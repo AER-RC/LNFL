@@ -1,3 +1,26 @@
+
+LNFL_v1.10
+
+August 2003
+
+1) For H2O the lower state energies with value of  -1. have been replaced  
+with a value of -300. cm-1 outside of LNFL in the linefile (the negative 
+value of the lower state energy indicates that the value is not known).  
+This value is modified in the line file to achieve a more probable 
+temperature correction.  LNFL has been changed so that it DOES NOT 
+change this E" value and passes the -300 directly to LBLRTM.
+
+
+LNFL_v1.9
+
+August 2003
+
+1) Expanded maximum molecule number up to 38 molecules. 
+   (S.A. Clough)
+2) Made changes to program to be consistent with TIPS 2002
+   inplemented in LBLRTM.
+   (S.A. Clough)
+
 LNFL_v1.8
 
 March 2003
