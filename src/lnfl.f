@@ -69,7 +69,7 @@ C    PRESSURE SHIFT, UPPER AND LOWER STATE VIBRATIONAL AND ROTATIONAL    LN00570
 C    IDENTIFICATIONS, REFERENCE PARAMETERS AND A FLAG FOR LINE           LN00580
 C    COUPLING.                                                           LN00590
 C                                                                        LN00600
-C    MOLECULE NUMBERS 1 THROUGH 36 MAY BE SELECTED.                      LN00610
+C    MOLECULE NUMBERS 1 THROUGH 38 MAY BE SELECTED.                      LN00610
 C                                                                        LN00620
 C                                                                        LN00630
 C    THE VARIABLES AND THE FORMAT FOR THE TRANSITIONS ON TAPE1 ARE       LN00640
@@ -87,7 +87,7 @@ C                                                                        LN00750
 C    TAPE2 IS AVAILABLE FOR THE USER TO PROVIDE ALTERNATE LINE DATA      LN00760
 C               (REPLACEMENT OR SUPPLEMENTAL)                            LN00770
 C                                                                        LN00780
-C    MOLECULE NUMBERS 1 THROUGH 36 MAY BE SELECTED.                      LN00790
+C    MOLECULE NUMBERS 1 THROUGH 38 MAY BE SELECTED.                      LN00790
 C                                                                        LN00800
 C    TWO FORMAT OPTIONS ARE AVAILABLE: OPTION SELECTED ON RECORD 2.      LN00810
 C                                                                        LN00820
@@ -266,10 +266,6 @@ C                                                                        LN02240
          n_negepp(m) = 0
          n_resetepp(m) = 0
  5    continue
-C                                                                        LN02291
-C     CALL VECISO TO LOAD ISOTOPE INFORMATION INTO /ISVECT/              LN02292
-C                                                                        LN02293
-      CALL VECISO                                                        LN02294
 C                                                                        LN02295
       IFIL1 = 1                                                          LN02300
       IFIL2 = 2                                                          LN02310
@@ -672,102 +668,52 @@ C                                                                        LN07250
   905 FORMAT (' ERROR HIT EOF ON TAPE ',I2,' BEFORE ',F10.2)             LN07270
 C                                                                        LN07280
       END                                                                LN07290
-      SUBROUTINE ISTOPE (NSO82,ISO85,MOLEC,ICHOIC)                       LN07300
-C                                                                        LN07310
-C     ICHOIC = 1 :FIND 1985 VECTOR CODE FROM 1982 CODE                   LN07320
-C     ICHOIC = 2 :FIND 1982 CODE FROM 1985 VECTOR CODE                   LN07330
-C                                                                        LN07340
-      PARAMETER (NTMOL=36,NSPECI=85)                                     LN07350
-C                                                                        LN07360
-      COMMON /ISVECT/ ISOVEC(NTMOL),ISO82(NSPECI),ISO_MAX(NTMOL)           LN07370
-      COMMON /FDES/ IU1,IU2,IU3,IU4,IU9,IU77                             LN07380
-C                                                                        LN07390
-      if (molec.gt.32) return
-c
-      IF (ICHOIC.EQ.1) THEN                                              LN07400
-C                                                                        LN07410
-C     FIND LOCATION TO SEARCH:                                           LN07420
-C                                                                        LN07430
-         NS = ISOVEC(MOLEC)+1                                            LN07440
-         NEND = ISO_MAX(MOLEC)+ISOVEC(MOLEC)                               LN07450
-C                                                                        LN07460
-         DO 10 I = NS, NEND                                              LN07470
-            IF (NSO82.EQ.ISO82(I)) THEN                                  LN07480
-               ISO85 = I-ISOVEC(MOLEC)                                   LN07490
-               RETURN                                                    LN07500
-            ENDIF                                                        LN07510
-   10    CONTINUE                                                        LN07520
-C                                                                        LN07530
-      ELSE                                                               LN07540
-         NSO82 = ISO82(ISOVEC(MOLEC)+ISO85)                              LN07550
-      ENDIF                                                              LN07560
-C                                                                        LN07570
-      RETURN                                                             LN07580
-C                                                                        LN07590
-      END                                                                LN07600
-      SUBROUTINE VECISO                                                  LN07610
-C                                                                        LN07620
-      PARAMETER (NTMOL=36,NSPECI=85)                                     LN07630
-C                                                                        LN07640
-      COMMON /ISVECT/ ISOVEC(NTMOL),ISO82(NSPECI),ISO_MAX(NTMOL)           LN07650
-C                                                                        LN07660
-C     ISOTOPE VECTOR INFORMATION                                         LN07670
-C        SET UP ISOVEC:                                                  LN07680
-C                                                                        LN07690
-      ISOVEC(1) = 0                                                      LN07700
-      DO 20 I = 2, NTMOL                                                 LN07710
-         ISOVEC(I) = 0                                                   LN07720
-         DO 10 J = 1, I-1                                                LN07730
-            ISOVEC(I) = ISOVEC(I)+ISO_MAX(J)                               LN07740
-   10    CONTINUE                                                        LN07750
-   20 CONTINUE                                                           LN07760
-C                                                                        LN07770
-      RETURN                                                             LN07780
-C                                                                        LN07790
-      END                                                                LN07800
 c  ****************************************
       BLOCK DATA Isotop
 c  ****************************************
 c
-      PARAMETER (NMOL=36,Nspeci=85)
-      COMMON /ISVECT/ ISOVEC(NMOL),ISO82(Nspeci),ISO_MAX(NMOL)
+      PARAMETER (NMOL=38)
+      COMMON /ISVECT/ ISO_MAX(NMOL)
+      common /iso_id/ iso_82(97)
 c
 c    The number of isotopes for a particular molecule:
       DATA (ISO_MAX(I),I=1,NMOL)/
 c     H2O, CO2, O3, N2O, CO, CH4, O2,
-     +  4,   8,  5,   5,  6,   3,  3,
+     +  6,   9,  9,   5,  6,   3,  3,
 c      NO, SO2, NO2, NH3, HNO3, OH, HF, HCl, HBr, HI,
      +  3,   2,   1,   2,    1,  3,  1,   2,   2,  1,
 c     ClO, OCS, H2CO, HOCl, N2, HCN, CH3Cl, H2O2, C2H2, C2H6, PH3
-     +  2,   4,    3,    2,  1,   3,     2,    1,    2,    1,   1,
-c     COF2, SF6, H2S, HCOOH, HO2, O, ClONO2,  NO+
-     +  1,   1,   3,     1,   1,  1,     2,    1  /
+     +  2,   5,    3,    2,  1,   3,     2,    1,    2,    1,   1,
+c     COF2, SF6, H2S, HCOOH, HO2, O, ClONO2, NO+, HOBr, C2H4
+     +  1,   1,   3,     1,   1,  1,     2,    1,    2,    2/
 c
-      DATA ISO82/
+      DATA ISO_82/
 c       H2O
-     +  161,181,171,162,                                           
+     +   161,181,171,162,182,172,
 c       CO2
-     +  626,636,628,627,638,637,828,728,
+     +  626,636,628,627,638,637,828,728,727,
 c       O3
-     +  666,668,686,667,676,
+     +  666,668,686,667,676,886,868,678,768,
 c       N2O
      +  446,456,546,448,447,
 c       CO,                 CH4
      +  26,36,28,27,38,37,  211,311,212,
 c       O2,        NO,        SO2
      +  66,68,67,  46,56,48  ,626,646,
-c      NO2,   NH3,        HNO3
-     + 646,   4111,5111,  146,
+c       NO2,   NH3,        HNO3
+     +  646,   4111,5111,  146,
 c       OH,        HF,  HCl,    HBr,    HI
      +  61,81,62,  19,  15,17,  19,11,  17,
-c       ClO,    OCS,              H2CO
-     +  56,76,  622,624,632,822,  126,136,128,
+c       ClO,    OCS,                 H2CO
+     +  56,76,  622,624,632,623,822,  126,136,128,
 c       HOCl,     N2,  HCN
      +  165,167,  44,  124,134,125
 c      CH3Cl,    H2O2,  C2H2,       C2H6,  PH3
-     +,215,217,  1661,  1221,1231,  1221,  1111,
-c     COF2, SF6, H2S,            HCOOH,  HO2, O,   ClONO2      NO+
-     + 269,  29,  121,141,131,   126,    166, 6,   5646,7646,  46/
+     +, 215,217,  1661,  1221,1231,  1221,  1111,
+c       COF2, SF6, H2S,           HCOOH,  HO2, O,   ClONO2      NO+
+     +  269,  29,  121,141,131,   126,    166, 6,   5646,7646,  46,
+c       HOBr,      C2H4
+     +  169,161,   221,231/  
 c
 C
       END
@@ -939,9 +885,12 @@ C                                                                        LN10000
      *              MIND1(64),IOUT(51)                                   LN10090
       COMMON /QUANT/ QUANT1(51),QUANTC(51)                               LN10100
       COMMON /LCHAR/ ALIN1(51),ALIN2(40),ALINC(51),ALINE(250)            LN10110
-      COMMON /ISVECT/ ISOVEC(36),ISO82(85),ISO_MAX(36)
+c 
+      parameter (ntmol=38)
+c
+      COMMON /ISVECT/ ISO_MAX(NTMOL)
       common /eppinfo/ negflag
-c                                                                          D00540
+c
       character*8 h_rdlin1
 c
       data h_rdlin1/' tape1 '/
@@ -1173,8 +1122,11 @@ C                                                                        LN11660
      *               MINDC(64),IOUTC(51)                                 LN11750
       COMMON /QUANT/ QUANT1(51),QUANTC(51)                               LN11760
       COMMON /LCHAR/ ALIN1(51),ALIN2(40),ALINC(51),ALINE(250)            LN11770
-      COMMON /ISVECT/ ISOVEC(36),ISO82(85),ISO_MAX(36)
-c                                                                          D00540
+c 
+      parameter (ntmol=38)
+c
+      COMMON /ISVECT/ ISO_MAX(NTMOL) 
+c
       character*8 h_rdlin2
 c
       data h_rdlin2/' tape2 '/
@@ -1779,14 +1731,16 @@ C                                                                        LN16900
       IF (ILO.LT.1) RETURN                                               LN16910
 C                                                                        LN16920
       DO 260 I = ILO, NMAX                                               LN16930
-         MOL2 = MOL(I)                                                   LN16940
-         CALL ISTOPE (NSO82(I),ISO85,MOL2,1)                             LN16950
-         MOL2 = MOL2+100*ISO85                                           LN16960
+         mol1 = mol(i)/10
+         iso  = mol(i)-mol1*10
+         MOL2 = mol(i)+100*ISO
          IF (MOL(I).EQ.0) GO TO 260                                      LN16970
          QIB1 = BLNK                                                     LN16980
          QIB2 = BLNK                                                     LN16990
          TI = HOL82(I)                                                   LN17000
-         MOL1 = MOD(MOL2,100)                                            LN17010
+c
+c     for the first 8 molecules, attach vibrational information
+c
          IF (MOL1.GT.8) GO TO 250                                        LN17020
 C                                                                        LN17030
 C     MOL1 IS THE ORIGINAL MOLECULAR ID                                  LN17040
