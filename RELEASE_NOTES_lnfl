@@ -5,11 +5,9 @@ There were only minor changes made to LNFL for version lnfl_v1.7.
 
 1) The revision number in the TAPE6 output comments was updated.
 
-2) To reflect the increased in portability of LBLRTM, provided
-   are makefiles and utilities
-   to run LNFL on the following:  
+2) To reflect the increase portability of LBLRTM, makefiles and 
+   utilities are provided to run LNFL on the following platforms:  
 
-    The following platforms:
 
      System     Mfr.        Compiler       sgl     
                                          
