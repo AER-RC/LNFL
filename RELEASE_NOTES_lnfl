@@ -1,4 +1,43 @@
 
+LNFL_v2.0
+
+Oct.  2004
+
+
+1) This is the first release of LNFL that accommodates the 160 character format
+   adopted for HITRAN_2004.  To facilitate this format change, some of the LNFL flags 
+   formerly on Record 3 have now been distributed to Records 3 and 4.  On Record 3,
+   the flags include those that are general for the LNFL run and also those that 
+   are specific to TAPE1.  On Record 4, the flags include those specific to TAPE2.
+   The default format for LNFL will remain the 100 character format.  The rationale
+   for this choice is that the vibrational data are more amenable to the LBLRTM Non-LTE
+   calculation than those associated with the 160 character format for which the 
+   vibrational information had been expanded to facilitate association of the lines
+   with the quantum mechanical vibrational designations.
+
+   Note that no blocking for TAPE1 and TAPE2 is now the default, so that flags NBLK1 
+   and NBLK2 are now ignored and are not necessary.  They have been replaced with flags
+   BLK1 and BLK2 to indicate the respective files  in blocked format.
+
+   A module including for line coupling coefficients is included for use with
+   HITRAN2004.  The carnbon dioxide frequencies have been changed in this module
+   to be consistent with HITRAN2004 but no other parameters have been modified. 
+   In particular, the required constraints on the line coupled bands have NOT been 
+   checked.
+   
+   In this release, the capability to accomodate the 160 character format is restricted
+   to TAPE1.
+
+     HITRAN2004 reference:
+     Rothman,  L.S., D. Jacquemart, A. Barbe, D.C. Benner, M. Birk, 
+     L.R. Brown, M.R. Carleer, C. Chackerian, Jr, K. Chance, V. Dana, 
+     V.M. Devi, J.-M. Flaud, R.R. Gamache, A. Goldman J.-M. Hartmann, 
+     K.W. Jucks, A.G. Maki, J.Y. Mandin, S. Massie, J. Orphal, A. Perrin, 
+     C.P. Rinsland, M.A.H. Smith, R.A. Toth, J. Vander Auwera, 
+     P. Varanasi, G. Wagner,  The HITRAN 2004 Molecular Spectroscopic 
+     Database, J. Quant. Spectrosc. Radiat .Transfer, in press, 2005.
+
+
 LNFL_v1.15
 
 Oct.2003

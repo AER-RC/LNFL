@@ -12,7 +12,7 @@ PLATFORM = LINUX
 
 FC = pgf90
 FCFLAG =-fast
-OUTPUT = lnfl_v1.15_pgf90_pgi_linux_sgl
+OUTPUT = lnfl_v2.0_pgf90_pgi_linux_sgl
 CPATH = src
 CPATHLBL = src
 CDOTO = linux_sgl.o
