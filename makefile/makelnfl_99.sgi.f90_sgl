@@ -39,11 +39,11 @@ $(CDOTO)/$(CLNF).o : $(CPATH)/$(CLNF).f
 	\mv $(CLNF).o $(CDOTO)
 
 $(CDOTO)/$(CUTL).o : $(CPATHLBL)/$(CUTL).f
-	if [ -r $(CPATH)/$(CUTL).f ] ; \
-	then \
-	   \rm -f $(CPATH)/$(CUTL).f ; \
-	   \cp -f $(CPATHLBL)/$(CUTL).f $(CPATH)/ ; \
-	fi
+#	if [ -r $(CPATH)/$(CUTL).f ] ; \
+#	then \
+#	   \rm -f $(CPATH)/$(CUTL).f ; \
+#	   \cp -f $(CPATHLBL)/$(CUTL).f $(CPATH)/ ; \
+#	fi
 	$(FC) $(FCFLAG) -c $(CPATH)/$(CUTL).f
 	\mv $(CUTL).o $(CDOTO)
 
