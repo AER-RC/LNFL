@@ -1419,8 +1419,7 @@ c     test for valid vibrational states
             if (ivup.eq.-99 .or. ivlo.eq.-99) then
                write (*,*) 
      *   '****   CHECK THAT TAPE1 IS 160 CHARACTER FORMAT   ****'
-     
-               STOP 
+                STOP 
      *   '****   INVALID VIBRATIONAL STATE ENCOUNTERED ****'
 
             endif
@@ -2141,7 +2140,7 @@ c         write (*,925) mol,h_dum, nclass_v(mol)
 
       data (n_lvl_v(j),j=1,10)    /
 c    *    1,    2,    3,    4,    5,    6,    7,
-     *   24,   29,   38,   91,  132,  115,   36,
+     *   24,   29,   38,   91,  132,  116,   36,
 c    *    8,    9,   10,   11,   12,   13,   14,
      *   47,   39,   91/
 
@@ -2267,7 +2266,16 @@ c         write      (*,935) n_lvl_v(j_cl)
      5 '       0 7 7 01', '               ', '       1 0 0 41',
      5 '       1 0 0 51', '       1 0 0 52', '       0 0 0 51'/
 
-      data ( h_vib(6,lvl),lvl=1,115 ) /
+      data ( h_vib(6,lvl),lvl=1,116 ) /
+c******
+c**
+c** There is a deuterated water vapor line in HITRAN 2004 at 12657.367357 cm-1
+c** with upper state quantum number 2 3 0, a state not in the Vib.dat file.
+c**
+c** As a temporary measure to address this problem '2 3 0' has been put into
+c** h_vib(6,116) and n_lnvl_v(6) has been increased to 116.  sac 08 Feb 2005
+c**
+c******
      6 '          0 0 0', '          0 1 0', '          0 2 0',
      6 '          1 0 0', '          0 0 1', '          0 3 0',
      6 '          1 1 0', '          0 1 1', '          0 4 0',
@@ -2306,7 +2314,7 @@ c         write      (*,935) n_lvl_v(j_cl)
      6 '          6 0 0', '          6 0 1', '          6 1 0',
      6 '          6 1 1', '          6 2 0', '          7 0 0',
      6 '          7 0 1', '          8 0 0', '          0 5 0',
-     6 '          0 6 0'/
+     6 '          0 6 0', '          2 3 0'/
 
       data ( h_vib(7,lvl),lvl=1,36 ) /
      7 ' 0 0 0 0 1 1   ', ' 0 0 0 0 0 0+  ', ' 0 0 1 0 0 0+  ',

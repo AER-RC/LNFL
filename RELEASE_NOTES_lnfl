@@ -1,4 +1,20 @@
 
+LNFL_v2.1
+
+Feb. 2005
+
+1) In the Vib.dat file available for HITRAN2004 no entry exists for the 
+   vibrational state ' 2 3 0' for vibrational class 6.
+
+   However, there is a deuterated water vapor line in HITRAN 2004 at 12657.367357 cm-1
+   with upper state quantum numbers 2 3 0.
+
+   As an interim measure to address this problem '2 3 0' has been added to 
+   the vibrational table for vibrational class 6,  h_vib(6,116), and n_lnvl_v(6)
+   has been increased from 115 to 116.  
+   (S. A. Clough) 
+
+
 LNFL_v2.0
 
 Oct.  2004

@@ -13,7 +13,7 @@ PLATFORM = OS_X (g77)
 FC = g77
 
 FCFLAG = -O2 
-OUTPUT = lnfl_v2.0_g77_OS_X_sgl
+OUTPUT = lnfl_v2.1_g77_OS_X_sgl
 CPATH = src
 CPATHLBL = src
 CDOTO = os_x_sgl_g77.o
