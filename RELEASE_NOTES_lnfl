@@ -1,4 +1,10 @@
 
+LNFL_v1.11
+
+1) Fixed some minor bugs with the total number of molecules that 
+   did not get updated when the maximum number was increased to 38.
+   (M.W. Shephard)
+
 LNFL_v1.10
 
 August 2003
