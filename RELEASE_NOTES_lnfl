@@ -1,5 +1,14 @@
 
+LNFL_v1.12
+
+August 2003
+
+1) Modified LNFL to read over any header information at the top
+   of the input spectroscopic line list.
+
 LNFL_v1.11
+
+August 2003
 
 1) Fixed some minor bugs with the total number of molecules that 
    did not get updated when the maximum number was increased to 38.
