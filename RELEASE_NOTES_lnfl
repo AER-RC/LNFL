@@ -1,3 +1,14 @@
+LNFL_v1.8
+
+March 2003
+
+1) For reading in the spectral line files, there was code implemented to 
+    report and skip over lines that cannot be handled properly by TIPS 
+    in LBLRTM.
+    (H. Snell and S.A. Clough)
+
+
+LNFL_v1.7.1
 
 February 2003
 
