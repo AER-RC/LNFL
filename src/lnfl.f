@@ -1,7 +1,7 @@
-C     path:      /stormrc1/aer_lnfl/src/SCCS/s.lnfl.f
-C     revision:  5.5
-C     created:   8/12/99  09:04:44
-C     presently: 8/12/99  09:05:27
+C     path:      $Source
+C     author:    $Author
+C     revision:  $Revision
+C     created:   $Date
       PROGRAM LNFL                                                       LN00010
 C                                                                        LN00020
 C**********************************************************************  LN00030

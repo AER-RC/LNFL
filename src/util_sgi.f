@@ -1,7 +1,7 @@
-C     path:      /home/rc1/aer_lblrtm/src/SCCS/s.util_sgi.f
-C     revision:  5.1
-C     created:   05/12/98  08:22:40
-C     presently: 07/07/98  10:44:07
+C     path:      $Source
+C     author:    $Author
+C     revision:  $Revision
+C     created:   $Date
       SUBROUTINE BUFIN (IFILE,IEOF,IARRAY,IWORDS)
 C
 C     THIS SUBROUTINE BUFFERS IN (READS) IWORDS INTO  IARRAY STARTING
