@@ -1949,26 +1949,55 @@ C                                                                        LN18710
       COMMON /CPLMOL/ MOLCPL(35),NCPL                                    LN18750
       CHARACTER CUP*9, CLO*9
 C                                                                        LN18760
-      DO 10 I = 1,82,2                                                   LN18770
+c______
+c
+c     -zero frequency oxygen line is not modified  based on
+c       Cimini et al 2003 (kcp and sac)
+
+      i=1
+
+         READ (CPLINS(I),920) ISO,VNU,STR,TRANS,HWHM,HWHMS,ENERGY,
+     *                         TDEP,SHIFT,IVUP,IVLO,CUP,CLO,HQ,IFLAG 
+         WRITE (2,920) ISO,VNU,STR,TRANS,HWHM,HWHMS,ENERGY,
+     *                         TDEP,SHIFT,IVUP,IVLO,CUP,CLO,HQ,IFLAG 
+c 
+         READ (CPLINS(I+1),925) ISO,Y1,G1,Y2,G2,Y3,G3,Y4,G4,IFLAG
+
+         WRITE (2,925)          ISO,Y1,G1,Y2,G2,Y3,G3,Y4,G4,IFLAG
+C
+c     modify the line coupling for the oxygen lines
+C
+      DO 10 I = 3,82,2                                                   LN18770
+c
          READ (CPLINS(I),920) ISO,VNU,STR,TRANS,HWHM,HWHMS,ENERGY,
      *                         TDEP,SHIFT,IVUP,IVLO,CUP,CLO,HQ,IFLAG 
          WRITE (2,920) ISO,VNU,STR,TRANS,HWHM,HWHMS,ENERGY,
      *                         TDEP,SHIFT,IVUP,IVLO,CUP,CLO,HQ,IFLAG 
 C 
-        READ (CPLINS(I+1),925) ISO,Y1,G1,Y2,G2,Y3,G3,Y4,G4,IFLAG
+         READ (CPLINS(I+1),925) ISO,Y1,G1,Y2,G2,Y3,G3,Y4,G4,IFLAG
 C**********************
-
-
+c
 C     These coefficients have been updated to provide consistency with
 C     HITRAN96 oxygen line parameters (June 1999).
-
-C     The Westwater/Rosenkranz corrections to the line coupling for 
-C     oxygen (applied 21 AUG 92; SAC) have been accounted for with
-C     the new coeffcients.
-
-        WRITE (2,925)          ISO,Y1,G1,Y2,G2,Y3,G3,Y4,G4,IFLAG
+c
+c     -modify the oxygen line coupling coefficients based on the data of 
+c      Cimini et al. 2003 (kcp and sac)
+c
+         data y_fac/0.87/, g_fac/0./
+c
+         y1 = y_fac*y1
+         y2 = y_fac*y2
+         y3 = y_fac*y3
+         y4 = y_fac*y4
+c
+         g1 = g_fac*g1
+         g2 = g_fac*g2
+         g3 = g_fac*g3
+         g4 = g_fac*g4
+c
+         WRITE (2,925)          ISO,Y1,G1,Y2,G2,Y3,G3,Y4,G4,IFLAG
 C
-   10 CONTINUE                                                           LN18790
+ 10   CONTINUE                                                           LN18790
 C                                                                        LN18760
 C   REMEMBER TO CHECK AND FIX SHIFT = 0. PROBLEM
 C                                                                        LN11550

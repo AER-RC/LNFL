@@ -1,4 +1,14 @@
 
+LNFL_v1.14
+
+Sept.2003
+
+1) The first order line coupling coefficients for oxygen have been scaled 
+   by a factor of 0.87.  The second order line coupling coefficients for 
+   oxygen have been set to zero.  This is based on the analysis of Cimini 
+   et al. using the scanning MWR data from ARM SGP.  
+   (K. Cady-Pereira and S.A. Clough))
+
 LNFL_v1.13
 
 Sept. 2003
