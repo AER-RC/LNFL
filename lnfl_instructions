@@ -1,0 +1,146 @@
+C     path:      /stormrc1/aer_lnfl/src/SCCS/s.lnfl_instructions
+C     revision:  1.5
+C     created:   09/11/98  13:56:15
+C     presently: 05/07/99  09:28:43
+
+
+   
+
+   
+
+   
+   
+           INSTRUCTIONS FOR LINE FILE CREATION FOR LBLRTM...     LNFL
+   
+                             5 August 1993
+   
+   
+   
+   
+RECORD 1
+   
+   
+      XID:  72 characters of user identification  (9A8)
+   
+   
+   
+   
+   
+RECORD 2
+   
+   
+   
+           VMIN,   VMAX
+   
+           1-10,  11-20
+   
+          F10.3,  F10.3
+   
+                VMIN    low wavenumber limit for the line file
+                              VMIN should be 25 cm-1 less than V1 for LBLRTM calculation
+   
+                VMAX    high wavenumber limit for the line file
+                              VMAX should be 25 cm-1 greater than V2 for LBLRTM calculation
+    
+  
+RECORD 3
+   
+   
+   
+          MIND1(M=1,32),      HOLIND
+   
+                   1-32,       41-80
+   
+                   32I1,8X,     A40
+   
+   
+   
+            MIND1(M)    Molecular INDicator for Molecule M from line data on file TAPE1
+   
+                           0  molecule M is not selected
+                           1  molecule M is selected
+   
+                              note that molecule number and column number are the same
+   
+   
+              HOLIND    HOLlerith INDicator to select LNFL options
+   
+                          LNOUT  selects option to provide formatted representation of TAPE3 on file TAPE7
+                                 representation is identical to TAPE1 and TAPE2, one transition per record
+                                 *** CAUTION *** this option may produce a VERY LARGE output file
+   
+                          NOCPL  line coupling parameters stored in LNFL are NOT incorporated into TAPE3 ( NOCPL = no coupling )
+                                 default writes line file data including coupling parameters onto TAPE2 which
+                                 are then merged with TAPE1 line data onto TAPE3
+   
+                           NLTE  preserves transition parameters for FACODE Non Local Thermodynamic Equilibrium option
+   
+                            REJ  selects line rejection and requires input data for stength rejection (record 5)
+   
+                          NBLK1  selects blocking factor equal 1 for TAPE1
+                                 line data for TAPE1 must be in 100 character format ( 1986 HITRAN or later )
+   
+                           F100  replacement or supplemental line data in 100 character format from TAPE2
+                                 merged with line data from TAPE1 (1986 HITRAN or later). Requires Record 4.
+   
+                          NBLK2  if F100 option is invoked, NBLK2 selects blocking factor equal 1 for TAPE2
+                                 ( NBLK2 = no blocking on TAPE2 )
+   
+                            F80  replacement or supplemental line data in 80 character format from TAPE2
+                                 merged with line data from TAPE1. TAPE3 parameters required for LBLRTM
+                                 from 80 character formatted data are set to default parameters by LNFL
+				 ( 1982 HITRAN format ).  Requires Record 4.
+
+                          H86T1  omits SHIFT line coupling information in 1986 HITRAN or later from TAPE1
+
+                          H86T2  omits SHIFT line coupling information in 1986 HITRAN or later from TAPE2
+    
+   
+RECORD 4            IF  ( (HOLIND .EQ. F100) .OR. (HOLIND .EQ. F80))            second line data source selected
+   
+   
+   
+           MIND2(M=1,32)
+   
+                   1-32
+   
+                   32I1
+   
+   
+   
+            MIND2(M)    Molecular INDicator for Molecule M from line data on file TAPE2
+   
+                           0  molecule M is not selected
+                           1  molecule M is selected
+   
+   
+   
+   
+   
+RECORD 5...            IF  ( HOLIND .EQ. REJ )           line rejection option selected
+   
+   
+   
+             SR(M=1,NMOL)
+   
+                   8E10.3
+   
+   
+   
+               SR(M)    Strength Rejection value for Molecule M
+   
+                              lines with strength values less than SR(M)
+                              will not be included on LBLRTM line file (TAPE3)
+   
+                              negative value for SR(M) uses internally stored
+                              default value based on tangent path through the
+                              earth's atmosphere
+   
+                              a value of 0. for SR(M) implies no rejection for molecule M,
+                              all lines for that molecule are retained
+   
+                              values for SR(M) are relative to LBLRTM line strengths:
+                                         AFGL strengths / ( v * (1-exp(v/kT)) )
+   
+                              NMOL is 7 or the number of the highest molecule selected,
+                              whichever is larger
