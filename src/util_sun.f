@@ -1,7 +1,7 @@
-C     path:      $Source$
-C     author:    $Author$
+C     path:      %P%
 C     revision:  $Revision$
-C     created:   $Date$
+C     created:   $Date$  
+C     presently: %H%  %T%
       SUBROUTINE BUFIN (IFILE,IEOF,IARRAY,IWORDS)
 C
 C     THIS SUBROUTINE BUFFERS IN (READS) IWORDS INTO  IARRAY STARTING
@@ -9,17 +9,15 @@ C     AT LOCATION IARRAY
 C
 C     IFILE IS THE FILE DESIGNATION
 C                                                                         A10830
-      COMMON /HVERSN/  HVRLBL,HVRCNT,HVRFFT,HVRATM,HVRLOW,HVRNCG,
-     *                HVROPR,HVRPST,HVRPLT,HVRTST,HVRUTL,HVRXMR
+      COMMON /CVRUTL/ HVRUTL
 C
-      CHARACTER*8 HVRLBL,HVRCNT,HVRFFT,HVRATM,HVRLOW,HVRNCG,HVROPR,
-     *            HVRPLT,HVRPST,HVRTST,HVRUTL,HVRXMR
+      CHARACTER*15 HVRUTL
 C                                  
       DIMENSION IARRAY(IWORDS)
 C
-C     ASSIGN SCCS VERSION NUMBER TO MODULE 
+C     ASSIGN CVS VERSION NUMBER TO MODULE 
 C
-      HVRUTL = '5.2' 
+      HVRUTL = '$Revision$' 
 C                          
       IEOF = 1             
 C                          
@@ -48,23 +46,11 @@ C     AT LOCATION IARRAY
 C
 C     IFILE IS THE FILE DESIGNATION
 C                                  
-
       implicit integer*4 (i-n)
       implicit real*4    (a-h,o-z)
 
-
       DIMENSION IARRAY(IWORDS)
 C                                                                         A10830
-      COMMON /HVERSN/  HVRLBL,HVRCNT,HVRFFT,HVRATM,HVRLOW,HVRNCG,
-     *                HVROPR,HVRPST,HVRPLT,HVRTST,HVRUTL,HVRXMR
-C
-      CHARACTER*8 HVRLBL,HVRCNT,HVRFFT,HVRATM,HVRLOW,HVRNCG,HVROPR,
-     *            HVRPLT,HVRPST,HVRTST,HVRUTL,HVRXMR
-C
-C     ASSIGN SCCS VERSION NUMBER TO MODULE 
-C
-      HVRUTL = '5.2' 
-C                          
       IEOF = 1             
 C                          
 C#    BUFFER IN (IFILE,1) (IARRAY(ILO),IARRAY(IHI))
@@ -127,7 +113,7 @@ c______________________________________________________________________________
 
       SUBROUTINE LBLDAT(HDATE)                                           LN05190
 C                                                                        LN05200
-      DOUBLE PRECISION HDATE                                            &LN05210
+      CHARACTER*8 HDATE
 C                                                                        LN05220
       CHARACTER GDATE*10                                                 LN05230
 C                                                                        LN05240
@@ -157,7 +143,7 @@ C                                                                        LN05460
       END                                                                LN05470
       SUBROUTINE FTIME (HTIME)                                           LN05480
 C                                                                        LN05490
-      DOUBLE PRECISION HTIME                                            &LN05500
+      CHARACTER*8 HTIME
 C                                                                        LN05510
       CHARACTER GTIME*10                                                 LN05520
 C                                                                        LN05530

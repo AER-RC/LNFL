@@ -1,7 +1,7 @@
-C     path:      $Source$
-C     author:    $Author$
+C     path:      %P%
 C     revision:  $Revision$
-C     created:   $Date$
+C     created:   $Date$  
+C     presently: %H%  %T%
       SUBROUTINE BUFIN (IFILE,IEOF,IARRAY,IWORDS)
 C
 C     THIS SUBROUTINE BUFFERS IN (READS) IWORDS INTO  IARRAY STARTING
@@ -11,15 +11,13 @@ C     IFILE IS THE FILE DESIGNATION
 C                                  
       DIMENSION IARRAY(IWORDS)
 C                                                                         A10830
-      COMMON /HVERSN/  HVRLBL,HVRCNT,HVRFFT,HVRATM,HVRLOW,HVRNCG,
-     *                HVROPR,HVRPST,HVRPLT,HVRTST,HVRUTL,HVRXMR
+      COMMON /CVRUTL/ HVRUTL
 C
-      CHARACTER*8 HVRLBL,HVRCNT,HVRFFT,HVRATM,HVRLOW,HVRNCG,HVROPR,
-     *            HVRPLT,HVRPST,HVRTST,HVRUTL,HVRXMR
+      CHARACTER*15 HVRUTL
 C
 C     ASSIGN SCCS VERSION NUMBER TO MODULE 
 C
-      HVRUTL = '5.1' 
+      HVRUTL = '$Revision$' 
 C                          
       IEOF = 1             
 C                          
@@ -55,16 +53,6 @@ C
 
       DIMENSION IARRAY(IWORDS)
 C                                                                         A10830
-      COMMON /HVERSN/  HVRLBL,HVRCNT,HVRFFT,HVRATM,HVRLOW,HVRNCG,
-     *                HVROPR,HVRPST,HVRPLT,HVRTST,HVRUTL,HVRXMR
-C
-      CHARACTER*8 HVRLBL,HVRCNT,HVRFFT,HVRATM,HVRLOW,HVRNCG,HVROPR,
-     *            HVRPLT,HVRPST,HVRTST,HVRUTL,HVRXMR
-C
-C     ASSIGN SCCS VERSION NUMBER TO MODULE 
-C
-      HVRUTL = '5.1' 
-C                          
       IEOF = 1             
 C                          
 C#    BUFFER IN (IFILE,1) (IARRAY(ILO),IARRAY(IHI))
@@ -100,6 +88,31 @@ C
       RETURN                                         
 C                                                    
       END                                            
+c______________________________________________________________________________
+
+      SUBROUTINE BUFOUTln (IFILE,IARRAY,IWORDS)
+C                                                 
+C     THIS SUBROUTINE BUFFERS OUT (WRITES) IWORDS FROM IARRAY STARTING
+C     AT LOCATION IARRAY                                                 
+C                                                                     
+C     IFILE IS THE FILE DESIGNATION                                   
+C                                                                     
+c
+      implicit integer*4 (i-n)
+      implicit real*4    (a-h,o-z)
+c
+      DIMENSION IARRAY(IWORDS)
+C                                                   
+C#    BUFFER OUT (IFILE,1) (IARRAY(ILO),IARRAY(IHI))
+C#    IF (UNIT(IFILE).EQ.0.) STOP ' ERROR IN BUFOUT '
+C                                                    
+      WRITE (IFILE) IARRAY
+C                                                    
+      RETURN                                         
+C                                                    
+      END                                            
+c______________________________________________________________________________
+
       SUBROUTINE LBLDAT(HDATE)                                           LN05190
 c
 c     SGI version
