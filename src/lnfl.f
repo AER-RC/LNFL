@@ -580,14 +580,14 @@ c            mol_max
   965 FORMAT ('0',/,23X,'COUPLED',4X,'NLTE',3X,'NEGATIVE',3X,
      *        'RESET',4X,'SUM LBLRTM',6X,                                LN05100
      *        'STRENGTH',/,7X,'MOL',5X,'LINES',4X,'LINES',4X,'LINES',
-     *        6X,'EPP',6X,'EPP'                                          LN05110
+     *        6X,'EPP',6X,'EPP',   
      *        6X,'STRENGTHS',6X,'REJECTION',2(/),(' ',4X,A6,' = ',I6,    LN05120
      *        3X,I6,3X,I6,3X,I6,3X,i6,3X,1PE12.4,5X,E10.3,0P))           LN05130
   970 FORMAT ('0',20X,'NUMBER OF BLOCKS =',I4)                           LN05140
   975 FORMAT ('0',10X,' TOTAL TIME =',F10.3,' TIME IN =',F10.3,          LN05150
      *        ' TIME OUT =',F10.3)                                       LN05160
   980 FORMAT (//'0 Modules and versions used in this calculation:',/,/,
-     *         5X,'lblrtm.f: ',4X,A15,10X, 'util_xxx.f: ',4X,A15,/)
+     *         5X,'  lnfl.f: ',4X,A15,10X, 'util_xxx.f: ',4X,A15,/)
 C                                                                        LN05170
       END                                                                LN05180
       FUNCTION NWDL (IWD,ILAST)                                          LN06490
