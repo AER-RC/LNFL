@@ -729,6 +729,7 @@ C                                                                        LN08620
      *               IREC,IRECTL,HID1(2),LSTWD                           LN08650
 
       common /bufid2/ n_negepp(64),n_resetepp(64),xspace(4096),lstwd2
+      common /eppinfo/ negflag
 
       COMMON VNU3(250),STR3(250),ALF3(250),EPP3(250),MOL3(250),          LN08660
      *       HWHMS(250),TMPALF(250),PSHIFT(250),IFLG(250),LSTW2          LN08670
@@ -779,6 +780,16 @@ C                                                                        LN08820
          MCNTLC(M) = MCNTLC(M)+1                                         LN09120
          ILINLC = ILINLC+1                                               LN09130
       ENDIF                                                              LN09140
+
+c     Check for negative ENERGY values
+c     If ENERGY = -1., then set ENERGY to 300.
+c     If ENERGY = -n, then set ENERGY to n
+
+      if (epp3(ilin3) .lt. -0.99) then
+          negflag = 1
+          n_negepp(m) = n_negepp(m)+1
+      endif
+
       MIS = MOD(MOL2(I),1000)                                            LN09143
       IF (MIS.NE.MOL2(I)) THEN                                           LN09146
          MCNTNL(M) = MCNTNL(M)+1                                         LN09150
@@ -916,13 +927,7 @@ C                                                                        LN10260
       I1 = 1                                                             LN10300
       N1 = 0                                                             LN10310
       ILIN3 = 0                                                          LN10320
-      
-c      do 5 m=1,64
-c         n_negepp(m) = 0
-c         n_resetepp(m) = 0
-c 5    continue
 C                                                                        LN10330
-
    10 CONTINUE                                                           LN10340
       IF (IEOF.EQ.1) GO TO 60                                            LN10350
       IEOF = 1                                                           LN10360
@@ -1001,24 +1006,6 @@ C                                                                        LN10900
                HWHMS = HWHMF                                             LN10920
                IF (M.EQ.1) HWHMS = 5.*HWHMF                              LN10930
             ENDIF                                                        LN10940
-
-c           Check for negative ENERGY values
-c           If ENERGY = -1., then set ENERGY to 300.
-c           If ENERGY = -n, then set ENERGY to n
-
-            if (energy.lt.0.) then
-               negflag = 1
-               n_negepp(m) = n_negepp(m)+1
-               if (m.eq.1) then
-                  if (energy.eq.-1.) then
-                     energy=300.
-                     n_resetepp(m) = n_resetepp(m)+1
-                  else
-                     energy=-energy
-                  endif
-               endif
-            endif
-
             WRITE (ALIN1(ILIN3),921) M,ISO,VNU,STRSV,TRANS,HWHMF,        LN10950
      *                              HWHMS,ENERGY,TDEP,SHIFT,IVUP,        LN10960
      *                              IVLO,CUP,CLO,HOL,IFLGSV              LN10970
@@ -1104,9 +1091,7 @@ C                                                                        LN11600
      *               SUMSTR(64),NMOL,FLINLO,FLINHI,ILIN,ILINLC,ILINNL,   LN11620
      *               IREC,IRECTL,HID1(2),LSTWD                           LN11630
 
-
       common /bufid2/ n_negepp(64),n_resetepp(64),xspace(4096),lstwd2
-
 C                                                                        LN11640
       CHARACTER*8      HID,HID1,HMOL                                    &LN11650
       REAL*8           STRSV
