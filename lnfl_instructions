@@ -61,6 +61,13 @@ RECORD 3
                            1  molecule M is selected
    
                               note that molecule number and column number are the same
+
+    (M):  AVAILABLE       ( 1)  H2O  ( 2)  CO2  ( 3)    O3 ( 4)   N2O ( 5)    CO ( 6)   CH4 ( 7)    O2
+    MOLECULAR SPECIES     ( 8)   NO  ( 9)  SO2  (10)   NO2 (11)   NH3 (12)  HNO3 (13)    OH (14)    HF
+                          (15)  HCL  (16)  HBR  (17)    HI (18)   CLO (19)   OCS (20)  H2CO (21)  HOCL
+                          (22)   N2  (23)  HCN  (24) CH3CL (25)  H2O2 (26)  C2H2 (27)  C2H6 (28)   PH3
+                          (29) COF2  (30)  SF6  (31)   H2S (32) HCOOH 
+ 
    
    
               HOLIND    HOLlerith INDicator to select LNFL options
