@@ -11,7 +11,7 @@ PLATFORM = SUN
 
 FC = f77
 FCFLAG =-fast -O3
-OUTPUT = lnfl_v1.5
+OUTPUT = lnfl_v1.6
 CPATH = src
 CPATHLBL = src
 CDOTO = sgl.o
