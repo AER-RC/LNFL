@@ -177,7 +177,7 @@ C                                                                        LN01650
       CHARACTER*8 GREJ,GNLTE,GREJNL,GNEGEPP                              LN01660
 C                                                                        LN01670
       CHARACTER*18 hnamlnfl,hvrlnfl,hnamutl,hvrutl
-      CHARACTER*3 rev_num
+      CHARACTER*5 rev_num
       CHARACTER HF80*3,HF100*4,HNOCPL*5,HREJ*3,HNLTE*4,HOLIND*40         LN01680
       CHARACTER*5 HNBLK1,HNBLK2,HLNOUT,HH86T1,HH86T2                     LN01690
       CHARACTER*27 QUANT1,QUANTC                                         LN01700
@@ -553,8 +553,8 @@ C                                                                        LN04850
 C                                                                        LN04890
       STOP ' LINFIL COMPLETE '                                           LN04900
 C                                                                        LN04910
-  900 format(11x,a3)
-  901 format('LNFLv',a3)
+  900 format(10x,a5)
+  901 format('V: ',a5)
   902 FORMAT (10A8)                                                      LN04920
   905 FORMAT ('1',10A8,2(1X,A8,1X))                                      LN04930
   910 FORMAT (2F10.3)                                                    LN04940
@@ -764,6 +764,16 @@ C                                                                        LN08820
       ILIN = ILIN+1                                                      LN08960
       SUMSTR(M) = SUMSTR(M)+STR2(I)                                      LN08970
       MOLCNT(M) = MOLCNT(M)+1                                            LN08980
+
+c     Check for negative ENERGY values
+c     If ENERGY = -1., then set ENERGY to 300.
+c     If ENERGY = -n, then set ENERGY to n
+
+      if (iflg(ilin3).eq.0 .and. epp3(ilin3) .lt. -0.99) then
+         negflag = 1
+         n_negepp(m) = n_negepp(m)+1
+      endif
+
       IF (IFG2(I).GE.1) THEN                                             LN08990
          NWDS = NWDS+9                                                   LN09000
          ILIN3 = ILIN3+1                                                 LN09010
@@ -780,16 +790,7 @@ C                                                                        LN08820
          MCNTLC(M) = MCNTLC(M)+1                                         LN09120
          ILINLC = ILINLC+1                                               LN09130
       ENDIF                                                              LN09140
-
-c     Check for negative ENERGY values
-c     If ENERGY = -1., then set ENERGY to 300.
-c     If ENERGY = -n, then set ENERGY to n
-
-      if (epp3(ilin3) .lt. -0.99) then
-          negflag = 1
-          n_negepp(m) = n_negepp(m)+1
-      endif
-
+c
       MIS = MOD(MOL2(I),1000)                                            LN09143
       IF (MIS.NE.MOL2(I)) THEN                                           LN09146
          MCNTNL(M) = MCNTNL(M)+1                                         LN09150
@@ -911,7 +912,7 @@ C                                                                        LN10120
       CHARACTER*27 QUANT1,QUANTC                                         LN10150
       CHARACTER*9 CUP,CLO
       CHARACTER*7 HOL                                                    LN10160
-      CHARACTER*1 CFLAG,CBLNK,CMINUS                                     LN10170
+      CHARACTER*1 CFLAG,CBLNK,CMINUS,a_1,h_1,h_2
       DIMENSION AMOL1(51)                                                LN10180
 C                                                                        LN10190
       EQUIVALENCE (MOL1(1),AMOL1(1))                                     LN10200
@@ -919,7 +920,7 @@ C                                                                        LN10210
       DATA TEMP0 / 296. /                                                LN10220
       DATA ZEROFL /                                                      LN10230
      *           '00000000000000000000000000000000000000000000000000'/   LN10240
-      DATA CBLNK / ' '/,CMINUS / '-'/                                    LN10250
+      DATA CBLNK / ' '/,CMINUS / '-'/, n_hdr/0/, h_1/'>'/, h_2/'%'/
 C                                                                        LN10260
       BETA0 = RADCN2/TEMP0                                               LN10270
       IER = 0                                                            LN10280
@@ -953,6 +954,16 @@ C                                                                        LN10510
    40 IFLGM1 = 0                                                         LN10560
       DO 50 I = 1, 51                                                    LN10570
          IF (I.GT.IDIM) WRITE (ALIN(I),910) ZEROFL,ZEROFL                LN10580
+c
+c     skip over header records:
+         READ (ALIN(I),913) a_1
+         if (a_1.eq.h_1 .or. a_1.eq.h_2) then
+            n_hdr = n_hdr+1
+            if (n_hdr.eq. 1) Write (*,914)     
+            go to 50
+         endif
+c
+c     test for invalid molecule number:
          READ (ALIN(I),915) MOL                                          LN10590
          IF (MOL.le.0) GO TO 50                                          LN10600
          M = MOL                                                         LN10610
@@ -961,6 +972,11 @@ C                                                                        LN10510
             READ (ALIN(I),920) ISO,VNU,STRSV,TRANS,HWHMF,HWHMS,ENERGY,   LN10640
      *                         TDEP,SHIFT,IVUP,IVLO,CUP,CLO,HOL,IFLGSV   LN10650
             IFLAG = IFLGSV                                               LN10660
+c
+c     check that molecule and isotope are within proper range
+c
+            if (m   .lt. 1) stop ' molecule value is less than 1 '
+            if (iso .lt. 1) stop '  isotope value is less than 1 '
 c
 c   the TIPS program in lblrtm is currently limited to molecules up to 36
 c
@@ -1061,15 +1077,17 @@ C                                                                        LN11330
    60 CONTINUE                                                           LN11340
 C                                                                        LN11350
       PRINT 940                                                          LN11360
-      IF (VMAX.LT.17000.) THEN                                           LN11370
-         PRINT 945,VMAX                                                  LN11380
-      ENDIF                                                              LN11390
+c      IF (VMAX.LT.17000.) THEN                                           LN11370
+c         PRINT 945,VMAX                                                  LN11380
+c      ENDIF                                                              LN11390
 C                                                                        LN11400
       RETURN                                                             LN11410
 C                                                                        LN11420
   900 FORMAT (51(A100))                                                  LN11430
   905 FORMAT (2X,A1,95X,I2)                                              LN11440
   910 FORMAT (2A50)                                                      LN11450
+ 913  format (a1)
+ 914  format ( ' skipping over header records on TAPE1')
   915 FORMAT (I2)                                                        LN11460
   920 FORMAT (2X,I1,F12.6,D10.3,E10.3,2F5.4,F10.4,F4.2,F8.6,2I3,2A9,
      *        A7,I2)                                                     LN11470
@@ -1077,9 +1095,10 @@ C                                                                        LN11420
      *        2A9,A7,I2)
   925 FORMAT (2X,4(E13.6,E11.4),I2)                                      LN11480
   930 FORMAT (I2,I1,2I3,2A9)                                             LN11490
-  940 FORMAT (' TAPE1 IS AT A EOF ',/,                                   LN11510
-     *        ' THE 1986 TAPE HAS ONE EOF AT EOT  ')                     LN11520
-  945 FORMAT (' THE EOF ON THE 86 TAPE IS AFTER 17000 ',/,               LN11530
+  940 FORMAT (' TAPE1 IS AT A EOF ')
+c  940 FORMAT (' TAPE1 IS AT A EOF ',/,                                   LN11510
+c     *        ' THE TAPE2 HAS ONE EOF AT EOT  ')
+  945 FORMAT (' THE EOF ON TAPE2 IS BEFORE',/,
      *        ' VMAX = ',F12.5,' YOU MAY HAVE A BAD TAPE ')              LN11540
 C                                                                        LN11550
       END                                                                LN11560
@@ -1121,7 +1140,7 @@ C                                                                        LN11780
       CHARACTER*27 QUANT1,QUANTC                                         LN11810
       CHARACTER*9 CUP,CLO                                                LN11820
       CHARACTER*7 HOL
-      CHARACTER*1 CFLAG,CBLNK,CMINUS                                     LN11830
+      CHARACTER*1 CFLAG,CBLNK,CMINUS,a_1,h_1,h_2
       DIMENSION AMOLC(51)                                                LN11840
 C                                                                        LN11850
       EQUIVALENCE (MOLC(1),AMOLC(1))                                     LN11860
@@ -1129,7 +1148,7 @@ C                                                                        LN11870
       DATA TEMP0 / 296. /                                                LN11880
       DATA ZEROFL /                                                      LN11890
      *           '00000000000000000000000000000000000000000000000000'/   LN11900
-      DATA CBLNK / ' '/,CMINUS / '-'/                                    LN11910
+      DATA CBLNK / ' '/,CMINUS / '-'/,n_hdr/0/, h_1/'>'/, h_2/'%'/
 C                                                                        LN11920
       BETA0 = RADCN2/TEMP0                                               LN11930
       IER = 0                                                            LN11940
@@ -1159,10 +1178,21 @@ C                                                                        LN12170
       IEOF = 0                                                           LN12180
       GO TO 40                                                           LN12190
    30 IDIM = I-1                                                         LN12200
+      PRINT 940
       IF (IDIM.LE.0) GO TO 60                                            LN12210
    40 IFLGM1 = 0                                                         LN12220
       DO 50 I = 1, 51                                                    LN12230
          IF (I.GT.IDIM) WRITE (ALIN(I),910) ZEROFL,ZEROFL                LN12240
+c
+c     skip over header records:
+         READ (ALIN(I),913) a_1
+         if (a_1.eq.h_1 .or. a_1.eq.h_2) then
+            n_hdr = n_hdr+1
+            if (n_hdr.eq. 1) Write (*,914)     
+            go to 50
+         endif
+c
+c     test for invalid molecule number:
          READ (ALIN(I),915) MOL                                          LN12250
          IF (MOL.EQ.0) GO TO 50                                          LN12260
          M = MOL                                                         LN12270
@@ -1171,6 +1201,11 @@ C                                                                        LN12170
             READ (ALIN(I),920) ISO,VNU,STRSV,TRANS,HWHMF,HWHMS,ENERGY,   LN12300
      *                         TDEP,SHIFT,IVUP,IVLO,CUP,CLO,HOL,IFLGSV   LN12310
             IFLAG = IFLGSV
+c
+c     check that molecule and isotope are within proper range
+c
+            if (m   .lt. 1) stop ' molecule value is less than 1 '
+            if (iso .lt. 1) stop '  isotope value is less than 1 '
 c
 c   the TIPS program in lblrtm is currently limited to molecules up to 38
 c
@@ -1269,13 +1304,14 @@ C                                                                        LN12970
       RETURN                                                             LN12980
 C                                                                        LN12990
    60 CONTINUE                                                           LN13000
-      PRINT 940                                                          LN13010
 C                                                                        LN13020
       RETURN                                                             LN13030
 C                                                                        LN13040
   900 FORMAT (51(A100))                                                  LN13050
   905 FORMAT (2X,A1,95X,I2)                                              LN13060
   910 FORMAT (2A50)                                                      LN13070
+ 913  format (a1)
+ 914  format ( ' skipping over header records on TAPE2')
   915 FORMAT (I2)                                                        LN13080
   920 FORMAT (2X,I1,F12.6,D10.3,E10.3,2F5.4,F10.4,F4.2,F8.6,2I3,2A9,
      *        A7,I2)                                                     LN13090
@@ -2039,7 +2075,7 @@ C                    H2S      HCOOH     HO2, O, ClONO2, NO+,HOBr,C2H4
      *           0.000E+00, 0.000E+00, 32*0.0 /                          LN19790
 C                                                                        LN19800
       DATA SR / 64*0.0 /                                                 LN19810
-      DATA CHID10 / 'ISOTOP I'/                                          LN19820
+      DATA CHID10 / '       I'/                                          LN19820
       DATA IRD,IPR,IPU / 5,66,7 /                                        LN19830
       DATA SUMSTR / 64*0. /,MCNTLC / 64*0 /,ILINLC / 0 /,IREC / 0 /,     LN19840
      *     IRECTL / 0 /                                                  LN19850
