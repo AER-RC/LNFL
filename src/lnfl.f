@@ -69,7 +69,7 @@ C    PRESSURE SHIFT, UPPER AND LOWER STATE VIBRATIONAL AND ROTATIONAL    LN00570
 C    IDENTIFICATIONS, REFERENCE PARAMETERS AND A FLAG FOR LINE           LN00580
 C    COUPLING.                                                           LN00590
 C                                                                        LN00600
-C    MOLECULE NUMBERS 1 THROUGH 32 MAY BE SELECTED.                      LN00610
+C    MOLECULE NUMBERS 1 THROUGH 36 MAY BE SELECTED.                      LN00610
 C                                                                        LN00620
 C                                                                        LN00630
 C    THE VARIABLES AND THE FORMAT FOR THE TRANSITIONS ON TAPE1 ARE       LN00640
@@ -87,7 +87,7 @@ C                                                                        LN00750
 C    TAPE2 IS AVAILABLE FOR THE USER TO PROVIDE ALTERNATE LINE DATA      LN00760
 C               (REPLACEMENT OR SUPPLEMENTAL)                            LN00770
 C                                                                        LN00780
-C    MOLECULE NUMBERS 1 THROUGH 32 MAY BE SELECTED.                      LN00790
+C    MOLECULE NUMBERS 1 THROUGH 36 MAY BE SELECTED.                      LN00790
 C                                                                        LN00800
 C    TWO FORMAT OPTIONS ARE AVAILABLE: OPTION SELECTED ON RECORD 2.      LN00810
 C                                                                        LN00820
@@ -176,6 +176,8 @@ C                                                                        LN01630
 C                                                                        LN01650
       CHARACTER*8 GREJ,GNLTE,GREJNL,GNEGEPP                              LN01660
 C                                                                        LN01670
+      CHARACTER*15 hvrlnfl,hvrutl
+      CHARACTER*3 rev_num
       CHARACTER HF80*3,HF100*4,HNOCPL*5,HREJ*3,HNLTE*4,HOLIND*40         LN01680
       CHARACTER*5 HNBLK1,HNBLK2,HLNOUT,HH86T1,HH86T2                     LN01690
       CHARACTER*27 QUANT1,QUANTC                                         LN01700
@@ -201,17 +203,19 @@ C                                                                        LN01860
       COMMON /UNITS/ PI,PLANCK,BOLTZ,CLIGHT,AVOG,RADCN1,RADCN2           LN01890
       COMMON /MANE/ VNU1(51),STR1(51),ALF1(51),EPP1(51),MOL1(51),        LN01900
      *              HWHM1(51),TMPAL1(51),PSHIF1(51),IFG1(51),            LN01910
-     *              MIND1(35),IOUT(51)                                   LN01920
+     *              MIND1(64),IOUT(51)                                   LN01920
       COMMON /MAINC/ VNUC(51),STRC(51),ALFC(51),EPPC(51),MOLC(51),       LN01930
      *               HWHMC(51),TMPALC(51),PSHIFC(51),IFGC(51),           LN01940
-     *               MINDC(35),IOUTC(51)                                 LN01950
+     *               MINDC(64),IOUTC(51)                                 LN01950
       COMMON /TRAC/ VNU2(40),STR2(40),ALF2(40),EPP2(40),MOL2(40),        LN01960
      *              HWHM2(40),TMPAL2(40),PSHIF2(40),IFG2(40),            LN01970
-     *              MIND2(35)                                            LN01980
+     *              MIND2(64)                                            LN01980
       COMMON /CPLMOL/ MOLCPL(35),NCPL                                    LN01990
       COMMON /SREJ/ SR(64),SRD(64),TALF(64)                              LN02000
       COMMON /ICN/ ILIN3,NMAX,NBLOCK                                     LN02010
       COMMON /QUANT/ QUANT1(51),QUANTC(51)                               LN02020
+      COMMON /CVRLBL/ HVRNFLL
+      COMMON /CVRUTL/ HVRUTL
       common /eppinfo/ negflag
 C                                                                        LN02030
       DIMENSION MOLCNT(64),IID(10),RCDHDR(5)                             LN02040
@@ -233,10 +237,17 @@ C                                                                        LN02110
       DATA GNEGEPP / '       ^'/
       DATA MOLCNT / 64*0 /                                               LN02170
       DATA VLST1 / -1. /,VLST2 / -2. /                                   LN02180
+c
+      data mol_max /36/
 C                                                                        LN02190
 C#    DATA CFORM/'BUFFERED   '/                                          LN02200
       DATA CFORM / 'UNFORMATTED'/                                        LN02210
 C                                                                        LN02220
+      HVRLNFL = '$Revision$'
+c
+      read(hvrlnfl,900) rev_num
+      write(chid08,901) rev_num
+c
       CALL CPUTIM (TIME0)                                                LN02230
 C                                                                        LN02240
       lstwd = -654321
@@ -249,7 +260,6 @@ C                                                                        LN02240
       lstw2 = -654321
       ILNGTH = NWDL(IWD2,LSTW2)                                          LN02280
       RADCN2 = PLANCK*CLIGHT/BOLTZ                                       LN02290
-
 
       do 5 m=1,64
          n_negepp(m) = 0
@@ -272,17 +282,17 @@ c
       ILIN = 0                                                           LN02380
       NWDS = 0                                                           LN02390
 C                                                                        LN02400
-      READ (IRD,900) (HID(I),I=1,9)                                      LN02410
+      READ (IRD,902) (HID(I),I=1,9)                                      LN02410
 C                                                                        LN02420
 C     HID CONTAINS 72 CHARACTERS OF HEADER IDENTIFICATION.               LN02430
 C                                                                        LN02440
-C     CHID08 CONTAINS THE SCCS VERSION NUMBER OF LNFL.F, AND
+C     CHID08 CONTAINS THE CVS VERSION NUMBER OF LNFL.F, AND
 C 
 C     CHID10 CONTAINS THE FLAG "I" FOR THE ISOTOPE INCLUSION
 C     IN TAPE3, TESTED IN LBLRTM
 C
-      READ (CHID08,900) HID(8)                                           LN02450
-      READ (CHID10,900) HID(10)                                          LN02450
+      READ (CHID08,902) HID(8)                                           LN02450
+      READ (CHID10,902) HID(10)                                          LN02450
       CALL LBLDAT (HDATE)                                                LN02460
       CALL FTIME (HTIME)                                                 LN02470
       WRITE (IPR,905) HID,HID1                                           LN02480
@@ -292,7 +302,7 @@ C                                                                        LN02490
 C                                                                        LN02520
 C     VMIN IS LOW WAVENUMBER LIMIT; VMAX IS HIGH WAVENUMBER LIMIT.       LN02530
 C                                                                        LN02540
-      READ (IRD,920) (MIND1(I),I=1,32),HOLIND                            LN02550
+      READ (IRD,920) (MIND1(I),I=1,mol_max),HOLIND                            LN02550
 C                                                                        LN02560
 C     INBLK1 AND INBLK2 ARE FLAGS TO DETERMINE THE BLOCKING FOR          LN02570
 C     INPUT FILES TAPE1 AND TAPE2                                        LN02580
@@ -351,12 +361,12 @@ C                                                                        LN02920
       IF (ABS(IMRG2).EQ.1) THEN                                          LN03020
          IF (IMRG2.EQ.1) THEN                                            LN03030
 C                                                                        LN03040
-            READ (IRD,920) (MIND2(I),I=1,32)                             LN03050
+            READ (IRD,920) (MIND2(I),I=1,mol_max)                             LN03050
             WRITE (IPR,930) HF80                                         LN03060
          ELSE                                                            LN03070
 C                                                                        LN03080
             IF (IF100.EQ.1) THEN                                         LN03090
-               READ (IRD,920) (MINDC(I),I=1,32)                          LN03100
+               READ (IRD,920) (MINDC(I),I=1,mol_max)                          LN03100
                WRITE (IPR,930) HF100                                     LN03110
             ELSE                                                         LN03120
                DO 10 I = 1, 30                                           LN03130
@@ -368,16 +378,16 @@ C                                                                        LN03080
       ENDIF                                                              LN03190
       CALL HOLRT (4,HNLTE,INLTE,HOLIND,40)                               LN03200
       IF (INLTE.EQ.1) THEN                                               LN03210
-         READ (GNLTE,900) HID(9)                                         LN03220
+         READ (GNLTE,902) HID(9)                                         LN03220
          WRITE (IPR,930) HNLTE                                           LN03230
       ENDIF                                                              LN03240
       CALL HOLRT (3,HREJ,IREJ,HOLIND,40)                                 LN03250
       IF (IREJ.EQ.1) WRITE (IPR,930) HREJ                                LN03260
 C                                                                        LN03270
 C     MOLIND IS AN ARRAY TO SELECT MOLECULES (=1 YES, =0 NO), FORMAT     LN03280
-C     (32I1)        -- PUT 1 IN COLUMN CORRESPONDING TO MOLECULE ID.     LN03290
+C     (36I1)        -- PUT 1 IN COLUMN CORRESPONDING TO MOLECULE ID.     LN03290
 C                                                                        LN03300
-      DO 20 I = 1, 32                                                    LN03310
+      DO 20 I = 1, mol_max                                                    LN03310
          READ (CMOL(I),935) HMOL(I)                                      LN03320
          IF (MIND1(I).GT.0) MOLIND(I) = 1                                LN03330
          IF (MIND2(I).GT.0) MOLIND(I) = MOLIND(I)+2                      LN03340
@@ -391,8 +401,8 @@ C                                                                        LN03400
       WRITE (IPR,945) (HMOL(I),MOLIND(I),I=1,NMOL)                       LN03420
       WRITE (IPR,945)                                                    LN03430
       IF (IREJ.EQ.1) THEN                                                LN03440
-         READ (GREJ,900) HID(9)                                          LN03450
-         IF (INLTE.EQ.1) READ (GREJNL,900) HID(9)                        LN03460
+         READ (GREJ,902) HID(9)                                          LN03450
+         IF (INLTE.EQ.1) READ (GREJNL,902) HID(9)                        LN03460
          READ (IRD,950) (SR(I),I=1,NMOL)                                 LN03470
       ENDIF                                                              LN03480
 C                                                                        LN03490
@@ -425,7 +435,7 @@ C                                                                        LN03720
          N1 = 0                                                          LN03760
       ENDIF                                                              LN03770
       IF (negflag.EQ.1) THEN
-         READ (GNEGEPP,900) HID(7)
+         READ (GNEGEPP,902) HID(7)
       ENDIF                                                              LN03240
       IF (N1.LT.1) GO TO 90                                              LN03780
 C                                                                        LN03790
@@ -542,15 +552,19 @@ C                                                                        LN04850
       CALL CPUTIM (TIME1)                                                LN04860
       TIME = TIME1-TIME0                                                 LN04870
       WRITE (IPR,975) TIME,TIME0,TIME1                                   LN04880
+      WRITE(IPR,980) hvrlnfl,hvrutl
 C                                                                        LN04890
       STOP ' LINFIL COMPLETE '                                           LN04900
 C                                                                        LN04910
-  900 FORMAT (10A8)                                                      LN04920
+  900 format(11x,a3)
+  901 format('LNFLv',a3)
+  902 FORMAT (10A8)                                                      LN04920
   905 FORMAT ('1',10A8,2(1X,A8,1X))                                      LN04930
   910 FORMAT (2F10.3)                                                    LN04940
   915 FORMAT ('0',20X,'VMIN =',F12.6,' CM-1,      VMAX =',F12.6,         LN04950
      *        ' CM-1')                                                   LN04960
-  920 FORMAT (32I1,8X,A40)                                               LN04970
+c            mol_max
+  920 FORMAT (36I1,4X,A40)                                               LN04970
   925 FORMAT ('0',' ** NOTE IFLG SET - ',A5,' *****',/)                  LN04980
   930 FORMAT ('0',' ** NOTE IFLG SET - ',A4,' *****',/)                  LN04990
   935 FORMAT (A6)                                                        LN05000
@@ -572,6 +586,8 @@ C                                                                        LN04910
   970 FORMAT ('0',20X,'NUMBER OF BLOCKS =',I4)                           LN05140
   975 FORMAT ('0',10X,' TOTAL TIME =',F10.3,' TIME IN =',F10.3,          LN05150
      *        ' TIME OUT =',F10.3)                                       LN05160
+  980 FORMAT (//'0 Modules and versions used in this calculation:',/,/,
+     *         5X,'lblrtm.f: ',4X,A15,10X, 'util_xxx.f: ',4X,A15,/)
 C                                                                        LN05170
       END                                                                LN05180
       FUNCTION NWDL (IWD,ILAST)                                          LN06490
@@ -948,7 +964,7 @@ C                                                                        LN10000
       COMMON /IC1/ ILIN3                                                 LN10060
       COMMON /MANE/ VNU1(51),STR1(51),ALF1(51),EPP1(51),MOL1(51),        LN10070
      *              HWHM1(51),TMPAL1(51),PSHIF1(51),IFG1(51),            LN10080
-     *              MIND1(35),IOUT(51)                                   LN10090
+     *              MIND1(64),IOUT(51)                                   LN10090
       COMMON /QUANT/ QUANT1(51),QUANTC(51)                               LN10100
       COMMON /LCHAR/ ALIN1(51),ALIN2(40),ALINC(51),ALINE(250)            LN10110
       common /eppinfo/ negflag
@@ -1181,7 +1197,7 @@ C                                                                        LN11660
       COMMON /IC2/ ILIN3                                                 LN11720
       COMMON /MAINC/ VNUC(51),STRC(51),ALFC(51),EPPC(51),MOLC(51),       LN11730
      *               HWHMC(51),TMPALC(51),PSHIFC(51),IFGC(51),           LN11740
-     *               MINDC(35),IOUTC(51)                                 LN11750
+     *               MINDC(64),IOUTC(51)                                 LN11750
       COMMON /QUANT/ QUANT1(51),QUANTC(51)                               LN11760
       COMMON /LCHAR/ ALIN1(51),ALIN2(40),ALINC(51),ALINE(250)            LN11770
 C                                                                        LN11780
@@ -1535,7 +1551,7 @@ C                                                                        LN14840
       COMMON /HOL/ HOL82(40)                                             LN14860
       CHARACTER HOL82*35                                                 LN14870
       COMMON /TRAC/ VNU(40),STR(40),ALF(40),EPP(40),MOL(40),HWHMF(40),   LN14880
-     *              TMPALF(40),PSHIFT(40),IFLG(40),MIND2(35)             LN14890
+     *              TMPALF(40),PSHIFT(40),IFLG(40),MIND2(64)             LN14890
       COMMON /CONTRL/ VMIN,VMAX,VLO,VHI,LINES,NWDS,LSTW1                 LN14900
       COMMON /HBLOCK/ INBLK1,INBLK2,IO2BND,I86T1,I86T2                   LN14910
       COMMON /IFIL/ IRD,IPR,IPU,NWDR,LRC,ILNGTH,INLTE,IER,IPUOUT         LN14920
@@ -1967,12 +1983,12 @@ C                                                                        LN18960
       CHARACTER CMOL*6,CHID10*8,CHID08*8                                 LN19010
       COMMON /MANE/ VNU1(51),STR1(51),ALF1(51),EPP1(51),MOL1(51),        LN19020
      *              HWHM1(51),TMPAL1(51),PSHIF1(51),IFG1(51),            LN19030
-     *              MIND1(35),IOUT(51)                                   LN19040
+     *              MIND1(64),IOUT(51)                                   LN19040
       COMMON /MAINC/ VNUC(51),STRC(51),ALFC(51),EPPC(51),MOLC(51),       LN19050
      *               HWHMC(51),TMPALC(51),PSHIFC(51),IFGC(51),           LN19060
-     *               MINDC(35),IOUTC(51)                                 LN19070
+     *               MINDC(64),IOUTC(51)                                 LN19070
       COMMON /TRAC/ VNU2(40),STR2(40),ALF2(40),EPP2(40),MOL2(40),        LN19080
-     *              HWHM2(40),TMPAL2(40),PSHIF2(40),IFG2(40),MIND2(35)   LN19090
+     *              HWHM2(40),TMPAL2(40),PSHIF2(40),IFG2(40),MIND2(64)   LN19090
       COMMON /UNITS/ PI,PLANCK,BOLTZ,CLIGHT,AVOG,RADCN1,RADCN2           LN19100
       COMMON /SREJ/ SR(64),SRD(64),TALF(64)                              LN19110
       COMMON /ICN/ ILIN3,NMAX,NBLOCK                                     LN19120
@@ -2004,9 +2020,9 @@ C                                                                        LN19180
      *     TALF(25),TALF(26),TALF(27),TALF(28),TALF(29),TALF(30) /       LN19370
      *          0.5,    0.25,     0.5,     0.5,     0.5,     0.5 /       LN19380
       DATA CMOL(31),CMOL(32),CMOL(33),CMOL(34),CMOL(35),CMOL(36) /       LN19390
-     *     '  H2S ','HCOOH ','      ','      ','      ','      ' /,      LN19400
+     *     '  H2S ','HCOOH ','  HO2 ','    O ','CLONO2','  NO+ ' /,      LN19400
      *     TALF(31),TALF(32),TALF(33),TALF(34),TALF(35),TALF(36) /       LN19410
-     *          0.5,     0.5,     0.0,     0.0,     0.0,     0.0 /       LN19420
+     *          0.5,     0.5,     0.5,     0.5,     0.5,     0.5 /       LN19420
 C                                                                        LN19430
       DATA (CMOL(I),I=37,64) / 28*'      '/                              LN19440
       DATA (TALF(I),I=37,64) / 28*0.0 /                                  LN19450
@@ -2042,11 +2058,10 @@ C                                                                        LN19740
 C                   C2H2       C2H6        PH3       COF2        SF6     LN19750
      *           4.717E-23, 3.401E-24, 6.173E-13, 0.000E+00, 0.000E+00,  LN19760
 C                                                                        LN19770
-C                    H2S      HCOOH                                      LN19780
-     *           0.000E+00, 0.999E+00, 32*0.0 /                          LN19790
+C                    H2S      HCOOH     HO2, O, ClONO2, NO+
+     *           0.000E+00, 0.000E+00, 32*0.0 /                          LN19790
 C                                                                        LN19800
       DATA SR / 64*0.0 /                                                 LN19810
-      DATA CHID08 / 'LNFL 5.5'/                                          LN19820
       DATA CHID10 / 'ISOTOP I'/                                          LN19820
       DATA IRD,IPR,IPU / 5,66,7 /                                        LN19830
       DATA SUMSTR / 64*0. /,MCNTLC / 64*0 /,ILINLC / 0 /,IREC / 0 /,     LN19840
