@@ -238,7 +238,7 @@ C                                                                        LN02110
       DATA MOLCNT / 64*0 /                                               LN02170
       DATA VLST1 / -1. /,VLST2 / -2. /                                   LN02180
 c
-      data mol_max /36/
+      data mol_max /38/
 C                                                                        LN02190
 C#    DATA CFORM/'BUFFERED   '/                                          LN02200
       DATA CFORM / 'UNFORMATTED'/                                        LN02210
@@ -382,7 +382,7 @@ C                                                                        LN03080
       IF (IREJ.EQ.1) WRITE (IPR,930) HREJ                                LN03260
 C                                                                        LN03270
 C     MOLIND IS AN ARRAY TO SELECT MOLECULES (=1 YES, =0 NO), FORMAT     LN03280
-C     (36I1)        -- PUT 1 IN COLUMN CORRESPONDING TO MOLECULE ID.     LN03290
+C     (38I1)        -- PUT 1 IN COLUMN CORRESPONDING TO MOLECULE ID.     LN03290
 C                                                                        LN03300
       DO 20 I = 1, mol_max                                                    LN03310
          READ (CMOL(I),935) HMOL(I)                                      LN03320
@@ -561,7 +561,7 @@ C                                                                        LN04910
   915 FORMAT ('0',20X,'VMIN =',F12.6,' CM-1,      VMAX =',F12.6,         LN04950
      *        ' CM-1')                                                   LN04960
 c            mol_max
-  920 FORMAT (36I1,4X,A40)                                               LN04970
+  920 FORMAT (38I1,4X,A40)                                               LN04970
   925 FORMAT ('0',' ** NOTE IFLG SET - ',A5,' *****',/)                  LN04980
   930 FORMAT ('0',' ** NOTE IFLG SET - ',A4,' *****',/)                  LN04990
   935 FORMAT (A6)                                                        LN05000
@@ -1172,7 +1172,7 @@ C                                                                        LN12170
      *                         TDEP,SHIFT,IVUP,IVLO,CUP,CLO,HOL,IFLGSV   LN12310
             IFLAG = IFLGSV
 c
-c   the TIPS program in lblrtm is currently limited to molecules up to 36
+c   the TIPS program in lblrtm is currently limited to molecules up to 38
 c
             if (m .gt. nmol) then
                call line_exception (1,ipr,h_rdlin2,m,nmol,iso,iso_max)
@@ -1996,9 +1996,13 @@ C                                                                        LN19180
      *     '  H2S ','HCOOH ','  HO2 ','    O ','CLONO2','  NO+ ' /,      LN19400
      *     TALF(31),TALF(32),TALF(33),TALF(34),TALF(35),TALF(36) /       LN19410
      *          0.5,     0.5,     0.5,     0.5,     0.5,     0.5 /       LN19420
+      DATA CMOL(37),CMOL(38)                                     /
+     *     ' HOBr ',' C2H4 '                                     /,
+     *     TALF(37),TALF(38)                                     /
+     *          0.5,     0.5                                     /
 C                                                                        LN19430
-      DATA (CMOL(I),I=37,64) / 28*'      '/                              LN19440
-      DATA (TALF(I),I=37,64) / 28*0.0 /                                  LN19450
+      DATA (CMOL(I),I=39,64) / 26*'      '/                              LN19440
+      DATA (TALF(I),I=39,64) / 26*0.0 /                                  LN19450
 C                                                                        LN19460
 C     THE FOLLOWING DATA STATEMENTS CONTAIN THE DEFAULT REJECTION        LN19470
 C     FOR EACH OF THE FIRST 32 POSSIBLE MOLECULES - THESE ARE BASED         LN19480
@@ -2010,7 +2014,7 @@ C                                                                        LN19530
 C                THIS GIVES:  S(M) = 1.E-5/W(M)                          LN19540
 C                                                                        LN19550
 C                NOTE: NO PROFILES ARE CURRENTLY AVAILABLE FOR           LN19560
-C                      MOLECULES 29 THROUGH 36 SO DEFAULT                LN19570
+C                      MOLECULES 29 THROUGH 38 SO DEFAULT                LN19570
 C                      REJECTIONS ARE CURRENTLY SET TO ZERO.             LN19580
 C                                                                        LN19590
 C                    H2O        CO2         O3        N2O         CO     LN19600
@@ -2031,7 +2035,7 @@ C                                                                        LN19740
 C                   C2H2       C2H6        PH3       COF2        SF6     LN19750
      *           4.717E-23, 3.401E-24, 6.173E-13, 0.000E+00, 0.000E+00,  LN19760
 C                                                                        LN19770
-C                    H2S      HCOOH     HO2, O, ClONO2, NO+
+C                    H2S      HCOOH     HO2, O, ClONO2, NO+,HOBr,C2H4
      *           0.000E+00, 0.000E+00, 32*0.0 /                          LN19790
 C                                                                        LN19800
       DATA SR / 64*0.0 /                                                 LN19810
