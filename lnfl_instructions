@@ -14,8 +14,17 @@ C     presently: 05/07/99  09:28:43
    
                              5 August 1993
    
+-------------------------------------------------------------------------
+
+	FILE ASSIGNMENTS FOR LNFL
+
+	TAPE1	ASCII LINE FILE (e.g., HITRAN database)
+
+        TAPE3   BINARY OUTPUT FILE (input for LBLRTM)
+
+	TAPE5  LNFL INPUT FILE (see lnfl_instructions)   
    
-   
+-------------------------------------------------------------------------
    
 RECORD 1
    
