@@ -1,5 +1,6 @@
 # Makefile for lnfl
-#
+# $Id$
+
 SHELL = /bin/sh
 
 ###############################

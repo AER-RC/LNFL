@@ -7,17 +7,17 @@ SHELL = /bin/sh
 # Set variables
 ###############################
 
-PLATFORM = SUN
+PLATFORM = AIX
 
 
-FC = f90
-FCFLAG =-fast 
-OUTPUT = lnfl_v1.7_f90_sun_sgl
+FC = xlf90
+FCFLAG = -O2 -qfixed=72 -qmaxmem=-1
+OUTPUT = lnfl_v1.7_f90_aix_sgl
 CPATH = src
 CPATHLBL = src
-CDOTO = sun_f90_sgl.o
+CDOTO = aix_f90_sgl.o
 
-CUTL = util_sun
+CUTL = util_aix
 CLNF = lnfl
 
 OBJ = $(CDOTO)/$(CLNF).o $(CDOTO)/$(CUTL).o
