@@ -176,7 +176,7 @@ C                                                                        LN01630
 C                                                                        LN01650
       CHARACTER*8 GREJ,GNLTE,GREJNL,GNEGEPP                              LN01660
 C                                                                        LN01670
-      CHARACTER*15 hvrlnfl,hvrutl
+      CHARACTER*18 hnamlnfl,hvrlnfl,hnamutl,hvrutl
       CHARACTER*3 rev_num
       CHARACTER HF80*3,HF100*4,HNOCPL*5,HREJ*3,HNLTE*4,HOLIND*40         LN01680
       CHARACTER*5 HNBLK1,HNBLK2,HLNOUT,HH86T1,HH86T2                     LN01690
@@ -214,8 +214,8 @@ C                                                                        LN01860
       COMMON /SREJ/ SR(64),SRD(64),TALF(64)                              LN02000
       COMMON /ICN/ ILIN3,NMAX,NBLOCK                                     LN02010
       COMMON /QUANT/ QUANT1(51),QUANTC(51)                               LN02020
-      COMMON /CVRLBL/ HVRNFLL
-      COMMON /CVRUTL/ HVRUTL
+      COMMON /CVRLBL/ HNAMLNFL,HVRLNFL
+      COMMON /CVRUTL/ HNAMUTL,HVRUTL
       common /eppinfo/ negflag
 C                                                                        LN02030
       DIMENSION MOLCNT(64),IID(10),RCDHDR(5)                             LN02040
@@ -243,6 +243,7 @@ C                                                                        LN02190
 C#    DATA CFORM/'BUFFERED   '/                                          LN02200
       DATA CFORM / 'UNFORMATTED'/                                        LN02210
 C                                                                        LN02220
+      HNAMLNFL= '           lnfl.f:'     
       HVRLNFL = '$Revision$'
 c
       read(hvrlnfl,900) rev_num
@@ -552,7 +553,7 @@ C                                                                        LN04850
       CALL CPUTIM (TIME1)                                                LN04860
       TIME = TIME1-TIME0                                                 LN04870
       WRITE (IPR,975) TIME,TIME0,TIME1                                   LN04880
-      WRITE(IPR,980) hvrlnfl,hvrutl
+      WRITE(IPR,980) hnamlnfl,hvrlnfl,hnamutl,hvrutl
 C                                                                        LN04890
       STOP ' LINFIL COMPLETE '                                           LN04900
 C                                                                        LN04910
@@ -587,7 +588,7 @@ c            mol_max
   975 FORMAT ('0',10X,' TOTAL TIME =',F10.3,' TIME IN =',F10.3,          LN05150
      *        ' TIME OUT =',F10.3)                                       LN05160
   980 FORMAT (//'0 Modules and versions used in this calculation:',/,/,
-     *         5X,'  lnfl.f: ',4X,A15,10X, 'util_xxx.f: ',4X,A15,/)
+     *         5X,a18,2X,A18,10X,a18,2X,A18,/)
 C                                                                        LN05170
       END                                                                LN05180
       FUNCTION NWDL (IWD,ILAST)                                          LN06490
@@ -676,17 +677,19 @@ C                                                                        LN07310
 C     ICHOIC = 1 :FIND 1985 VECTOR CODE FROM 1982 CODE                   LN07320
 C     ICHOIC = 2 :FIND 1982 CODE FROM 1985 VECTOR CODE                   LN07330
 C                                                                        LN07340
-      PARAMETER (NTMOL=32,NSPECI=75)                                     LN07350
+      PARAMETER (NTMOL=36,NSPECI=85)                                     LN07350
 C                                                                        LN07360
-      COMMON /ISVECT/ ISOVEC(NTMOL),ISO82(NSPECI),ISONM(NTMOL)           LN07370
+      COMMON /ISVECT/ ISOVEC(NTMOL),ISO82(NSPECI),ISO_MAX(NTMOL)           LN07370
       COMMON /FDES/ IU1,IU2,IU3,IU4,IU9,IU77                             LN07380
 C                                                                        LN07390
+      if (molec.gt.32) return
+c
       IF (ICHOIC.EQ.1) THEN                                              LN07400
 C                                                                        LN07410
 C     FIND LOCATION TO SEARCH:                                           LN07420
 C                                                                        LN07430
          NS = ISOVEC(MOLEC)+1                                            LN07440
-         NEND = ISONM(MOLEC)+ISOVEC(MOLEC)                               LN07450
+         NEND = ISO_MAX(MOLEC)+ISOVEC(MOLEC)                               LN07450
 C                                                                        LN07460
          DO 10 I = NS, NEND                                              LN07470
             IF (NSO82.EQ.ISO82(I)) THEN                                  LN07480
@@ -704,9 +707,9 @@ C                                                                        LN07590
       END                                                                LN07600
       SUBROUTINE VECISO                                                  LN07610
 C                                                                        LN07620
-      PARAMETER (NTMOL=32,NSPECI=75)                                     LN07630
+      PARAMETER (NTMOL=36,NSPECI=85)                                     LN07630
 C                                                                        LN07640
-      COMMON /ISVECT/ ISOVEC(NTMOL),ISO82(NSPECI),ISONM(NTMOL)           LN07650
+      COMMON /ISVECT/ ISOVEC(NTMOL),ISO82(NSPECI),ISO_MAX(NTMOL)           LN07650
 C                                                                        LN07660
 C     ISOTOPE VECTOR INFORMATION                                         LN07670
 C        SET UP ISOVEC:                                                  LN07680
@@ -715,90 +718,61 @@ C                                                                        LN07690
       DO 20 I = 2, NTMOL                                                 LN07710
          ISOVEC(I) = 0                                                   LN07720
          DO 10 J = 1, I-1                                                LN07730
-            ISOVEC(I) = ISOVEC(I)+ISONM(J)                               LN07740
+            ISOVEC(I) = ISOVEC(I)+ISO_MAX(J)                               LN07740
    10    CONTINUE                                                        LN07750
    20 CONTINUE                                                           LN07760
 C                                                                        LN07770
       RETURN                                                             LN07780
 C                                                                        LN07790
       END                                                                LN07800
-      BLOCK DATA ISOTPE                                                  LN07810
-C                                                                        LN07820
-      PARAMETER (NTMOL=32,NSPECI=75)                                     LN07830
-C                                                                        LN07840
-      COMMON /ISVECT/ ISOVEC(NTMOL),ISO82(NSPECI),ISONM(NTMOL)           LN07850
-C                                                                        LN07860
-C    THE NUMBER OF ISOTOPES FOR A PARTICULAR MOLECULE:                   LN07870
-C                                                                        LN07880
-      DATA (ISONM(I),I=1,NTMOL)/                                         LN07890
-C                                                                        LN07900
-C     H2O, CO2, O3, N2O, CO, CH4, O2,                                    LN07910
-C                                                                        LN07920
-     *  4,   8,  3,   5,  5,   3,  3,                                    LN07930
-C                                                                        LN07940
-C      NO, SO2, NO2, NH3, HNO3, OH, HF, HCL, HBR, HI,                    LN07950
-C                                                                        LN07960
-     *  3,   2,   1,   2,    1,  3,  1,   2,   2,  1,                    LN07970
-C                                                                        LN07980
-C     CLO, OCS, H2CO, HOCL, N2, HCN, CH3CL, H2O2, C2H2, C2H6, PH3        LN07990
-C                                                                        LN08000
-     *  2,   4,    3,    2,  1,   3,     2,    1,    2,    1,   1,       LN08010
-C                                                                        LN08020
-C     COF2, SF6, H2S, HCOOH                                              LN08030
-C                                                                        LN08040
-     *   1,   1,   1,     1 /                                            LN08050
-C                                                                        LN08060
-      DATA ISO82/                                                        LN08070
-C                                                                        LN08080
-C       H2O                                                              LN08090
-C                                                                        LN08100
-     *  161,181,171,162,                                                 LN08110
-C                                                                        LN08120
-C       CO2                                                              LN08130
-C                                                                        LN08140
-     *  626,636,628,627,638,637,828,728,                                 LN08150
-C                                                                        LN08160
-C       O3                                                               LN08170
-C                                                                        LN08180
-     *  666,668,686,                                                     LN08190
-C                                                                        LN08200
-C       N2O                                                              LN08210
-C                                                                        LN08220
-     *  446,456,546,448,447,                                             LN08230
-C                                                                        LN08240
-C       CO,              CH4                                             LN08250
-C                                                                        LN08260
-     *  26,36,28,27,38,  211,311,212,                                    LN08270
-C                                                                        LN08280
-C       O2,        NO,        SO2                                        LN08290
-C                                                                        LN08300
-     *  66,68,67,  46,56,48  ,626,646,                                   LN08310
-C                                                                        LN08320
-C       NO2,   NH3,        HNO3                                          LN08330
-C                                                                        LN08340
-     *  646,   4111,5111,  146,                                          LN08350
-C                                                                        LN08360
-C       OH,        HF,  HCL,    HBR,    HI                               LN08370
-C                                                                        LN08380
-     *  61,81,62,  19,  15,17,  19,11,  17,                              LN08390
-C                                                                        LN08400
-C       CLO,    OCS,              H2CO                                   LN08410
-C                                                                        LN08420
-     *  56,76,  622,624,632,822,  126,136,128,                           LN08430
-C                                                                        LN08440
-C       HOCL,     N2,  HCN                                               LN08450
-C                                                                        LN08460
-     *  165,167,  44,  124,134,125,                                      LN08470
-C                                                                        LN08480
-C       CH3CL,    H2O2,  C2H2,       C2H6,  PH3                          LN08490
-C                                                                        LN08500
-     *  215,217,  1661,  1221,1231,  1221,  1111,                        LN08510
-C                                                                        LN08520
-C       COF2, SF6, H2S, HCOOH                                            LN08530
-C                                                                        LN08540
-     *  269,  29, 121,   126/                                            LN08550
-C                                                                        LN08560
-      END                                                                LN08570
+c  ****************************************
+      BLOCK DATA Isotop
+c  ****************************************
+c
+      PARAMETER (NMOL=36,Nspeci=85)
+      COMMON /ISVECT/ ISOVEC(NMOL),ISO82(Nspeci),ISO_MAX(NMOL)
+c
+c    The number of isotopes for a particular molecule:
+      DATA (ISO_MAX(I),I=1,NMOL)/
+c     H2O, CO2, O3, N2O, CO, CH4, O2,
+     +  4,   8,  5,   5,  6,   3,  3,
+c      NO, SO2, NO2, NH3, HNO3, OH, HF, HCl, HBr, HI,
+     +  3,   2,   1,   2,    1,  3,  1,   2,   2,  1,
+c     ClO, OCS, H2CO, HOCl, N2, HCN, CH3Cl, H2O2, C2H2, C2H6, PH3
+     +  2,   4,    3,    2,  1,   3,     2,    1,    2,    1,   1,
+c     COF2, SF6, H2S, HCOOH, HO2, O, ClONO2,  NO+
+     +  1,   1,   3,     1,   1,  1,     2,    1  /
+c
+      DATA ISO82/
+c       H2O
+     +  161,181,171,162,                                           
+c       CO2
+     +  626,636,628,627,638,637,828,728,
+c       O3
+     +  666,668,686,667,676,
+c       N2O
+     +  446,456,546,448,447,
+c       CO,                 CH4
+     +  26,36,28,27,38,37,  211,311,212,
+c       O2,        NO,        SO2
+     +  66,68,67,  46,56,48  ,626,646,
+c      NO2,   NH3,        HNO3
+     + 646,   4111,5111,  146,
+c       OH,        HF,  HCl,    HBr,    HI
+     +  61,81,62,  19,  15,17,  19,11,  17,
+c       ClO,    OCS,              H2CO
+     +  56,76,  622,624,632,822,  126,136,128,
+c       HOCl,     N2,  HCN
+     +  165,167,  44,  124,134,125
+c      CH3Cl,    H2O2,  C2H2,       C2H6,  PH3
+     +,215,217,  1661,  1221,1231,  1221,  1111,
+c     COF2, SF6, H2S,            HCOOH,  HO2, O,   ClONO2      NO+
+     + 269,  29,  121,141,131,   126,    166, 6,   5646,7646,  46/
+c
+C
+      END
+c*******************************************************************************
+c
       SUBROUTINE MOVE (LINMRG,I,VNU2,STR2,ALF2,EPP2,MOL2,AMOL2,HWHM2,    LN08580
      *                 TMPAL2,PSHIF2,IFG2,MOLCNT,ALIN2)                  LN08590
 C                                                                        LN08600
@@ -948,10 +922,8 @@ C                                                                        LN09940
       COMMON /BUFID/ HID(10),HMOL(64),MOLIND(64),MCNTLC(64),MCNTNL(64),  LN09950
      *               SUMSTR(64),NMOL,FLINLO,FLINHI,ILIN,ILINLC,ILINNL,   LN09960
      *               IREC,IRECTL,HID1(2),LSTWD                           LN09970
-
-
+c
       common /bufid2/ n_negepp(64),n_resetepp(64),xspace(4096),lstwd2
-
 C                                                                        LN09980
       CHARACTER*8      HID,HID1,HMOL                                    &LN09990
       REAL*8           STRSV
@@ -967,7 +939,12 @@ C                                                                        LN10000
      *              MIND1(64),IOUT(51)                                   LN10090
       COMMON /QUANT/ QUANT1(51),QUANTC(51)                               LN10100
       COMMON /LCHAR/ ALIN1(51),ALIN2(40),ALINC(51),ALINE(250)            LN10110
+      COMMON /ISVECT/ ISOVEC(36),ISO82(85),ISO_MAX(36)
       common /eppinfo/ negflag
+c                                                                          D00540
+      character*8 h_rdlin1
+c
+      data h_rdlin1/' tape1 '/
 C                                                                        LN10120
       CHARACTER*100 ALIN1,ALIN2,ALINC,ALINE,ALIN(51)                     LN10130
       CHARACTER*50 ZEROFL                                                LN10140
@@ -1023,7 +1000,7 @@ C                                                                        LN10510
       DO 50 I = 1, 51                                                    LN10570
          IF (I.GT.IDIM) WRITE (ALIN(I),910) ZEROFL,ZEROFL                LN10580
          READ (ALIN(I),915) MOL                                          LN10590
-         IF (MOL.EQ.0) GO TO 50                                          LN10600
+         IF (MOL.le.0) GO TO 50                                          LN10600
          M = MOL                                                         LN10610
          IF (MIND1(M).EQ.0) GO TO 50                                     LN10620
          IF (IFLGM1.LE.0) THEN                                           LN10630
@@ -1033,16 +1010,12 @@ C                                                                        LN10510
 c
 c   the TIPS program in lblrtm is currently limited to molecules up to 36
 c
-            data mol_max /36/, mol_max_pr_1/-99/
-            if (mol .gt. mol_max) then
-               if (mol_max_pr_1 .lt. 0) then
-                  mol_max_pr_1 = 11
-                  write (*,*) ' tape1: molecule number greater than ',
-     *                 mol_max, ' encountered and skipped'
-                  write (ipr,*) 'molecule number greater than ',
-     *                 mol_max, ' encountered and skipped'   
-                  go to 50
-               endif
+            if (m .gt. nmol) then
+               call line_exception (1,ipr,h_rdlin1,m,nmol,iso,iso_max)
+               go to 50
+            else if (iso .gt. iso_max(m)) then
+               call line_exception (2,ipr,h_rdlin1,m,nmol,iso,iso_max)
+               go to 50
             endif
 c
             MOL = MOL+100*ISO                                            LN10670
@@ -1200,6 +1173,11 @@ C                                                                        LN11660
      *               MINDC(64),IOUTC(51)                                 LN11750
       COMMON /QUANT/ QUANT1(51),QUANTC(51)                               LN11760
       COMMON /LCHAR/ ALIN1(51),ALIN2(40),ALINC(51),ALINE(250)            LN11770
+      COMMON /ISVECT/ ISOVEC(36),ISO82(85),ISO_MAX(36)
+c                                                                          D00540
+      character*8 h_rdlin2
+c
+      data h_rdlin2/' tape2 '/
 C                                                                        LN11780
       CHARACTER*100 ALIN1,ALIN2,ALINC,ALINE,ALIN(51)                     LN11790
       CHARACTER*50 ZEROFL                                                LN11800
@@ -1259,16 +1237,12 @@ C                                                                        LN12170
 c
 c   the TIPS program in lblrtm is currently limited to molecules up to 36
 c
-            data mol_max /36/, mol_max_pr_2/-99/
-            if (mol .gt. mol_max) then
-               if (mol_max_pr_2 .lt. 0) then
-                  mol_max_pr_2 = 22
-                  write (*,*) ' tape2: molecule number greater than ',
-     *                 mol_max, ' encountered and skipped'
-                  write (ipr,*) 'molecule number greater than ',
-     *                 mol_max, ' encountered and skipped'   
-                  go to 50
-               endif
+            if (m .gt. nmol) then
+               call line_exception (1,ipr,h_rdlin2,m,nmol,iso,iso_max)
+               go to 50
+            else if (iso .gt. iso_max(mol)) then
+               call line_exception (2,ipr,h_rdlin2,m,nmol,iso,iso_max)
+               go to 50
             endif
 c
             MOL = MOL+100*ISO
@@ -1375,6 +1349,66 @@ C                                                                        LN13040
   940 FORMAT (' TAPE2 IS AT A EOF ')                                     LN13130
 C                                                                        LN13140
       END                                                                LN13150
+c-----------------------------------------------------------------------
+c
+      subroutine line_exception(ind,ipr,h_sub,mol,nmol,iso,iso_max)
+
+      character*8 h_sub
+      dimension iso_max(*)
+
+      data  mol_max_pr_1/-99/, iso_max_pr_1/-99/
+      
+      if ((ind.eq.1 .and. mol_max_pr_1.lt.0) .or.
+     *    (ind.eq.2 .and. iso_max_pr_1.lt.0)) then
+         write (*,*)
+         write (*,*) 'Line file exception encountered in', h_sub
+         write (*,*) 'This message only written for first exception',
+     *               ' for molecule and isotope cases'
+         write (*,*) 'Other exceptions may exist'
+
+         write (ipr,*) '****************************************'
+         write (ipr,*) 'Line file exception encountered'
+         write (ipr,*) 'This message only written for first exception'
+         write (ipr,*) 'Other exceptions may exist'
+         write (ipr,*) '****************************************'
+         write (ipr,*)
+      endif
+c
+      if (ind .eq. 1) then
+          if (mol_max_pr_1 .lt. 0) then
+             mol_max_pr_1 = 11
+             write (*,*)
+             write (*,*)   ' tape3: molecule number ', mol,
+     *             ' greater than ', nmol,' encountered and skipped'
+             write (ipr,*) ' tape3: molecule number ', mol,
+     *             ' greater than ', nmol,' encountered and skipped'
+               write (*,*)
+            endif
+            go to 25
+c
+         else if (ind .eq. 2) then
+            if (iso_max_pr_1 .lt. 0) then
+               iso_max_pr_1 = 11
+               write (*,*)
+               write (*,*)   ' tape3: molecule number ', mol
+               write (ipr,*) ' tape3: molecule number ', mol
+
+               write (*,*)   ' tape3: isotope number ', iso,
+     *                       ' greater than ', iso_max(mol),
+     *                       ' encountered and skipped'
+               write (ipr,*) ' tape3: isotope number ', iso,
+     *                       ' greater than ', iso_max(mol),
+     *                       ' encountered and skipped'
+               write (*,*)
+            endif
+            go to 25
+         endif
+C
+ 25      continue
+
+         return
+         end
+c-----------------------------------------------------------------------
       SUBROUTINE VIBQ1 (MOL,IVUP,IVLO)                                   LN13160
 C                                                                        LN13170
       IMPLICIT REAL*8           (V)                                     !LN13180
@@ -2028,8 +2062,8 @@ C                                                                        LN19430
       DATA (TALF(I),I=37,64) / 28*0.0 /                                  LN19450
 C                                                                        LN19460
 C     THE FOLLOWING DATA STATEMENTS CONTAIN THE DEFAULT REJECTION        LN19470
-C     FOR EACH OF THE 32 POSSIBLE MOLECULES - THESE ARE BASED ON         LN19480
-C     A LIMB VIEW OF A TROPICAL ATMOSPHERE GIVEN THE FOLLOWING           LN19490
+C     FOR EACH OF THE FIRST 32 POSSIBLE MOLECULES - THESE ARE BASED         LN19480
+C     ON A LIMB VIEW OF A TROPICAL ATMOSPHERE GIVEN THE FOLLOWING           LN19490
 C     EQUATION:                                                          LN19500
 C                  S(M) = DPTMIN/(50.*W(M))                              LN19510
 C                                      WHERE DPTMIN=0.0005               LN19520
@@ -2037,7 +2071,7 @@ C                                                                        LN19530
 C                THIS GIVES:  S(M) = 1.E-5/W(M)                          LN19540
 C                                                                        LN19550
 C                NOTE: NO PROFILES ARE CURRENTLY AVAILABLE FOR           LN19560
-C                      MOLECULES 29 THROUGH 32 SO DEFAULT                LN19570
+C                      MOLECULES 29 THROUGH 36 SO DEFAULT                LN19570
 C                      REJECTIONS ARE CURRENTLY SET TO ZERO.             LN19580
 C                                                                        LN19590
 C                    H2O        CO2         O3        N2O         CO     LN19600
