@@ -12,7 +12,7 @@ PLATFORM = SGI
 
 FC = f90
 FCFLAG =-mips4 -r10000 -lfastm -O3 -TENV:X=0
-OUTPUT = lnfl_v1.14_f90_sgi_sgl
+OUTPUT = lnfl_v1.15_f90_sgi_sgl
 CPATH = src
 CPATHLBL = src
 CDOTO = sgi_sgl.o
