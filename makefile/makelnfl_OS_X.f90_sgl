@@ -12,7 +12,7 @@ PLATFORM = OS_X
 FC = f90
 
 FCFLAG = -s -O -N11   
-OUTPUT = lnfl_v1.7_f90_OS_X_sgl
+OUTPUT = lnfl_v1.7.1_f90_OS_X_sgl
 CPATH = src
 CPATHLBL = src
 CDOTO = sgl.o
