@@ -2066,8 +2066,8 @@ C                                                                        LN19800
       DATA IRD,IPR,IPU / 5,66,7 /                                        LN19830
       DATA SUMSTR / 64*0. /,MCNTLC / 64*0 /,ILINLC / 0 /,IREC / 0 /,     LN19840
      *     IRECTL / 0 /                                                  LN19850
-      DATA MOLIND / 64*0 /,MIND1 / 35*0 /,MIND2 / 35*0 /                 LN19860
-      DATA MINDC / 35*0 /,IOUT / 51*0 /,IOUTC / 51*0 /                   LN19870
+      DATA MOLIND / 64*0 /,MIND1 / 64*0 /,MIND2 / 64*0 /                 LN19860
+      DATA MINDC / 64*0 /,IOUT / 51*0 /,IOUTC / 51*0 /                   LN19870
       DATA MCNTNL / 64*0 /,ILINNL / 0 /                                  LN19880
       DATA PLANCK / 6.626176E-27 /,BOLTZ / 1.380662E-16 /,               LN19890
      *     CLIGHT / 2.99792458E10 /,AVOG / 6.022045E23 /                 LN19900
