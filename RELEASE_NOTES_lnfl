@@ -2,9 +2,8 @@ LNFL_v1.8
 
 March 2003
 
-1) For reading in the spectral line files, there was code implemented to 
-    report and skip over lines that cannot be handled properly by TIPS 
-    in LBLRTM.
+1) There was code implemented to report and skip over spectral lines 
+   that cannot be handled properly by TIPS in LBLRTM.
     (H. Snell and S.A. Clough)
 
 
