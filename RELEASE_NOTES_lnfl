@@ -1,0 +1,23 @@
+
+February 2003
+
+There were only minor changes made to LNFL for version lnfl_v1.7.
+
+1) The revision number in the TAPE6 output comments was updated.
+
+2) To reflect the increased the portability of LBLRTM, provided
+   are makefiles and utilities
+   to run LNFL on the following:  
+
+    The following platforms:
+
+     System     Mfr.        Compiler       sgl     
+                                         
+      IRIX      SGI                       f90
+      SOLARIS   SUN                       f90,f77  
+      AIX       IBM                       f90      
+      LINUX     ----         PGI          f90     
+      OS X      Apple        Absoft       f90      
+                             g77 (gnu)    g77      
+
+  (S.A. Clough, M.W. Shephard, P. VanDelst, A. Goldman)
