@@ -975,8 +975,14 @@ c     test for invalid molecule number:
 c
 c     check that molecule and isotope are within proper range
 c
-            if (m   .lt. 1) stop ' molecule value is less than 1 '
-            if (iso .lt. 1) stop '  isotope value is less than 1 '
+            if (m   .lt. 1) then
+                write(*,*) ALIN(I) 
+                stop ' molecule value is less than 1 '
+            endif
+            if (iso .lt. 1) then
+                write(*,*) ALIN(I) 
+                stop '  isotope value is less than 1 '
+            endif
 c
 c   the TIPS program in lblrtm is currently limited to molecules up to 36
 c
@@ -1204,8 +1210,14 @@ c     test for invalid molecule number:
 c
 c     check that molecule and isotope are within proper range
 c
-            if (m   .lt. 1) stop ' molecule value is less than 1 '
-            if (iso .lt. 1) stop '  isotope value is less than 1 '
+            if (m   .lt. 1) then
+                write(*,*) ALIN(I) 
+                stop ' molecule value is less than 1 '
+            endif
+            if (iso .lt. 1) then
+                write(*,*) ALIN(I) 
+                stop '  isotope value is less than 1 '
+            endif
 c
 c   the TIPS program in lblrtm is currently limited to molecules up to 38
 c
@@ -2214,7 +2226,7 @@ C
       DATA NCPL/886/
 C
       DATA CPL001/
-     1     ' 70    0.000010 2.401E-35 0.000E+00.0340.0000    0',
+     1     ' 71    0.000010 2.401E-35 0.000E+00.0340.0000   -1',
      1     '.00000.000.000000  0  0 O2 BAND<.007 CM-1000 0 0-3',
      1     ' 7 5.000000E-01 0.0000E+00 5.000000E-01 0.0000E+00',
      1     ' 5.000000E-01 0.0000E+00 5.000000E-01 0.0000E+00-3',
