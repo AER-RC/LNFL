@@ -4,16 +4,14 @@ C     created:   09/11/98  13:56:15
 C     presently: 05/07/99  09:28:43
 
 
-   
-
-   
-
-   
-   
+    
            INSTRUCTIONS FOR LINE FILE CREATION FOR LBLRTM...     LNFL
    
-                             5 August 1993
+                             1 September 2004
    
+These are updated instructions for LNFL,  rev: 1.15,   2003/11/03 15:42:27 
+
+
 -------------------------------------------------------------------------
 
 	FILE ASSIGNMENTS FOR LNFL
@@ -56,11 +54,11 @@ RECORD 3
    
    
    
-          MIND1(M=1,32),      HOLIND
+          MIND1(M=1,38),      HOLIND
    
-                   1-32,       41-80
+                   1-38,       43-82
    
-                   32I1,8X,     A40
+                   38I1,4X,     A40
    
    
    
@@ -75,8 +73,8 @@ RECORD 3
     MOLECULAR SPECIES     ( 8)   NO  ( 9)  SO2  (10)   NO2 (11)   NH3 (12)  HNO3 (13)    OH (14)    HF
                           (15)  HCL  (16)  HBR  (17)    HI (18)   CLO (19)   OCS (20)  H2CO (21)  HOCL
                           (22)   N2  (23)  HCN  (24) CH3CL (25)  H2O2 (26)  C2H2 (27)  C2H6 (28)   PH3
-                          (29) COF2  (30)  SF6  (31)   H2S (32) HCOOH 
- 
+                          (29) COF2  (30)  SF6  (31)   H2S (32) HCOOH (33)   HO2 (34)     O (35)CLONO2
+                          (36)  NO+  (37) HOBR  (38)  C2H4
    
    
               HOLIND    HOLlerith INDicator to select LNFL options
@@ -116,11 +114,11 @@ RECORD 4            IF  ( (HOLIND .EQ. F100) .OR. (HOLIND .EQ. F80))            
    
    
    
-           MIND2(M=1,32)
+           MIND2(M=1,38)
    
-                   1-32
+                   1-38
    
-                   32I1
+                   38I1
    
    
    
