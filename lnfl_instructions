@@ -80,7 +80,7 @@ RECORD 3
                                  default writes line file data including coupling parameters onto TAPE2 which
                                  are then merged with TAPE1 line data onto TAPE3
    
-                           NLTE  preserves transition parameters for FACODE Non Local Thermodynamic Equilibrium option
+                           NLTE  preserves transition parameters for FASCODE Non Local Thermodynamic Equilibrium option
    
                             REJ  selects line rejection and requires input data for stength rejection (record 5)
    
