@@ -1,7 +1,7 @@
-C     path:      $Source
-C     author:    $Author
-C     revision:  $Revision
-C     created:   $Date
+C     path:      $Source$
+C     author:    $Author$
+C     revision:  $Revision$
+C     created:   $Date$
       PROGRAM LNFL                                                       LN00010
 C                                                                        LN00020
 C**********************************************************************  LN00030
