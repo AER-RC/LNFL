@@ -7,17 +7,17 @@ SHELL = /bin/sh
 # Set variables
 ###############################
 
-PLATFORM = LINUX
+PLATFORM = OS_X (Absoft)
 
+FC = f90
 
-FC = pgf90
-FCFLAG =-fast
-OUTPUT = lnfl_v2.2_pgf90_pgi_linux_sgl
+FCFLAG = -s -O -N11 -1U77  
+OUTPUT = lnfl_v2.2_f90_OS_X_absoft_sgl
 CPATH = src
 CPATHLBL = src
-CDOTO = linux_sgl.o
+CDOTO = OS_X_absoft_sgl.o
 
-CUTL = util_linux_pgi
+CUTL = util_OS_X_absoft
 CLNF = lnfl
 
 OBJ = $(CDOTO)/$(CLNF).o $(CDOTO)/$(CUTL).o
@@ -28,7 +28,8 @@ OBJ = $(CDOTO)/$(CLNF).o $(CDOTO)/$(CUTL).o
 
 $(OUTPUT) : \
 	intro makedir $(OBJ) conclude
-	$(FC) $(FCFLAG) -o $(OUTPUT) $(OBJ)
+	$(FC) $(FCFLAG) -o $(OUTPUT) $(OBJ) \
+	-L/Applications/Absoft/lib/ -lU77
 
 
 ###############################
@@ -40,11 +41,6 @@ $(CDOTO)/$(CLNF).o : $(CPATH)/$(CLNF).f
 	\mv $(CLNF).o $(CDOTO)
 
 $(CDOTO)/$(CUTL).o : $(CPATHLBL)/$(CUTL).f
-#	if [ -r $(CPATH)/$(CUTL).f ] ; \
-#	then \
-#	   \rm -f $(CPATH)/$(CUTL).f ; \
-#	   \cp -f $(CPATHLBL)/$(CUTL).f $(CPATH)/ ; \
-#	fi
 	$(FC) $(FCFLAG) -c $(CPATH)/$(CUTL).f
 	\mv $(CUTL).o $(CDOTO)
 
