@@ -11,8 +11,8 @@ PLATFORM = OS_X (Absoft)
 
 FC = f90
 
-FCFLAG = -s -O -N11 -1U77  
-OUTPUT = lnfl_v2.2_f90_OS_X_absoft_sgl
+FCFLAG = -s -O -N11  
+OUTPUT = lnfl_v2.3_f90_OS_X_absoft_sgl
 CPATH = src
 CPATHLBL = src
 CDOTO = OS_X_absoft_sgl.o

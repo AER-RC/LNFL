@@ -1,4 +1,25 @@
 
+LNFL_v2.3
+
+June. 2006
+
+1) The major change in this version is that the internally stored 
+line coupling information for oxygen and carbon dioxide is
+no longer written to TAPE2 for susequent merging with TAPE1. 
+
+2) Line coupling information must be supplied explicitly by the user,
+either on TAPE2 or TAPE1.
+
+3) The meaning of the NOCPL option has been changed such that,
+if it is invoked, all line coupling information from TAPE1 or TAPE2
+will be suppressed on the output files, TAPE3 (unformatted) 
+and TAPE7 (formatted).
+
+4) Some modifiations to the coding have been made for simplification.
+
+5) Upgraded makefiles and corresponding utilities to include more compilers.
+
+
 LNFL_v2.1
 
 Feb. 2005

@@ -12,7 +12,7 @@ PLATFORM = OS_X (IBM Compiler)
 FC = xlf90
 
 FCFLAG = -qfixed -s -O -qmaxmem-1   
-OUTPUT = lnfl_v2.2_xlf90_OS_X_ibm_xl_sgl
+OUTPUT = lnfl_v2.3_xlf90_OS_X_ibm_xl_sgl
 CPATH = src
 CPATHLBL = src
 CDOTO = OS_X_ibm_xl_sgl.o

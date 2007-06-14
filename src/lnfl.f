@@ -5,7 +5,7 @@ C     created:   $Date$
 C
 C  --------------------------------------------------------------------------
 C |                                                                          |
-C |  Copyright 2002, 2003, Atmospheric & Environmental Research, Inc. (AER). |
+C |  Copyright 2002 - 2005, Atmospheric & Environmental Research, Inc. (AER). |
 C |  This software may be used, copied, or redistributed as long as it is    |
 C |  not sold and this copyright notice is reproduced on each copy made.     |
 C |  This model is provided as is without any express or implied warranties. |
@@ -35,14 +35,25 @@ C    INTERNAL LINE COUPLING DATA IS INCLUDED FOR OXYGEN IN THE           LN00200
 C     0., 2. (60GHZ) AND  4. (120GHZ) CM-1 SPECTRAL REGION AND FOR THE   LN00210
 C    CARBON DIOXIDE Q-BRANCHES AT 618., 667., 720., 721.  AND 791. CM-1  LN00220
 C    THE DATA IS PROVIDED FOR THE MAIN ISOTOPES ONLY. THE LINE COUPLING  LN00230
-C    COEFFICIENTS ARE DUE TO HOKE AND CLOUGH, 1988.                      LN00240
+C    COEFFICIENTS FORMULATION IS DESCRIBED IN 
+C     Hoke et al, 1988: Proc. Of The Internations Radiation  Symposium, 
+C     J. Lenoble AND J.F. Geleyn, ED., A. DEEPAK PUB., 368-371.                               
 C
 C    These coefficients have been updated to provide consistency with
 C    HITRAN96 oxygen and carbon dioxide line parameters (June 1999).
+C
 C    ADDITIONAL LINE COUPLING PARAMETERS ARE PROVIDED FOR CO2 Q BRANCHES
 C    AT 1932 cm-1, 2076 cm-1, 2093 cm-1, 2193 cm-1 (April 2001)
-C     - coupling coefficients for these branches are from 
-C       Strow et al. 1994
+C    - coupling coefficients for these branches are from 
+C     Strow L.L., D. C. Tobin , S. E. Hannon, "A compilation of 
+C     first-order line mixing coefficients for CO2 Q-branches," 
+C     J. Quant. Spectrosc. Radiat. Transfer, vol.  52, pp. 281-294,1994.
+C                                                                       
+C    THE LINE COUPLING DATA GENERALLY FOLLOWS THE DEVELOPMENT OF SMITH,
+C            S' = S * ( 1. + G * (P/P0)**2 )           P0=1013 MB       
+C            S''= S * (      Y * (P/P0)  )                              
+C     VALUES FOR Y AND G ARE PROVIDED AT FOUR TEMPERATURES:             
+C     200 K, 250 K, 296 K, AND 340 K                                    
 c
 c    ******************************************************************* 
 c
@@ -220,7 +231,7 @@ C                                                                        LN01670
       CHARACTER*18 hnamlnfl,hvrlnfl,hnamutl,hvrutl
       CHARACTER*5 rev_num
       CHARACTER HNOCPL*5,HREJ*3,HNLTE*4,HMRG2*4,HF160*4,HOLIND1*40 
-      CHARACTER HBLK1*4,HBLK2*4,         HF80*3,HF100*4,HOLIND2*40   
+      CHARACTER HBLK1*4,HBLK2*4,HF80*3,HF100*4,HOLIND2*40,HCPL*3   
       CHARACTER*5 HNBLK1,HNBLK2,HLNOUT,HH86T1,HH86T2                     LN01690
       CHARACTER*27 QUANT1,QUANTC                                         LN01700
       CHARACTER*100 ALIN1,ALIN2,ALINC,ALIN                               LN01710
@@ -236,7 +247,7 @@ c
      *       HWHMS(250),TMPALF(250),PSHIFT(250),IFLG(250),LSTW2          LN01760
       COMMON /IFIL/ IRD,IPR,IPU,NWDR,LRC,ILNGTH,INLTE,IER,IPUOUT         LN01770
       COMMON /CONTRL/ VMIN,VMAX,VLO,VHI,LINES,NWDS,LSTW1                 LN01780
-      COMMON /HBLOCK/ INBLK1,INBLK2,IO2BND,I86T1,I86T2                   LN01790
+      COMMON /HBLOCK/ INBLK1,INBLK2,I86T1,I86T2
 C                                                                        LN01800
       COMMON /BUFID/ HID(10),HMOL(64),MOLIND(64),MCNTLC(64),MCNTNL(64),  LN01810
      *               SUMSTR(64),NMOL,FLINLO,FLINHI,ILIN,ILINLC,ILINNL,   LN01820
@@ -259,7 +270,7 @@ C                                                                        LN01860
      *              MIND2(64)                                            LN01980
       COMMON /CPLMOL/ MOLCPL(38),NCPL                                    LN01990
       COMMON /SREJ/ SR(64),SRD(64),TALF(64)                              LN02000
-      COMMON /ICN/ ILIN3,NMAX,NBLOCK                                     LN02010
+      COMMON /ICN/ ILIN3,NMAX,NBLOCK,inocpl
       COMMON /QUANT/ QUANT1(51),QUANTC(51)                               LN02020
       COMMON /CVRLBL/ HNAMLNFL,HVRLNFL
       COMMON /CVRUTL/ HNAMUTL,HVRUTL
@@ -275,7 +286,7 @@ C                                                                        LN02060
       EQUIVALENCE (MOL1(1),AMOL1(1)) , (MOL2(1),AMOL2(1))                LN02090
       EQUIVALENCE (MOLC(1),AMOLC(1))                                     LN02100
 C                                                                        LN02110
-      DATA HF80 / 'F80'/,HF100 / 'F100'/,HF160 / 'F160'/,
+      DATA HF80 / 'F80'/,HF100 / 'F100'/,HF160 / 'F160'/,HCPL / 'CPL'/,
      *     HNOCPL / 'NOCPL'/, HLNOUT / 'LNOUT'/, HMRG2 / 'MRG2'/
       DATA HREJ / 'REJ'/,HNLTE / 'NLTE'/,HNBLK1 / 'NBLK1'/,              LN02140
      *     HNBLK2 / 'NBLK2'/, HBLK1 /'BLK1'/, HBLK2 /'BLK2'/
@@ -370,8 +381,17 @@ c
       CALL HOLRT (5,HLNOUT,IPUOUT,HOLIND1,40)                             LN02710
       IF (IPUOUT.EQ.1) WRITE (IPR,925) HLNOUT                            LN02720
 
-      CALL HOLRT (5,HNOCPL,INCPST,HOLIND1,40)                             LN02790
-      IF (INCPST.EQ.1) WRITE (IPR,925) HNOCPL                            LN02680
+c     If cpl is selected the internally stored (cplstr) line parameters
+c     including line coupling are written to tape2:
+
+      CALL HOLRT (3,HCPL,ICPLSTR,HOLIND1,40)   
+      IF (ICPLSTR.EQ.1) WRITE (IPR,925) HCPL
+
+c     If nocpl selected the output file (TAPE3 and TAPE7) will 
+c     not include line coupling information
+
+      CALL HOLRT (5,HNOCPL,INOCPL,HOLIND1,40)                             LN02790
+      IF (INOCPL.EQ.1) WRITE (IPR,925) HNOCPL                            LN02680
 C                                                                        LN02730
       CALL HOLRT (3,HREJ,IREJ,HOLIND1,40)                                 LN03250
       IF (IREJ.EQ.1) WRITE (IPR,930) HREJ                                LN03260
@@ -438,7 +458,7 @@ c%%%         IF (I86T2.EQ.1) WRITE (IPR,925) HH86T2
 C                                                                        LN02820
       endif
 c
-      IF (imrg2.eq.0 .and. INCPST.eq.0) THEN               
+      IF (imrg2.eq.0 .and. icplstr.eq.1) THEN               
          OPEN (IFIL2,FILE='TAPE2',STATUS='NEW',FORM='FORMATTED')         LN02870
       ELSE                                                               LN02880
          IF (imrg2.EQ.1) then 
@@ -456,7 +476,7 @@ C                                                                        LN02920
 c     check to see if line coupling parameters stored in LNFL 
 c                                           should be written to TAPE2
 c
-      IF (imrg2.eq.0 .and. INCPST.EQ.0) THEN 
+      IF (imrg2.eq.0 .and. ICPLSTR.EQ.1) THEN 
 c        set imrg2 to indicate coupling parameters written to TAPE2
          IMRG2 = -1                                                      LN02940
          if (if160_1 .eq. 1) then
@@ -467,7 +487,6 @@ c        set imrg2 to indicate coupling parameters written to TAPE2
             INBLK2 = 1   
          endif
       ENDIF                                                              LN03010
-
 c
       IF (IMRG2.EQ.1) THEN
 c
@@ -483,12 +502,10 @@ c
  10      CONTINUE                                           
       ENDIF                                                              LN03190
 c
-c     change imrg2 to indicate that coupled lines on TAPE2
-c     are to be merged
+c     change imrg2 to indicate that internal coupled lines should be
+c     written to TAPE2 and merged with TAPE1
 c
-      if (imrg2.eq.1 .and. incpst.eq.0) then
-         imrg2 = -1
-      endif
+      if (imrg2.eq.1 .and. icplstr.eq.0) imrg2 = -1
 
       IF (INLTE.EQ.1) THEN                                               LN03210
          READ (GNLTE,902) HID(9)                                         LN03220
@@ -533,8 +550,6 @@ C                                                                        LN03620
 C     IF VMIN .LE. .007 AND O2 IS INCLUDED, SET FLAG TO REPLACE          LN03630
 C     O2 LINES WITH SPECIAL BAND FOR LINE COUPLING CASE                  LN03640
 C                                                                        LN03650
-      IO2BND = 0                                                         LN03660
-      IF (VMIN.LE..007.AND.IMRG2.EQ.-1.AND.MINDC(7).NE.0) IO2BND = 1     LN03670
 c
       if (imrg2.eq.1 .and. if80.eq.1 ) imrg2 = 2
 c
@@ -545,23 +560,22 @@ c         0   no merge
 c        -1   merge inclusive of line coupling coefficients
 
 C                                                                        LN03680
-      IF (imrg2.eq.2)   CALL RDFL82 (IFIL2,I2,N2,IEOF2,VLST2)  
-c
+      IF (IMRG2.EQ.2)   CALL RDFL82 (IFIL2,I2,N2,IEOF2,VLST2)  
+C
       IF (IMRG2 .EQ. 1) CALL RDFIL2 (IFIL2,I2,N2,IEOF2)                   LN03700
-c
+C
       IF (IMRG2 .EQ.-1) CALL RDFIL2 (IFIL2,I2,N2,IEOF2)                   LN03700
-      IF (IO2BND.EQ.-1) WRITE (IPR,955)                                  LN03710
 C                                                                        LN03720
    40 IF (IEOF1.EQ.0) THEN                                               LN03730
-         If (IF160_1 .eq. 1) then
-            CALL RDFIL1_f160 (IFIL1,I1,N1,IEOF1)          
-         else
+         IF (IF160_1 .EQ. 1) THEN
+            CALL RDFIL1_F160 (IFIL1,I1,N1,IEOF1)          
+         ELSE
             CALL RDFIL1 (IFIL1,I1,N1,IEOF1)                                 LN03740
-         endif
+         ENDIF
       ELSE                                                               LN03750
          N1 = 0                                                          LN03760
       ENDIF                                                              LN03770
-      IF (negflag.EQ.1) THEN
+      IF (NEGFLAG.EQ.1) THEN
          READ (GNEGEPP,902) HID(7)
       ENDIF                                                              LN03240
       IF (N1.LT.1) GO TO 90                                              LN03780
@@ -578,16 +592,9 @@ C                                                                        LN03790
             CALL MOVE (LINMRG,I2,VNU2,STR2,ALF2,EPP2,MOL2,AMOL2,HWHM2,   LN03890
      *                 TMPAL2,PSHIF2,IFG2,MOLCNT,ALIN2)                  LN03900
          ENDIF                                                           LN03910
-         IF (IMRG2.EQ.-1) THEN                                           LN03920
-            IF (MOLC(IC).EQ.0) GO TO 60                                  LN03930
+         IF (IMRG2.EQ.-1) THEN
+            IF (MOLC(IC).EQ.0) GO TO 60
 C                                                                        LN03940
-C     CHECK FOR O2 MOLECULE IF VNU LT .007 TO REPLACE                    LN03950
-C     LINE WITH A BAND CENTERED AT .000010 CM-1                          LN03960
-C                                                                        LN03970
-            IF (IO2BND.EQ.-1.AND.VNU1(I).LT..007) THEN                   LN03980
-               MMOL1 = MOD(MOL1(I),100)                                  LN03990
-               IF (MMOL1.EQ.7.AND.IFG1(I).NE.3) GO TO 80                 LN04000
-            ENDIF                                                        LN04010
             VNUTST = VNUC(IC)-VNU1(I)                                    LN04020
 C                                                                        LN04030
 C    CHECK TO SEE IF WAVENUMBERS ARE WITHIN  1.0 WAVENUMBERS             LN04040
@@ -871,7 +878,7 @@ C                                                                        LN08700
       DIMENSION VNU2(*),STR2(*),ALF2(*),EPP2(*),MOL2(*),AMOL2(*),        LN08710
      *          HWHM2(*),TMPAL2(*),PSHIF2(*),IFG2(*),ALIN2(*)            LN08720
       DIMENSION MOLCNT(*)                                                LN08730
-      COMMON /ICN/ ILIN3,NMAX,NBLOCK                                     LN08740
+      COMMON /ICN/ ILIN3,NMAX,NBLOCK,inocpl
       COMMON /CONTRL/ VMIN,VMAX,VLO,VHI,LINES,NWDS,LSTW1                 LN08750
       COMMON /LCHAR/ ALIN1(51),ALINE(40),ALINC(51),ALIN(250)             LN08760
 C                                                                        LN08770
@@ -891,6 +898,7 @@ C                                                                        LN08820
       HWHMS(ILIN3) = HWHM2(I)                                            LN08910
       TMPALF(ILIN3) = TMPAL2(I)                                          LN08920
       PSHIFT(ILIN3) = PSHIF2(I)                                          LN08930
+      if (inocpl .eq.1 ) ifg2(i) = 0
       IFLG(ILIN3) = IFG2(I)                                              LN08940
       ALIN(ILIN3) = ALIN2(I)                                             LN08950
       ILIN = ILIN+1                                                      LN08960
@@ -951,7 +959,7 @@ C                                                                        LN09310
      *       HWHMS(250),TMPALF(250),PSHIFT(250),IFLG(250),LSTW2          LN09340
       COMMON /LCHAR/ ALIN1(51),ALIN2(40),ALINC(51),ALIN(250)             LN09350
       CHARACTER*100 ALIN1,ALIN2,ALINC,ALIN,ALINE                         LN09360
-      COMMON /ICN/ I3,NMAX,NBLOCK                                        LN09370
+      COMMON /ICN/ I3,NMAX,NBLOCK,inocpl
       COMMON /IFIL/ IRD,IPR,IPU,NWDR,LRC,ILNGTH,INLTE,IER,IPUOUT         LN09380
       DIMENSION RCDHDR(5)                                                LN09390
 C                                                                        LN09400
@@ -1021,7 +1029,7 @@ C                                                                        LN09980
 C                                                                        LN10000
       COMMON /SREJ/ SR(64),SRD(64),TALF(64)                              LN10010
       COMMON /CONTRL/ VMIN,VMAX,VLO,VHI,LINES,NWDS,LSTW1                 LN10020
-      COMMON /HBLOCK/ INBLK1,INBLK2,IO2BND,I86T1,I86T2                   LN10030
+      COMMON /HBLOCK/ INBLK1,INBLK2,I86T1,I86T2
       COMMON /IFIL/ IRD,IPR,IPU,NWDR,LRC,ILNGTH,INLTE,IER,IPUOUT         LN10040
       COMMON /UNITS/ PI,PLANCK,BOLTZ,CLIGHT,AVOG,RADCN1,RADCN2           LN10050
       COMMON /IC1/ ILIN3                                                 LN10060
@@ -1132,6 +1140,8 @@ c     skip over header records:
          if (hr_1.eq.h_1 .or. hr_1.eq.h_2) then
             n_hdr = n_hdr+1
             if (n_hdr.eq. 1) Write (*,914)     
+            if (ipuout.eq.1) Write(ipu,902) alin(i)
+ 902        format (a100) 
             go to 50
          endif
 
@@ -1416,12 +1426,31 @@ c              write (*,*) lvl,ivup,ivlo,hvib_u,hvib_l,h_vib(m_cl,lvl)
 
 c     test for valid vibrational states
 
-            if (ivup.eq.-99 .or. ivlo.eq.-99) then
-               write (*,*) 
-     *   '****   CHECK THAT TAPE1 IS 160 CHARACTER FORMAT   ****'
-                STOP 
-     *   '****   INVALID VIBRATIONAL STATE ENCOUNTERED ****'
+            data ivib_excep / 0/
 
+            if (ivup.eq.-99 .or. ivlo.eq.-99) then
+
+               ivib_excep = ivib_excep +1
+
+               if (ivib_excep.eq.1) then
+                  open (12,file='lines_vib_excep')
+
+                  write (*,*) ' mol =', m, '  iso =',iso, '  vnu = ',vnu
+                  write (*,*) ' ivup = ', ivup, 'hvib_u = ', hvib_u,
+     &                 ' ivlo = ', ivlo, 'hvib_l = ', hvib_l
+
+                  write (*,  997) 
+                  write (ipr,997) 
+
+ 997              format 
+     * ( '****   CHECK THAT TAPE1 IS 160 CHARACTER FORMAT    ****',/,
+     *   '****   VIBRATIONAL STATE ENCOUNTERED THAT LBLRTM   ****',/,
+     *   '****   DOES NOT HANDLE: SKIPPING ASSOCIATED LINES  ****',/,
+     *   '****   SKIPPED LINES WRITTEN TO "lines_vib_except" ****',// )
+
+               endif
+                  write (12,900) ALIN(I) 
+                  go to 50
             endif
 
             STR = STRSV/(VNU*(1.0-EXP(-BETA0*VNU)))                      LN10760
@@ -1468,7 +1497,6 @@ c
 C
 C           SET FLAG FOR O2 0.0 CM-1 BAND CASE
 C
-            IF (IO2BND.EQ.1.AND.IFLAG.EQ.3) IO2BND = -1                  LN11080
             IOUT(N1) = ILINS                                             LN11090
 
          ELSE                                                            LN11100
@@ -1513,7 +1541,6 @@ c      ENDIF                                                              LN1139
 C                                                                        LN11400
       RETURN                                                             LN11410
 C                                                                        LN11420
-c900   FORMAT (51(A100))                                                  LN11430
  900  FORMAT (51(A160))                                                  LN11430
  905  FORMAT (2X,A1,95X,I2)                                              LN11440
  910  FORMAT (2A50)                                                      LN11450
@@ -1521,10 +1548,6 @@ c900   FORMAT (51(A100))                                                  LN1143
  914  format ( ' skipping over header records on TAPE1')
  915  FORMAT (I2)                                                        LN11460
       
-      
-c920   FORMAT (2X,I1,F12.6,D10.3,E10.3,2F5.4,F10.4,F4.2,F8.6,2I3,2A9,
-c    *        A7,I2)                                                     LN11470
- 
  920  FORMAT (2X,I1,F12.6,D10.3,E10.3,2F5.4,F10.4,F4.2,F8.6,
      *    2A15,A9,7x,a8,6x,A7,5x,I1) 
  
@@ -1535,8 +1558,6 @@ c    *        A7,I2)                                                     LN11470
  925  FORMAT (2X,4(E13.6,E11.4),I2)                                      LN11480
  930  FORMAT (I2,I1,2I3,2A9)                                             LN11490
  940  FORMAT (' TAPE1 IS AT A EOF ')
-c940   FORMAT (' TAPE1 IS AT A EOF ',/,                                   LN11510
-c     *        ' THE TAPE2 HAS ONE EOF AT EOT  ')
  945  FORMAT (' THE EOF ON TAPE2 IS BEFORE',/,
      *        ' VMAX = ',F12.5,' YOU MAY HAVE A BAD TAPE ')              LN11540
 C                                                                        LN11550
@@ -1557,7 +1578,7 @@ C                                                                        LN09980
 C                                                                        LN10000
       COMMON /SREJ/ SR(64),SRD(64),TALF(64)                              LN10010
       COMMON /CONTRL/ VMIN,VMAX,VLO,VHI,LINES,NWDS,LSTW1                 LN10020
-      COMMON /HBLOCK/ INBLK1,INBLK2,IO2BND,I86T1,I86T2                   LN10030
+      COMMON /HBLOCK/ INBLK1,INBLK2,I86T1,I86T2
       COMMON /IFIL/ IRD,IPR,IPU,NWDR,LRC,ILNGTH,INLTE,IER,IPUOUT         LN10040
       COMMON /UNITS/ PI,PLANCK,BOLTZ,CLIGHT,AVOG,RADCN1,RADCN2           LN10050
       COMMON /IC1/ ILIN3                                                 LN10060
@@ -1632,6 +1653,8 @@ c     skip over header records:
          if (a_1.eq.h_1 .or. a_1.eq.h_2) then
             n_hdr = n_hdr+1
             if (n_hdr.eq. 1) Write (*,914)     
+            if (ipuout.eq.1) Write(ipu,902) alin(i)
+ 902        format (a100) 
             go to 50
          endif
 c
@@ -1738,7 +1761,6 @@ c
 C
 C           SET FLAG FOR O2 0.0 CM-1 BAND CASE
 C
-            IF (IO2BND.EQ.1.AND.IFLAG.EQ.3) IO2BND = -1                  LN11080
             IOUT(N1) = ILINS                                             LN11090
          ELSE                                                            LN11100
 C
@@ -1812,7 +1834,7 @@ C                                                                        LN11640
 C                                                                        LN11660
       COMMON /SREJ/ SR(64),SRD(64),TALF(64)                              LN11670
       COMMON /CONTRL/ VMIN,VMAX,VLO,VHI,LINES,NWDS,LSTW1                 LN11680
-      COMMON /HBLOCK/ INBLK1,INBLK2,IO2BND,I86T1,I86T2                   LN11690
+      COMMON /HBLOCK/ INBLK1,INBLK2,I86T1,I86T2
       COMMON /IFIL/ IRD,IPR,IPU,NWDR,LRC,ILNGTH,INLTE,IER,IPUOUT         LN11700
       COMMON /UNITS/ PI,PLANCK,BOLTZ,CLIGHT,AVOG,RADCN1,RADCN2           LN11710
       COMMON /IC2/ ILIN3                                                 LN11720
@@ -1880,11 +1902,18 @@ c
       DO 50 I = 1, 51                                                    LN12230
          IF (I.GT.IBLK) WRITE (ALIN(I),910) ZEROFL,ZEROFL                LN12240
 c
-c        skip over header records:
+c        check for header records and write to 'tape2_header'
          READ (ALIN(I),913) hr_1
          if (hr_1.eq.h_1 .or. hr_1.eq.h_2) then
+
             n_hdr = n_hdr+1
-            if (n_hdr.eq. 1) Write (*,914)     
+            if (n_hdr.eq. 1) then
+               Write (*,914)     
+               open (13,file='tape2_header',
+     &                  status='new',form='formatted')
+            end if
+            if (ipuout.eq.1) Write(13,902) alin(i)
+ 902        format (a100) 
             go to 50
          endif
 c
@@ -1977,7 +2006,6 @@ c
 C                                                                        LN12660
 C           SET FLAG FOR O2 0.0 CM-1 BAND CASE                           LN12670
 C                                                                        LN12680
-            IF (IO2BND.EQ.1.AND.IFLAG.EQ.3) IO2BND = -1                  LN12690
             IOUTC(N2) = ILINS                                            LN12700
          ELSE                                                            LN12710
 C                                                                        LN12720
@@ -2161,16 +2189,16 @@ c         write      (*,935) n_lvl_v(j_cl)
      1 '             21', '             22', '             23'/
 
       data ( h_vib(2,lvl),lvl=1,29) /
-     2 '            X 0', '            X 1', '            a 0',
-     2 '            a 1', '            b 0', '            b 1',
-     2 '            b 2', '               ', '            X 2',
-     2 '            B 0', '            B 1', '            B 2',
-     2 '            B 3', '            B 4', '            B 5',
-     2 '            B 6', '            B 7', '            B 8',
-     2 '            B 9', '            B10', '            B11',
-     2 '            B12', '            B13', '            B14',
-     2 '            B15', '            B16', '            B17',
-     2 '            B18', '            B19'/
+     2 '       X      0', '       X      1', '       a      0',
+     2 '       a      1', '       b      0', '       b      1',
+     2 '       b      2', '               ', '       X      2',
+     2 '       B      0', '       B      1', '       B      2',
+     2 '       B      3', '       B      4', '       B      5',
+     2 '       B      6', '       B      7', '       B      8',
+     2 '       B      9', '       B     10', '       B     11',
+     2 '       B     12', '       B     13', '       B     14',
+     2 '       B     15', '       B     16', '       B     17',
+     2 '       B     18', '       B     19'/
 
       data ( h_vib(3,lvl),lvl=1,38) /
      3 '       X3/2   0', '       X3/2   1', '       X3/2   2',
@@ -2395,7 +2423,6 @@ c******
      * '    0 0 0 3 1F1', '    0 0 0 3 1F2', '    0 0 0 3 2F2',
      * '    0 0 1 1 1 E', '    0 0 1 1 1A1', '    0 0 1 1 1F1',
      * '    0 0 1 1 1F2'/
-
 
       do j_cl=1,ncl_v
          do lvl=1,n_lvl_v(j_cl)
@@ -2633,7 +2660,7 @@ C                                                                        LN14840
       COMMON /TRAC/ VNU(40),STR(40),ALF(40),EPP(40),MOL(40),HWHMF(40),   LN14880
      *              TMPALF(40),PSHIFT(40),IFLG(40),MIND2(64)             LN14890
       COMMON /CONTRL/ VMIN,VMAX,VLO,VHI,LINES,NWDS,LSTW1                 LN14900
-      COMMON /HBLOCK/ INBLK1,INBLK2,IO2BND,I86T1,I86T2                   LN14910
+      COMMON /HBLOCK/ INBLK1,INBLK2,I86T1,I86T2
       COMMON /IFIL/ IRD,IPR,IPU,NWDR,LRC,ILNGTH,INLTE,IER,IPUOUT         LN14920
       COMMON /UNITS/ PI,PLANCK,BOLTZ,CLIGHT,AVOG,RADCN1,RADCN2           LN14930
       COMMON /LCHAR/ ALIN1(51),ALIN(40),ALINC(51),ALINE(250)             LN14940
@@ -7236,7 +7263,7 @@ C                                                                        LN18960
      *              HWHM2(40),TMPAL2(40),PSHIF2(40),IFG2(40),MIND2(64)   LN19090
       COMMON /UNITS/ PI,PLANCK,BOLTZ,CLIGHT,AVOG,RADCN1,RADCN2           LN19100
       COMMON /SREJ/ SR(64),SRD(64),TALF(64)                              LN19110
-      COMMON /ICN/ ILIN3,NMAX,NBLOCK                                     LN19120
+      COMMON /ICN/ ILIN3,NMAX,NBLOCK,inocpl
       common /eppinfo/ negflag
 C                                                                        LN19130
       EQUIVALENCE (HID1(1),HDATE) , (HID1(2),HTIME)                      LN19140
