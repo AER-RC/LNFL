@@ -1,0 +1,97 @@
+# Makefile for lnfl
+# $Id$
+
+SHELL = /bin/sh
+
+###############################
+# Set variables
+###############################
+
+PLATFORM = LINUX
+
+
+FC = pgf90
+FCFLAG =-fast
+OUTPUT = ../lnfl_v2.3_pgi_linux_pgf90_sgl
+CPATH = ../src/
+CPATHLBL = ../src/
+CDOTO = linux_sgl.o/
+
+CUTL = util_linux_pgi
+CLNF = lnfl
+
+OBJ = $(CDOTO)$(CLNF).o $(CDOTO)$(CUTL).o
+
+###############################
+# Load line
+###############################
+
+$(OUTPUT) : \
+	intro makedir $(OBJ) conclude
+	$(FC) $(FCFLAG) -o $(OUTPUT) $(OBJ)
+
+
+###############################
+# Object compile lines
+###############################
+
+$(CDOTO)$(CLNF).o : $(CPATH)$(CLNF).f
+	$(FC) $(FCFLAG) -c $(CPATH)$(CLNF).f
+	\mv $(CLNF).o $(CDOTO)
+
+$(CDOTO)$(CUTL).o : $(CPATHLBL)$(CUTL).f
+#	if [ -r $(CPATH)$(CUTL).f ] ; \
+#	then \
+#	   \rm -f $(CPATH)$(CUTL).f ; \
+#	   \cp -f $(CPATHLBL)$(CUTL).f $(CPATH) ; \
+#	fi
+	$(FC) $(FCFLAG) -c $(CPATH)$(CUTL).f
+	\mv $(CUTL).o $(CDOTO)
+
+###############################
+# Create object file directory
+###############################
+
+makedir :
+	if [ ! -d $(CDOTO) ] ; \
+	then \
+	   mkdir $(CDOTO) ; \
+	fi
+
+
+###############################
+# Intro information
+###############################
+
+.SILENT:
+intro :
+	echo
+	echo '-----------------'
+	echo '  $(OUTPUT) Makefile'
+	echo '-----------------'
+	echo
+	echo 'This Makefile was designed for the $(PLATFORM) platform.'
+	echo
+	echo 'It uses the $(FC) compiler, with the following options:'
+	echo '      $(FCFLAG)'
+	echo
+	echo 'The object files used are as follows:'
+	echo
+	echo '      $(OBJ)'
+	echo
+	echo
+	echo '$(OUTPUT) make in progress ...'
+	echo
+
+
+
+###############################
+# Concluding information
+###############################
+
+conclude :
+	echo
+	echo '================='
+	echo '  Makefile done'
+	echo '================='
+
