@@ -119,7 +119,7 @@ C    PRESSURE SHIFT, UPPER AND LOWER STATE VIBRATIONAL AND ROTATIONAL    LN00570
 C    IDENTIFICATIONS, REFERENCE PARAMETERS AND A FLAG FOR LINE           LN00580
 C    COUPLING.                                                           LN00590
 C                                                                        LN00600
-C    MOLECULE NUMBERS 1 THROUGH 38 MAY BE SELECTED.                      LN00610
+C    MOLECULE NUMBERS 1 THROUGH 39 MAY BE SELECTED.                      LN00610
 C                                                                        LN00620
 C                                                                        LN00630
 C    THE VARIABLES AND THE FORMAT FOR THE TRANSITIONS ON TAPE1 ARE       LN00640
@@ -137,7 +137,7 @@ C                                                                        LN00750
 C    TAPE2 IS AVAILABLE FOR THE USER TO PROVIDE ALTERNATE LINE DATA      LN00760
 C               (REPLACEMENT OR SUPPLEMENTAL)                            LN00770
 C                                                                        LN00780
-C    MOLECULE NUMBERS 1 THROUGH 38 MAY BE SELECTED.                      LN00790
+C    MOLECULE NUMBERS 1 THROUGH 39 MAY BE SELECTED.                      LN00790
 C                                                                        LN00800
 C    TWO FORMAT OPTIONS ARE AVAILABLE: OPTION SELECTED ON RECORD 2.      LN00810
 C                                                                        LN00820
@@ -223,6 +223,8 @@ C-                                                                       LN01590
 C----------------------------------------------------------------------  LN01600
 C                                                                        LN01610
       IMPLICIT REAL*8           (V)                                     !LN01620
+c
+      parameter (mol_max=39)
 C                                                                        LN01630
       character*8 HID,HTIME,HDATE,HID1,HMOL  
 C                                                                        LN01650
@@ -295,8 +297,6 @@ C                                                                        LN02110
       DATA GNEGEPP / '       ^'/
       DATA MOLCNT / 64*0 /                                               LN02170
       DATA VLST1 / -1. /,VLST2 / -2. /                                   LN02180
-c
-      data mol_max /38/
 C                                                                        LN02190
 C#    DATA CFORM/'BUFFERED   '/                                          LN02200
       DATA CFORM / 'UNFORMATTED'/                                        LN02210
@@ -325,8 +325,8 @@ C                                                                        LN02240
          n_resetepp(m) = 0
  5    continue
 C                                                                        LN02295
-      call set_vib_map
-      call set_rot_map
+c**      call prnt_vib_map
+c**      call prnt_rot_map
 c
       IFIL1 = 1                                                          LN02300
       IFIL2 = 2                                                          LN02310
@@ -513,7 +513,7 @@ c
       ENDIF                                                              LN03240
 C                                                                        LN03270
 C     MOLIND IS AN ARRAY TO SELECT MOLECULES (=1 YES, =0 NO), FORMAT     LN03280
-C     (38I1)        -- PUT 1 IN COLUMN CORRESPONDING TO MOLECULE ID.     LN03290
+C     (39I1)        -- PUT 1 IN COLUMN CORRESPONDING TO MOLECULE ID.     LN03290
 C                                                                        LN03300
       DO 20 I = 1, mol_max                                                    LN03310
          READ (CMOL(I),935) HMOL(I)                                      LN03320
@@ -700,7 +700,7 @@ C                                                                        LN04910
  915  FORMAT ('0',20X,'VMIN =',F12.6,' CM-1,      VMAX =',F12.6,         LN04950
      *        ' CM-1')                                                   LN04960
 c            mol_max
- 920  FORMAT (38I1,4X,A40)                                               LN04970
+ 920  FORMAT (39I1,4X,A40)                                               LN04970
  925  FORMAT ('0',' ** NOTE IFLG SET - ',A5,' *****',/)                  LN04980
  930  FORMAT ('0',' ** NOTE IFLG SET - ',A4,' *****',/)                  LN04990
  935  FORMAT (A6)                                                        LN05000
@@ -710,8 +710,8 @@ c            mol_max
  950  FORMAT (8E10.3)                                                    LN05040
  955  FORMAT ('0',' O2 LINES < .007 CM-1 HAVE BEEN REPLACED BY A O2',    LN05050
      *        1X,'BAND CENTERED AT .000010 CM-1 ',/)                     LN05060
- 960  FORMAT ('0',9X,'TAPE NO. =',I2/10X,'LOWEST LINE =',F12.6,          LN05070
-     *        ' CM-1,  ','HIGHEST LINE =',F12.6,                         LN05080
+ 960  FORMAT ('0',9X,'TAPE NO. =',I2/10X,'LOWEST LINE =',F13.6,          LN05070
+     *        ' CM-1,  ','HIGHEST LINE =',F13.6,                         LN05080
      *        ' CM-1,  TOTAL NUMBER OF LINES =',I7)                      LN05090
  965  FORMAT ('0',/,23X,'COUPLED',4X,'NLTE',3X,'NEGATIVE',3X,
      *        'RESET',4X,'SUM LBLRTM',6X,                                LN05100
@@ -811,9 +811,9 @@ c  ****************************************
       BLOCK DATA Isotop
 c  ****************************************
 c
-      PARAMETER (NMOL=38)
+      PARAMETER (NMOL=39)
       COMMON /ISVECT/ ISO_MAX(NMOL)
-      common /iso_id/ iso_82(97)
+      common /iso_id/ iso_82(98)
 c
 c    The number of isotopes for a particular molecule:
       DATA (ISO_MAX(I),I=1,NMOL)/
@@ -823,8 +823,8 @@ c      NO, SO2, NO2, NH3, HNO3, OH, HF, HCl, HBr, HI,
      +  3,   2,   1,   2,    1,  3,  1,   2,   2,  1,
 c     ClO, OCS, H2CO, HOCl, N2, HCN, CH3Cl, H2O2, C2H2, C2H6, PH3
      +  2,   5,    3,    2,  1,   3,     2,    1,    2,    1,   1,
-c     COF2, SF6, H2S, HCOOH, HO2, O, ClONO2, NO+, HOBr, C2H4
-     +  1,   1,   3,     1,   1,  1,     2,    1,    2,    2/
+c     COF2, SF6, H2S, HCOOH, HO2, O, ClONO2, NO+, HOBr, C2H4,C3HOH
+     +  1,   1,   3,     1,   1,  1,     2,    1,    2,    2,   1/
 c
       DATA ISO_82/
 c       H2O
@@ -851,8 +851,8 @@ c      CH3Cl,    H2O2,  C2H2,       C2H6,  PH3
      +, 215,217,  1661,  1221,1231,  1221,  1111,
 c       COF2, SF6, H2S,           HCOOH,  HO2, O,   ClONO2      NO+
      +  269,  29,  121,141,131,   126,    166, 6,   5646,7646,  46,
-c       HOBr,      C2H4
-     +  169,161,   221,231/  
+c       HOBr,      C2H4,       CH3OH
+     +  169,161,   221,231,    2161/  
 c
 C
       END
@@ -1042,9 +1042,9 @@ c
       common /vib_map/ ncl_v,nclass_v(64),n_lvl_v(32),h_vib(32,256)
       common /rot_map/ ncl_r,nclass_r(64),n_lvl_r(32)
 c
-      parameter (ntmol=38)
+      parameter (mol_max=39)
 c
-      COMMON /ISVECT/ ISO_MAX(NTMOL)
+      COMMON /ISVECT/ ISO_MAX(MOL_MAX)
       common /eppinfo/ negflag
 c
       character*8 h_rdlin1
@@ -1387,7 +1387,10 @@ c
                 stop '  isotope value is less than 1 '
             endif
 c
-c   the TIPS program in lblrtm is currently limited to molecules up to 38
+c   the TIPS program in lblrtm is currently limited to molecules up to 38.
+c
+c   However, partition sum temperature dependence for molecule 39 (c3hoh)
+c   is being handled by using the analytical expression
 c
             if (m .gt. nmol) then
                call line_exception (1,ipr,h_rdlin1,m,nmol,iso,iso_max)
@@ -1588,9 +1591,9 @@ C                                                                        LN10000
       COMMON /QUANT/ QUANT1(51),QUANTC(51)                               LN10100
       COMMON /LCHAR/ ALIN1(51),ALIN2(40),ALINC(51),ALINE(250)            LN10110
 c 
-      parameter (ntmol=38)
+      parameter (mol_max=39)
 c
-      COMMON /ISVECT/ ISO_MAX(NTMOL)
+      COMMON /ISVECT/ ISO_MAX(MOL_MAX)
       common /eppinfo/ negflag
 c
       character*8 h_rdlin1
@@ -1694,6 +1697,9 @@ c
             endif
 c
 c   the TIPS program in lblrtm is currently limited to molecules up to 38
+c
+c   However, partition sum temperature dependence for molecule 39 (c3hoh)
+c   is being handled by using the analytical expression
 c
             if (m .gt. nmol) then
                call line_exception (1,ipr,h_rdlin1,m,nmol,iso,iso_max)
@@ -1844,9 +1850,9 @@ C                                                                        LN11660
       COMMON /QUANT/ QUANT1(51),QUANTC(51)                               LN11760
       COMMON /LCHAR/ ALIN1(51),ALIN2(40),ALINC(51),ALINE(250)            LN11770
 c 
-      parameter (ntmol=38)
+      parameter (mol_max=39)
 c
-      COMMON /ISVECT/ ISO_MAX(NTMOL) 
+      COMMON /ISVECT/ ISO_MAX(MOL_MAX) 
 c
       character*8 h_rdlin2
 c
@@ -1939,6 +1945,9 @@ c
             endif
 c
 c   the TIPS program in lblrtm is currently limited to molecules up to 38
+c
+c   However, partition sum temperature dependence for molecule 39 (c3hoh)
+c   is being handled by using the analytical expression
 c
             if (m .gt. nmol) then
                call line_exception (1,ipr,h_rdlin2,m,nmol,iso,iso_max)
@@ -2123,7 +2132,9 @@ C
          end
 c-----------------------------------------------------------------------
 
-      Subroutine set_vib_map
+      BlockData set_vib_map
+
+      parameter (nmol=39)
 
       character*15 h_vib
 
@@ -2133,9 +2144,9 @@ c     molecules:       64
 c     classes:         32
 c     vib_ids/class:  256
       
-      data ncl_v /10/,  nmol /39/
+      data ncl_v /10/
 
-      data (nclass_v(m),m=1,39)  /
+      data (nclass_v(m),m=1,nmol)  /
 
 c    *       1,       2,       3,       4,       5,       6,       7,
 c    *     H2O,     CO2,      O3,     N2O,      CO,     CH4,      O2,
@@ -2161,22 +2172,11 @@ c    *      36,      37,      38,      39,
 c    *     NO+,    HOBr,    C2H4,   CH3OH,
      *       1,       6,      10,      10 /
 c
-      do mol=1,nmol
-c         write (*,925) mol,h_dum, nclass_v(mol)
- 925     format(i5,a8,i5)
-      end do
-
       data (n_lvl_v(j),j=1,10)    /
 c    *    1,    2,    3,    4,    5,    6,    7,
      *   24,   29,   38,   91,  132,  116,   36,
 c    *    8,    9,   10,   11,   12,   13,   14,
      *   47,   39,   91/
-
-      do j_cl=1,ncl_v
-c         write      (*,935) n_lvl_v(j_cl)
- 935     format(i5)
-         
-      end do
 
       data ( h_vib(1,lvl),lvl=1,24 ) /
      1 '              0', '              1', '              2',
@@ -2424,9 +2424,37 @@ c******
      * '    0 0 1 1 1 E', '    0 0 1 1 1A1', '    0 0 1 1 1F1',
      * '    0 0 1 1 1F2'/
 
+      end
+c__________________________________________________________________________
+
+      Subroutine prnt_vib_map
+
+      character*15 h_vib
+
+      COMMON /BUFID/ HID(10),HMOL(64),MOLIND(64),MCNTLC(64),MCNTNL(64),  LN11610
+     *               SUMSTR(64),NMOL,FLINLO,FLINHI,ILIN,ILINLC,ILINNL,   LN11620
+     *               IREC,IRECTL,HID1(2),LSTWD                           LN11630
+
+      common /vib_map/ ncl_v,nclass_v(64),n_lvl_v(32),h_vib(32,256)
+
+c     molecules:       64
+c     classes:         32
+c     vib_ids/class:  256
+      
+c
+      do mol=1,nmol
+         write (*,925) mol,h_dum, nclass_v(mol)
+ 925     format(i5,a8,i5)
+      end do
+c
+      do j_cl=1,ncl_v
+         write      (*,935) n_lvl_v(j_cl)
+ 935     format(i5)
+      end do
+
       do j_cl=1,ncl_v
          do lvl=1,n_lvl_v(j_cl)
-c            write      (*,940) h_vib(j_cl,lvl)
+            write      (*,940) h_vib(j_cl,lvl)
  940        format(a15)
          end do
       end do
@@ -2436,7 +2464,7 @@ c            write      (*,940) h_vib(j_cl,lvl)
       end
 c__________________________________________________________________________
 
-      Subroutine set_rot_map
+      Blockdata set_rot_map
 
       common /rot_map/ ncl_r,nclass_r(64),n_lvl_r(32)
 
@@ -2444,9 +2472,11 @@ c     molecules:       64
 c     classes:         32
 c     rot_ids/class:  256
       
-      data ncl_r / 6/,  nmol /38/
+      parameter (nmol=39)
 
-      data (nclass_r(m),m=1,38)  /
+      data ncl_r / 6/
+
+      data (nclass_r(m),m=1,nmol)  /
 
 c    *       1,       2,       3,       4,       5,       6,       7,
 c    *     H2O,     CO2,      O3,     N2O,      CO,     CH4,      O2,
@@ -2468,12 +2498,29 @@ c    *      29,      30,      31,      32,      33,      34,      35,
 c    *    COF2,     SF6,     H2S,   HCOOH,     HO2,       O,  ClONO2,
      *       1,       3,       1,       1,       1,       0,       1,
 c
-c    *      36,      37,      38,
-c    *     NO+,    HOBr,    C2H4,
-     *       2,       1,       1/
+c    *      36,      37,      38,      39
+c    *     NO+,    HOBr,    C2H4,   CH3OH
+     *       2,       1,       1,       1/
 c
+      end
+c__________________________________________________________________________
+
+      Subroutine prnt_rot_map
+
+      COMMON /BUFID/ HID(10),HMOL(64),MOLIND(64),MCNTLC(64),MCNTNL(64),  LN11610
+     *               SUMSTR(64),NMOL,FLINLO,FLINHI,ILIN,ILINLC,ILINNL,   LN11620
+     *               IREC,IRECTL,HID1(2),LSTWD                           LN11630
+
+      COMMON /BUFIDC/ CMOL(64),CHID10,CHID08                             LN19000
+
+      common /rot_map/ ncl_r,nclass_r(64),n_lvl_r(32)
+
+c     molecules:       64
+c     classes:         32
+c     rot_ids/class:  256
+
       do mol=1,nmol
-c        write (*,925) mol,h_mol_nam(mol), nclass_r(mol)
+         write (*,925) mol,cmol(mol), nclass_r(mol)
  925     format(i5,a8,i5)
 
       end do
@@ -3045,12 +3092,14 @@ C                                                                        LN18680
 C     THIS SUBROUTINE WRITES OUT THE LINES AND THEIR COUPLING            LN18690
 C     COEFFICIENTS TO TAPE2 FOR USE BY LNFL                              LN18700
 C                                                                        LN18710
+      parameter (mol_max=39)
+
       COMMON /CLINES_100/ CPLINS(886)                                        LN18720
       CHARACTER CPLINS*100, HQ*7                                         LN18730
       COMMON /IFIL/ IRD,IPR,IPU,NWDR,LRC,ILNGTH,INLTE,IER,IPUOUT         LN18740
-      COMMON /CPLMOL_100/ MOLCPL_100(38),NCPL_100 
+      COMMON /CPLMOL_100/ MOLCPL_100(mol_max),NCPL_100 
 
-      dimension molcpl(38)
+      dimension molcpl(mol_max)
 
       CHARACTER CUP*9, CLO*9
 C                                                                        LN18760
@@ -3058,7 +3107,7 @@ c      set up molcpl and ncpl based on particular line coupling file used
 c
       ncpl =ncpl_100
 
-      do m=1,38
+      do m=1,mol_max
          molcpl(m) = molcpl_100(m)
       enddo
 
@@ -3214,7 +3263,10 @@ C       Strow et al. 1994
 C**********************************************************************  LN20840
 C                                                                        LN20850
       IMPLICIT CHARACTER*50 (C)                                          LN20860
-      COMMON /CPLMOL_100/ MOLCPL_100(38),NCPL_100
+
+      parameter (mol_max=39)
+
+      COMMON /CPLMOL_100/ MOLCPL_100(mol_max),NCPL_100
       COMMON /CLINES_100/ CPL001(16),CPL005(16),CPL009(16),CPL013(16),       LN20880
      +     CPL017(16),CPL021(16),CPL025(16),CPL029(16),CPL033(16),       LN20890
      +     CPL037(16),CPL041(16),CPL045(16),CPL049(16),CPL053(16),       LN20900
@@ -3243,7 +3295,7 @@ C     MOLCPL CONTAINS THE FLAGS FOR MOLECULE 2 AND 7                     LN21050
 C                                                                        LN21060
       DATA MOLCPL_100/0,1,0,0,0,0,1,0,0,0,0,0,0,0,0,                         LN21070
      1                0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,                         LN21080
-     2                0,0,0,0,0,0,0,0/                                       LN21090
+     2                0,0,0,0,0,0,0,0,0/                                       LN21090
 C                                                                        LN21100
 
 C     Previously NCPL was 598 ([([(293-1)/4]+1) * 16] + 12) / 2 = 598
@@ -5143,12 +5195,14 @@ C                                                                        LN18680
 C     THIS SUBROUTINE WRITES OUT THE LINES AND THEIR COUPLING            LN18690
 C     COEFFICIENTS TO TAPE2 FOR USE BY LNFL                              LN18700
 C                                                                        LN18710
+      parameter (mol_max=39)
+
       COMMON /CLINES_160/ CPLINS(886)                                        LN18720
       CHARACTER CPLINS*100, HQ*7                                         LN18730
       COMMON /IFIL/ IRD,IPR,IPU,NWDR,LRC,ILNGTH,INLTE,IER,IPUOUT         LN18740
-      COMMON /CPLMOL_160/ MOLCPL_160(38),NCPL_160
+      COMMON /CPLMOL_160/ MOLCPL_160(mol_max),NCPL_160
 
-      dimension molcpl(38)
+      dimension molcpl(mol_max)
 
       CHARACTER CUP*9, CLO*9
 C                                                                        LN18760
@@ -5156,7 +5210,7 @@ c      set up molcpl and ncpl based on particular line coupling file used
 c
       ncpl =ncpl_160
 
-      do m=1,38
+      do m=1,mol_max
          molcpl(m) = molcpl_160(m)
       enddo
 
@@ -5311,7 +5365,10 @@ C       Strow et al. 1994
 C**********************************************************************  LN20840
 C                                                                        LN20850
       IMPLICIT CHARACTER*50 (C)                                          LN20860
-      COMMON /CPLMOL_160/ MOLCPL_160(38),NCPL_160
+
+      parameter (mol_max=39)
+
+      COMMON /CPLMOL_160/ MOLCPL_160(mol_max),NCPL_160
       COMMON /CLINES_160/ 
      +                CPL001(16),CPL005(16),CPL009(16),CPL013(16),       LN20880
      +     CPL017(16),CPL021(16),CPL025(16),CPL029(16),CPL033(16),       LN20890
@@ -5341,7 +5398,7 @@ C     MOLCPL CONTAINS THE FLAGS FOR MOLECULE 2 AND 7                     LN21050
 C                                                                        LN21060
       DATA MOLCPL_160/0,1,0,0,0,0,1,0,0,0,0,0,0,0,0,                         LN21070
      1                0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,                         LN21080
-     2                0,0,0,0,0,0,0,0/                                       LN21090
+     2                0,0,0,0,0,0,0,0,0/                                       LN21090
 C                                                                        LN21100
 
 C     Previously NCPL was 598 ([([(293-1)/4]+1) * 16] + 12) / 2 = 598
@@ -7240,6 +7297,8 @@ C                                                                        LN33830
 C                                                                        LN18890
       IMPLICIT REAL*8           (V)                                     !LN18900
 C                                                                        LN18910
+      parameter (mol_max=39,mol_max_1=mol_max+1)
+
       COMMON /IFIL/ IRD,IPR,IPU,NWDR,LRC,ILNGTH,INLTE,IER,IPUOUT         LN18920
       COMMON /CONTRL/ VMIN,VMAX,VLO,VHI,LINES,NWDS,LSTW1                 LN18930
 C                                                                        LN18940
@@ -7295,13 +7354,13 @@ C                                                                        LN19180
      *     '  H2S ','HCOOH ','  HO2 ','    O ','CLONO2','  NO+ ' /,      LN19400
      *     TALF(31),TALF(32),TALF(33),TALF(34),TALF(35),TALF(36) /       LN19410
      *          0.5,     0.5,     0.5,     0.5,     0.5,     0.5 /       LN19420
-      DATA CMOL(37),CMOL(38)                                     /
-     *     ' HOBr ',' C2H4 '                                     /,
-     *     TALF(37),TALF(38)                                     /
-     *          0.5,     0.5                                     /
+      DATA CMOL(37),CMOL(38),CMOL(39)                            /
+     *     ' HOBr ',' C2H4 ','CH3OH '                            /,
+     *     TALF(37),TALF(38),TALF(39)                            /
+     *          0.5,     0.5,     0.5                            /
 C                                                                        LN19430
-      DATA (CMOL(I),I=39,64) / 26*'      '/                              LN19440
-      DATA (TALF(I),I=39,64) / 26*0.0 /                                  LN19450
+      DATA (CMOL(I),I=mol_max_1,64) / 25*'      '/                              LN19440
+      DATA (TALF(I),I=mol_max_1,64) / 25*0.0 /                                  LN19450
 C                                                                        LN19460
 C     THE FOLLOWING DATA STATEMENTS CONTAIN THE DEFAULT REJECTION        LN19470
 C     FOR EACH OF THE FIRST 32 POSSIBLE MOLECULES - THESE ARE BASED         LN19480
@@ -7313,7 +7372,7 @@ C                                                                        LN19530
 C                THIS GIVES:  S(M) = 1.E-5/W(M)                          LN19540
 C                                                                        LN19550
 C                NOTE: NO PROFILES ARE CURRENTLY AVAILABLE FOR           LN19560
-C                      MOLECULES 29 THROUGH 38 SO DEFAULT                LN19570
+C                      MOLECULES 29 THROUGH 39 SO DEFAULT                LN19570
 C                      REJECTIONS ARE CURRENTLY SET TO ZERO.             LN19580
 C                                                                        LN19590
 C                    H2O        CO2         O3        N2O         CO     LN19600
@@ -7334,8 +7393,11 @@ C                                                                        LN19740
 C                   C2H2       C2H6        PH3       COF2        SF6     LN19750
      *           4.717E-23, 3.401E-24, 6.173E-13, 0.000E+00, 0.000E+00,  LN19760
 C                                                                        LN19770
-C                    H2S      HCOOH     HO2, O, ClONO2, NO+,HOBr,C2H4
-     *           0.000E+00, 0.000E+00, 32*0.0 /                          LN19790
+C                    H2S      HCOOH   
+     *           0.000E+00, 0.000E+00,
+C
+C                   HO2, O, ClONO2, NO+,HOBr,C2H4,CH3OH
+     *           32*0.0 /
 C                                                                        LN19800
       DATA SR / 64*0.0 /                                                 LN19810
       DATA CHID10 / '       I'/                                          LN19820

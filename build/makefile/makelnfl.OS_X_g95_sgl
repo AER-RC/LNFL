@@ -12,7 +12,7 @@ PLATFORM = OS_X
 FC = g95
 
 FCFLAG = -O2
-OUTPUT = ../lnfl_v2.4_OS_X_g95_sgl
+OUTPUT = ../lnfl_v2.5_OS_X_g95_sgl
 CPATH = ../src/
 CPATHLBL = ../src/
 CDOTO = sgl_OS_X_g95.o/

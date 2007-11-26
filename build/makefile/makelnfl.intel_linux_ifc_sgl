@@ -12,7 +12,7 @@ PLATFORM = LINUX
 
 FC = ifc
 FCFLAG =-w -Vaxlib
-OUTPUT = ../lnfl_v2.4_intel_linux_ifc_sgl
+OUTPUT = ../lnfl_v2.5_intel_linux_ifc_sgl
 CPATH = ../src/
 CPATHLBL = ../src/
 CDOTO = linux_intel_sgl.o/

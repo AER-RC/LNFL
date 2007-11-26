@@ -11,7 +11,7 @@ PLATFORM = SUN
 
 FC = f90
 FCFLAG =-fast 
-OUTPUT = ../lnfl_v2.4_sun_f90_sgl
+OUTPUT = ../lnfl_v2.5_sun_f90_sgl
 CPATH = ../src/
 CPATHLBL = ../src/
 CDOTO = sun_f90_sgl.o/
