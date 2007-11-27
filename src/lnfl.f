@@ -288,7 +288,7 @@ C                                                                        LN02060
       EQUIVALENCE (MOL1(1),AMOL1(1)) , (MOL2(1),AMOL2(1))                LN02090
       EQUIVALENCE (MOLC(1),AMOLC(1))                                     LN02100
 C                                                                        LN02110
-      DATA HF80 / 'F80'/,HF100 / 'F100'/,HF160 / 'F160'/,HCPL / 'CPL'/,
+      DATA HF80 / 'F80'/,HF100 / 'F100'/,HF160 / 'F160'/,HCPL / 'cpl'/,
      *     HNOCPL / 'NOCPL'/, HLNOUT / 'LNOUT'/, HMRG2 / 'MRG2'/
       DATA HREJ / 'REJ'/,HNLTE / 'NLTE'/,HNBLK1 / 'NBLK1'/,              LN02140
      *     HNBLK2 / 'NBLK2'/, HBLK1 /'BLK1'/, HBLK2 /'BLK2'/
