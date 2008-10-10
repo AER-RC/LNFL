@@ -78,11 +78,11 @@ RECORD 2
   
 RECORD 3 
       
-       MIND1(M=1,38),      HOLIND1
+       MIND1(M=1,39),      HOLIND1
    
-                1-38,       43-82
+                1-39,       44-83
    
-                38I1,4X,     A40
+                39I1,4X,     A40
    
    
    
@@ -98,7 +98,7 @@ RECORD 3
         SPECIES   (15)  HCL  (16)  HBR  (17)    HI (18)   CLO (19)   OCS (20)  H2CO (21)  HOCL
                   (22)   N2  (23)  HCN  (24) CH3CL (25)  H2O2 (26)  C2H2 (27)  C2H6 (28)   PH3
                   (29) COF2  (30)  SF6  (31)   H2S (32) HCOOH (33)   HO2 (34)     O (35)CLONO2
-                  (36)  NO+  (37) HOBR  (38)  C2H4
+                  (36)  NO+  (37) HOBR  (38)  C2H4 (39) CH3OH
    
    
      HOLIND1   HOLlerith INDicator to select general LNFL options and specific options for TAPE1
