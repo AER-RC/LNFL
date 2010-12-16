@@ -27,11 +27,9 @@
     default. Flags NBLK1 and NBLK2 are no longer necessary and are ignored.
 
     Note 3. The writing of internally stored line coupling information to TAPE2
-    is no longer supported.  Line coupling information may be included on TAPE2
-    by the user for merging with TAPE1.
+    is no longer supported.  Line coupling information may be included explicitly
+    on TAPE1 or TAPE2 by the user.
 
-    Note 4.  TAPE1 itself may include line coupling information.
-    
 -------------------------------------------------------------------------
 
     FILE ASSIGNMENTS FOR LNFL
@@ -80,7 +78,7 @@ RECORD 3
       
        MIND1(M=1,39),      HOLIND1
    
-                1-39,       44-83
+                1-39,       43-82
    
                 39I1,4X,     A40
    
@@ -98,7 +96,7 @@ RECORD 3
         SPECIES   (15)  HCL  (16)  HBR  (17)    HI (18)   CLO (19)   OCS (20)  H2CO (21)  HOCL
                   (22)   N2  (23)  HCN  (24) CH3CL (25)  H2O2 (26)  C2H2 (27)  C2H6 (28)   PH3
                   (29) COF2  (30)  SF6  (31)   H2S (32) HCOOH (33)   HO2 (34)     O (35)CLONO2
-                  (36)  NO+  (37) HOBR  (38)  C2H4 (39) CH3OH
+                  (36)  NO+  (37) HOBR  (38)  C2H4 (39) C3HOH
    
    
      HOLIND1   HOLlerith INDicator to select general LNFL options and specific options for TAPE1
@@ -132,11 +130,11 @@ RECORD 4            IF MRG2 SELECTED ON RECORD 3:       second line for TAPE2 da
    
    
    
-       MIND2(M=1,38),      HOLIND2
+       MIND2(M=1,39),      HOLIND2
    
-               1-38,       43-82
+               1-39,       44-82
    
-               38I1,4X,     A40
+               39I1,4X,     A40
    
   
    
