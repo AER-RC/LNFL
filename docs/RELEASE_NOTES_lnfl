@@ -1,3 +1,11 @@
+LNFL_v2.6
+
+Dec., 2010
+
+* Fixed minor issues associated with reading F160 line files and handling of default line rejection with coupled lines.
+* Modified makefile system to include additional platforms and simplified execution.
+* Updated lnfl_instructions.
+
 
 LNFL_v2.5
 
