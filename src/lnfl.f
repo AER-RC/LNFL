@@ -1,11 +1,11 @@
 C     author:    $Author$
 C     revision:  $Revision$
 C     created:   $Date$
-      PROGRAM LNFL                                                       LN00010
+      PROGRAM LNFL                                                       
 C
 C  --------------------------------------------------------------------------
 C |                                                                          |
-C |  Copyright 2002 - 2005, Atmospheric & Environmental Research, Inc. (AER). |
+C |  Copyright 2002-2011, Atmospheric & Environmental Research, Inc. (AER).  |
 C |  This software may be used, copied, or redistributed as long as it is    |
 C |  not sold and this copyright notice is reproduced on each copy made.     |
 C |  This model is provided as is without any express or implied warranties. |
@@ -13,183 +13,142 @@ C |                       (http://www.rtweb.aer.com/)                        |
 C |                                                                          |
 C  --------------------------------------------------------------------------
 C
-C                                                                        LN00020
-C**********************************************************************  LN00030
-C                                                                        LN00040
-C                            LNFL                    21 OCTOBER 1991     LN00050
-C                                                                        LN00060
-C    THIS PROGRAM CREATES A LINE DATA FILE FOR LBLRTM.                   LN00070
-C                                                                        LN00080
-C                                                                        LN00090
-C    FOR USE WITH 1986 TAPE FORMAT FOR TAPE1 AND SUPPLEMENTAL OR         LN00100
-C    REPLACEMENT LINE DATA ON TAPE2.                                     LN00110
-C                                                                        LN00120
-C                                                                        LN00130
-C    DEFAULT IMPLEMENTATION OF THIS PROGRAM CAUSES LINE FILE DATA        LN00140
-C    INCLUDING LINE COUPLING INFORMATION, INTERNALLY STORED IN THIS      LN00150
-C    PROGRAM, TO BE WRITTEN TO TAPE2 AND INCORPORATED INTO THE LBLRTM    LN00160
-C    LINE FILE, TAPE3. THE INTERNALLY STORED LINE DATA REPLACES LINE     LN00170
-C    DATA FROM TAPE1 FOR IDENTICAL TRANSITIONS.                          LN00180
-C                                                                        LN00190
-C    INTERNAL LINE COUPLING DATA IS INCLUDED FOR OXYGEN IN THE           LN00200
-C     0., 2. (60GHZ) AND  4. (120GHZ) CM-1 SPECTRAL REGION AND FOR THE   LN00210
-C    CARBON DIOXIDE Q-BRANCHES AT 618., 667., 720., 721.  AND 791. CM-1  LN00220
-C    THE DATA IS PROVIDED FOR THE MAIN ISOTOPES ONLY. THE LINE COUPLING  LN00230
-C    COEFFICIENTS FORMULATION IS DESCRIBED IN 
-C     Hoke et al, 1988: Proc. Of The Internations Radiation  Symposium, 
-C     J. Lenoble AND J.F. Geleyn, ED., A. DEEPAK PUB., 368-371.                               
-C
-C    These coefficients have been updated to provide consistency with
-C    HITRAN96 oxygen and carbon dioxide line parameters (June 1999).
-C
-C    ADDITIONAL LINE COUPLING PARAMETERS ARE PROVIDED FOR CO2 Q BRANCHES
-C    AT 1932 cm-1, 2076 cm-1, 2093 cm-1, 2193 cm-1 (April 2001)
-C    - coupling coefficients for these branches are from 
-C     Strow L.L., D. C. Tobin , S. E. Hannon, "A compilation of 
-C     first-order line mixing coefficients for CO2 Q-branches," 
-C     J. Quant. Spectrosc. Radiat. Transfer, vol.  52, pp. 281-294,1994.
-C                                                                       
-C    THE LINE COUPLING DATA GENERALLY FOLLOWS THE DEVELOPMENT OF SMITH,
-C            S' = S * ( 1. + G * (P/P0)**2 )           P0=1013 MB       
-C            S''= S * (      Y * (P/P0)  )                              
-C     VALUES FOR Y AND G ARE PROVIDED AT FOUR TEMPERATURES:             
-C     200 K, 250 K, 296 K, AND 340 K                                    
+C                                                                        
+C**********************************************************************  
+C                                                                        
+C                            LNFL                     14 DECEMBER 2010   
+C                                                                        
+C    THIS PROGRAM CREATES A TAPE3 LINE DATA FILE FOR LBLRTM.                   
+C                                                                        
+C    FOR USE WITH HITRAN F100/F160 FORMAT FOR TAPE1 AND SUPPLEMENTAL OR  
+C    REPLACEMENT LINE DATA ON TAPE2.                                     
+C                                                                        
+C                                                                        
+C    IMPLEMENTATION OF THIS PROGRAM CAUSES LINE FILE DATA FROM THE TAPE1 
+C    TO BE WRITTEN TO THE LBLRTM BINARY LINE FILE, TAPE3.  
+C              
+C    LNFL ALSO TRANSFERS TO TAPE3 THE ISOTOPE NUMBER FOR EACH LINE.      
+C                                                                        
+C    THE FILES TAPE1 AND TAPE2 MUST INCLUDE THE LINE PARAMETERS          
+C    REQUIRED FOR THE MOLECULAR TYPES AND WAVENUMBER RANGE SELECTED.     
+C                                                                        
+C______________________________________________________________________  
+C                                                                        
+C                             TAPE1                                      
+C                                                                        
+C    THIS FILE CONTAINS THE LINE DATA IN CODED FORMAT FOR THE MAIN AND 
+C    TRACE ATMOSPHERIC MOLECULES.           
+C                                                                      
+C    THE REFERENCE FOR THE F100 DATA FORMAT IS:                       
+C                                                                     
+C       L.S. Rothman, R. R. Gamache, A. Goldman, L. R. Brown,         
+C       R. A. Toth, H. M. Pickett, R. L. Poynter, J.-M. Flaud,        
+C       C. Camy-Peyret, A. Barbe, N. Husson, C. P. Rinsland           
+C       and M. A. H. Smith, The HITRAN database: 1986 Edition, 
+C       Applied Optics 26, 4058 (1987)                                           
+
+c     THE REFERENCE FOR THE F160 DATA FORMAT IS: 
 c
-c    ******************************************************************* 
-c
-c     October 2004
-c
-c     This version of lnfl includes the capability of utilizing the
-c     HITRAN2004 line parameter database.  HITRAN2004 uses
-c     a new 160 character format; the suffix _160 has been used
-c     for the necessary variable and module designations in  LNFL.
-c
-c     The HITRAN2004 frequencies for carbon dioxide have been modified
-c     from those previously used for the line coupling coefficients 
-c     included in LNFL.  This has necessitated modification of LNFL
-c     to include a revised line coupling module.  Note that at this stage
-c     the coupling coefficients have NOT been modified to ensure the
-c     proper constraint requirements.  This will be done in the future.
-c
-c     HITRAN2004 reference:
 c     Rothman,  L.S., D. Jacquemart, A. Barbe, D.C. Benner, M. Birk, 
 c     L.R. Brown, M.R. Carleer, C. Chackerian, Jr, K. Chance, V. Dana, 
 c     V.M. Devi, J.-M. Flaud, R.R. Gamache, A. Goldman J.-M. Hartmann, 
 c     K.W. Jucks, A.G. Maki, J.Y. Mandin, S. Massie, J. Orphal, A. Perrin, 
 c     C.P. Rinsland, M.A.H. Smith, R.A. Toth, J. Vander Auwera, 
 c     P. Varanasi, G. Wagner,  The HITRAN 2004 Molecular Spectroscopic 
-c     Database, J. Quant. Spectrosc. Radiat .Transfer, in press, 2005.
+c     Database, J. Quant. Spectrosc. Radiat .Transfer 96, 139-204 (2005)
 c
 c    ******************************************************************* 
-C                                                                        LN00250
-C    LNFL ALSO TRANSFERS TO TAPE3 THE ISOTOPE NUMBER FOR EACH LINE.      LN00260
-C                                                                        LN00270
-C    THE FILES TAPE1 AND TAPE2 MUST INCLUDE THE LINE PARAMETERS          LN00280
-C    REQUIRED FOR THE MOLECULAR TYPES AND WAVENUMBER RANGE SELECTED.     LN00290
-C                                                                        LN00300
-C______________________________________________________________________  LN00310
-C                                                                        LN00320
-C                             TAPE1                                      LN00330
-C                                                                        LN00340
-C    THIS FILE CONTAINS THE AFGL OR EQUIVALENT LINE DATA IN CODED        LN00350
-C        FORMAT FOR THE MAIN AND TRACE ATMOSPHERIC MOLECULES.            LN00360
-C                                                                        LN00370
-C    THE REFERENCE FOR THE 1986 AFGL LINE DATA IS                        LN00380
-C                                                                        LN00390
-C       L.S. ROTHMAN, R. R. GAMACHE, A. GOLDMAN, L. R. BROWN,            LN00400
-C       R. A. TOTH, H. M. PICKETT, R. L. POYNTER, J.-M. FLAUD,           LN00410
-C       C. CAMY-PEYRET, A. BARBE, N. HUSSON, C. P. RINSLAND,             LN00420
-C       AND M. A. H. SMITH                                               LN00430
-C                                                                        LN00440
-C                  'THE HITRAN DATABASE: 1986 EDITION,'                  LN00450
-C                     APPLIED OPTICS 26,4058 (1987).                     LN00460
-C                                                                        LN00470
-C                                                                        LN00480
+C                                                                        
 C    TAPE1 and TAPE2 ARE ASSUMED TO BE in UNBLOCKED FORMAT.
 C    IF THE BLK1 OPTION IS SELECTED ON INPUT RECORD 1 or the BLK2
 C    OPTION ON TAPE2, THE RESPECTIVE FILES ARE ASSUMED TO BE
 C    BLOCKED WITH 51 TRANSITIONS PER BLOCK.
-C                                                                        LN00520
+C                                                                        
 C    FOR F100 FORMAT THERE ARE 100 CHARACTERS FOR EACH TRANSITION. 
 C    FOR F160 FORMAT THERE ARE 160 CHARACTERS FOR EACH TRANSITION. 
-C    THE DATA FOR EACH TRANSITION INCLUDE MOLECULE IDENTIFICATION,       LN00540
-C    LINE FREQUENCY, INTENSITY, AIR HALF-WIDTH, SELF HALFWIDTH,          LN00550
-C    LOWER STATE ENERGY, TEMPERATUE DEPENDENCE OF THE AIR HALFWIDTH,     LN00560
-C    PRESSURE SHIFT, UPPER AND LOWER STATE VIBRATIONAL AND ROTATIONAL    LN00570
-C    IDENTIFICATIONS, REFERENCE PARAMETERS AND A FLAG FOR LINE           LN00580
-C    COUPLING.                                                           LN00590
-C                                                                        LN00600
-C    MOLECULE NUMBERS 1 THROUGH 39 MAY BE SELECTED.                      LN00610
-C                                                                        LN00620
-C                                                                        LN00630
-C    THE VARIABLES AND THE FORMAT FOR THE TRANSITIONS ON TAPE1 ARE       LN00640
-C                                                                        LN00650
-C ISO,VNU,STR,TRANS,HWHM,HWHMS,ENERGY,TDEP,SHIFT,IVUP,IVLO,CUP,CLO,IFLG  LN00660
-C                                                                        LN00670
-C 2X,I1,F12.6,2E10.3, 2F5.4,    F10.4,F4.2, F8.6,   2I3,     2A9,7X,I2   LN00680
-C                                                                        LN00690
-C                                                                        LN00700
-C______________________________________________________________________  LN00710
-C                                                                        LN00720
-C                                                                        LN00730
-C              TAPE2                                                     LN00740
-C                                                                        LN00750
-C    TAPE2 IS AVAILABLE FOR THE USER TO PROVIDE ALTERNATE LINE DATA      LN00760
-C               (REPLACEMENT OR SUPPLEMENTAL)                            LN00770
-C                                                                        LN00780
-C    MOLECULE NUMBERS 1 THROUGH 39 MAY BE SELECTED.                      LN00790
-C                                                                        LN00800
-C    TWO FORMAT OPTIONS ARE AVAILABLE: OPTION SELECTED ON RECORD 2.      LN00810
-C                                                                        LN00820
-C                                                                        LN00830
-C    F80        1982 AFGL FORMAT                                         LN00840
-C                                                                        LN00850
-C    F100       1986 AFGL FORMAT (USE WITH HITRAN 1991)                  LN00860
-C                                                                        LN00870
-C               LINE COUPLING COEFFICIENTS MAY BE PROVIDED ON THIS FILE  LN00880
-C                                                                        LN00890
-c    F160       160 column format-  HITRAN 2004
-c
-C                                                                        LN00900
-C    IF FORMAT F100 IS SELECTED, A BLOCKING OPTION IS AVAILABLE:         LN00910
-C                                                                        LN00920
-C        NBLK2       ONE (1) TRANSITION PER RECORD (NO BLOCKING)         LN00930
-C                                                                        LN00940
-C                    DEFAULT IS 51 TRANSITIONS PER RECORD                LN00950
-C                                                                        LN00960
-C______________________________________________________________________  LN00970
-C                                                                        LN00980
-C                                                                        LN00990
-C              TAPE3                                                     LN01000
-C                                                                        LN01010
-C    LINE DATA FILE FOR LBLRTM; UNFORMATTED                              LN01020
-C    TAPE3 NOT COMPATIBLE WITH FASCOD2 CODE                              LN01030
-C                                                                        LN01040
-C______________________________________________________________________  LN01050
-C                                                                        LN01060
-C                                                                        LN01070
-C              TAPE7                                                     LN01080
-C                                                                        LN01090
-C    FORMATTED REPRESENTATION OF TAPE3 SELECTED BY OPTION 'LNOUT' ON     LN01100
-C    RECORD 2.                                                           LN01110
-C                                                                        LN01120
-C    ONE TRANSITION PER RECORD IN SAME REPRESENTATION AS DATA ON         LN01130
-C    ON TAPE1 AND TAPE2.                                                 LN01140
-C                                                                        LN01150
-C______________________________________________________________________  LN01160
-C                                                                        LN01170
-C                                                                        LN01180
-C              TAPE10                                                    LN01190
-C                                                                        LN01200
-C    THIS FILE IS AN INTERMEDIATE UNFORMATTED FILE                       LN01210
-C                                                                        LN01220
-C**********************************************************************  LN01230
-C                                                                        LN01240
-C NOTE : IN LINE COUPLING MODE (DEFAULT), THE CORRESPONDING LINES ON     LN01250
-C        THE TAPE1 LINE DATA FILE ARE REPLACED BY LINE DATA              LN01260
-C        INTERNALLY STORED IN BLOCK DATA IN THIS PROGRAM CONTAINING      LN01270
-C        THE Y'S AND THE G'S.                                            LN01280
-C                                                                        LN01290
+C    THE DATA FOR EACH TRANSITION INCLUDE MOLECULE IDENTIFICATION,       
+C    LINE FREQUENCY, INTENSITY, AIR HALF-WIDTH, SELF HALFWIDTH,          
+C    LOWER STATE ENERGY, TEMPERATUE DEPENDENCE OF THE AIR HALFWIDTH,     
+C    PRESSURE SHIFT, UPPER AND LOWER STATE VIBRATIONAL AND ROTATIONAL    
+C    IDENTIFICATIONS, REFERENCE PARAMETERS (AND FOR F100, A FLAG FOR 
+C    LINE COUPLING).                                                           
+C                                                                        
+C    MOLECULE NUMBERS 1 THROUGH 39 MAY BE SELECTED.                      
+C                                                                        
+C                                                                        
+C______________________________________________________________________  
+C                                                                       
+C                                                                       
+C              TAPE2                                                    
+C                                                                       
+C    TAPE2 IS AVAILABLE FOR THE USER TO PROVIDE ALTERNATE LINE DATA     
+C               (REPLACEMENT OR SUPPLEMENTAL)                          
+C                                                                        
+C    MOLECULE NUMBERS 1 THROUGH 39 MAY BE SELECTED.                      
+C                                                                        
+C    TWO FORMAT OPTIONS ARE AVAILABLE: OPTION SELECTED ON RECORD 2.      
+C                                                                        
+C                                                                        
+C    F80        1982 AFGL FORMAT                                         
+C                                                                        
+C    F100       1986 AFGL FORMAT 
+C______________________________________________________________________  
+C                                                                        
+C                                                                        
+C              TAPE3                                                     
+C                                                                        
+C    LINE DATA FILE FOR LBLRTM; UNFORMATTED                              
+C    TAPE3 NOT COMPATIBLE WITH FASCOD2 CODE                              
+C                                                                        
+C______________________________________________________________________  
+C                                                                        
+C                                                                        
+C              TAPE7                                                     
+C                                                                        
+C    FORMATTED REPRESENTATION OF TAPE3 SELECTED BY OPTION 'LNOUT' ON     
+C    RECORD 2.                                                           
+C                                                                        
+C    ONE TRANSITION PER RECORD IN SAME REPRESENTATION AS DATA ON         
+C    ON TAPE1 AND TAPE2.                                                 
+C                                                                        
+C______________________________________________________________________  
+C                                                                        
+C                                                                        
+C              TAPE10                                                    
+C                                                                        
+C    THIS FILE IS AN INTERMEDIATE UNFORMATTED FILE                       
+C                                                                        
+C**********************************************************************  
+C
+C                   LINE COUPLING
+C
+C 
+C    THE LINE COUPLING DATA GENERALLY FOLLOWS THE DEVELOPMENT OF SMITH,
+C            S' = S * ( 1. + G * (P/P0)**2 )           P0=1013 MB       
+C            S''= S * (      Y * (P/P0)  )                              
+C
+C    Ys ARE FIRST ORDER LINE COUPLING COEFFICIENTS
+C    Gs ARE SECOND ORDER LINE COUPLING COEFFICIENTS
+C
+C    LINE COUPLING MAY BE USED WITH F100 FORMAT
+                          
+C THE VARIABLES AND THE FORMAT FOR THE TRANSITIONS ON TAPE1 (F100) ARE       
+C                                                                        
+C ISO,VNU,STR,TRANS,HWHM,HWHMS,ENERGY,TDEP,SHIFT,IVUP,IVLO,CUP,CLO,IFLG  
+C                                                                        
+C 2X,I1,F12.6,2E10.3, 2F5.4,    F10.4,F4.2, F8.6,   2I3,     2A9,7X,I2   
+C                                                                        
+C                                                                        
+C    IF IFLG EQ -1, THEN AN ADDITIONAL LINE SHOULD BE PROVIDED 
+C    TO SUPPLY VALUES FOR Y AND G AT FOUR TEMPERATURES:                                              
+C                  
+C     200 K, 250 K, 296 K, AND 340 K                   
+C                 
+C     AS OF JULY 2007, THE WRITING OF INTERNALLY STORED LINE COUPLING 
+C     TO TAPE2 IS NO LONGER SUPPORTED. LINE COUPLING INFORMATION MAY 
+C     INCLUDED BY THE USER ON TAPE1 OR TAPE2.
+
+C                                                                        
 C**********************************************************************  LN01300
 C-                                                                       LN01310
 C-                      STATEMENT FLAGS                                  LN01320
@@ -1239,14 +1198,17 @@ c     hitran upper:
 c               10x,a5
 c     hitran lower:
 c                5x,a1,i3,a1,a5
-
+ 
 
 c              write (clo,962)  b_21,  b_22, b_23
 c%%% 962           format     (4x,a1, 1X,a2,   a1)
  962           format         (4x,a1,    a3,   a1)
+C               write(*,*) b_21, b_22, b_23
 
 c     The symmetry has been dropped here!
-               write (clo,962)  b_21,b_22
+C     And added back in (MJA, 11-5-2010)
+C               write (clo,962)  b_21,b_22
+                write (clo,962)  b_21,b_22, b_23
 
 c_______________________________________________________________________
 
@@ -1512,6 +1474,10 @@ C           SET IFLGM1 TO ZERO TO ENSURE THE NEXT PASS USES
 C           REGULAR FORMAT FOR READING LINE INFORMATION
 C
             IFLGM1 = 0                                                   LN11120
+C           SKIP STRENGTH REJECTED COUPLED LINES (MJA, 11-16-2010)
+C
+C            WRITE(*,*) STR
+            IF (STR.LT.SR(M)) GO TO 50                                   LN10770
 C
 C           SKIP OVER UNEEDED WAVENUMBERS
 C
@@ -1779,6 +1745,11 @@ C           REGULAR FORMAT FOR READING LINE INFORMATION
 C
             IFLGM1 = 0                                                   LN11120
 C
+C           SKIP STRENGTH REJECTED COUPLED LINES (MJA, 11-16-2010)
+C
+C            WRITE(*,*) STR
+            IF (STR.LT.SR(M)) GO TO 50                                   LN10770
+
 C           SKIP OVER UNEEDED WAVENUMBERS
 C
             IF (VNUS.LT.VMIN) GO TO 50
