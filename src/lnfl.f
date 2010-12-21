@@ -219,7 +219,7 @@ C                                                                        LN01840
 C                                                                        LN01860
       COMMON /BUFIDC/ CMOL(64),CHID10,CHID08                             LN01870
       CHARACTER CMOL*6,CHID10*8,CHID08*8,CFORM*11                        LN01880
-      COMMON /UNITS/ PI,PLANCK,BOLTZ,CLIGHT,AVOG,RADCN1,RADCN2           LN01890
+      COMMON /UNITS/ PI,PLANCK,BOLTZ,CLIGHT,AVOGAD,RADCN1,RADCN2           LN01890
       COMMON /MANE/ VNU1(51),STR1(51),ALF1(51),EPP1(51),MOL1(51),        LN01900
      *              HWHM1(51),TMPAL1(51),PSHIF1(51),IFG1(51),            LN01910
      *              MIND1(64),IOUT(51)                                   LN01920
@@ -277,7 +277,7 @@ C                                                                        LN02240
       LRC = NWDL(IWD1,LSTW1)                                             LN02270
       lstw2 = -654321
       ILNGTH = NWDL(IWD2,LSTW2)                                          LN02280
-      RADCN2 = PLANCK*CLIGHT/BOLTZ                                       LN02290
+C      RADCN2 = PLANCK*CLIGHT/BOLTZ                                       LN02290
 
       do 5 m=1,64
          n_negepp(m) = 0
@@ -990,7 +990,7 @@ C                                                                        LN10000
       COMMON /CONTRL/ VMIN,VMAX,VLO,VHI,LINES,NWDS,LSTW1                 LN10020
       COMMON /HBLOCK/ INBLK1,INBLK2,I86T1,I86T2
       COMMON /IFIL/ IRD,IPR,IPU,NWDR,LRC,ILNGTH,INLTE,IER,IPUOUT         LN10040
-      COMMON /UNITS/ PI,PLANCK,BOLTZ,CLIGHT,AVOG,RADCN1,RADCN2           LN10050
+      COMMON /UNITS/ PI,PLANCK,BOLTZ,CLIGHT,AVOGAD,RADCN1,RADCN2           LN10050
       COMMON /IC1/ ILIN3                                                 LN10060
       COMMON /MANE/ VNU1(51),STR1(51),ALF1(51),EPP1(51),MOL1(51),        LN10070
      *              HWHM1(51),TMPAL1(51),PSHIF1(51),IFG1(51),            LN10080
@@ -1549,7 +1549,7 @@ C                                                                        LN10000
       COMMON /CONTRL/ VMIN,VMAX,VLO,VHI,LINES,NWDS,LSTW1                 LN10020
       COMMON /HBLOCK/ INBLK1,INBLK2,I86T1,I86T2
       COMMON /IFIL/ IRD,IPR,IPU,NWDR,LRC,ILNGTH,INLTE,IER,IPUOUT         LN10040
-      COMMON /UNITS/ PI,PLANCK,BOLTZ,CLIGHT,AVOG,RADCN1,RADCN2           LN10050
+      COMMON /UNITS/ PI,PLANCK,BOLTZ,CLIGHT,AVOGAD,RADCN1,RADCN2           LN10050
       COMMON /IC1/ ILIN3                                                 LN10060
       COMMON /MANE/ VNU1(51),STR1(51),ALF1(51),EPP1(51),MOL1(51),        LN10070
      *              HWHM1(51),TMPAL1(51),PSHIF1(51),IFG1(51),            LN10080
@@ -1813,7 +1813,7 @@ C                                                                        LN11660
       COMMON /CONTRL/ VMIN,VMAX,VLO,VHI,LINES,NWDS,LSTW1                 LN11680
       COMMON /HBLOCK/ INBLK1,INBLK2,I86T1,I86T2
       COMMON /IFIL/ IRD,IPR,IPU,NWDR,LRC,ILNGTH,INLTE,IER,IPUOUT         LN11700
-      COMMON /UNITS/ PI,PLANCK,BOLTZ,CLIGHT,AVOG,RADCN1,RADCN2           LN11710
+      COMMON /UNITS/ PI,PLANCK,BOLTZ,CLIGHT,AVOGAD,RADCN1,RADCN2           LN11710
       COMMON /IC2/ ILIN3                                                 LN11720
       COMMON /MAINC/ VNUC(51),STRC(51),ALFC(51),EPPC(51),MOLC(51),       LN11730
      *               HWHMC(51),TMPALC(51),PSHIFC(51),IFGC(51),           LN11740
@@ -2680,7 +2680,7 @@ C                                                                        LN14840
       COMMON /CONTRL/ VMIN,VMAX,VLO,VHI,LINES,NWDS,LSTW1                 LN14900
       COMMON /HBLOCK/ INBLK1,INBLK2,I86T1,I86T2
       COMMON /IFIL/ IRD,IPR,IPU,NWDR,LRC,ILNGTH,INLTE,IER,IPUOUT         LN14920
-      COMMON /UNITS/ PI,PLANCK,BOLTZ,CLIGHT,AVOG,RADCN1,RADCN2           LN14930
+      COMMON /UNITS/ PI,PLANCK,BOLTZ,CLIGHT,AVOGAD,RADCN1,RADCN2           LN14930
       COMMON /LCHAR/ ALIN1(51),ALIN(40),ALINC(51),ALINE(250)             LN14940
       DIMENSION IDATE(40),ISO(40)                                        LN14950
 C                                                                        LN14960
@@ -7291,7 +7291,7 @@ C                                                                        LN18960
      *               MINDC(64),IOUTC(51)                                 LN19070
       COMMON /TRAC/ VNU2(40),STR2(40),ALF2(40),EPP2(40),MOL2(40),        LN19080
      *              HWHM2(40),TMPAL2(40),PSHIF2(40),IFG2(40),MIND2(64)   LN19090
-      COMMON /UNITS/ PI,PLANCK,BOLTZ,CLIGHT,AVOG,RADCN1,RADCN2           LN19100
+      COMMON /UNITS/ PI,PLANCK,BOLTZ,CLIGHT,AVOGAD,RADCN1,RADCN2           LN19100
       COMMON /SREJ/ SR(64),SRD(64),TALF(64)                              LN19110
       COMMON /ICN/ ILIN3,NMAX,NBLOCK,inocpl
       common /eppinfo/ negflag
@@ -7382,7 +7382,7 @@ C                                                                        LN19800
       DATA PLANCK / 6.62606876E-27 /, BOLTZ  / 1.3806503E-16 /,
      *     CLIGHT / 2.99792458E+10 /, 
      *     AVOGAD / 6.02214199E+23 /
-
+     *     RADCN1 / 1.191042722E-12 /, RADCN2 / 1.4387752    /
       DATA ILIN3 / 0 /,NMAX / 250 /,NBLOCK / 0 /                         LN19910
       data negflag / 0 /
 C                                                                        LN19920
