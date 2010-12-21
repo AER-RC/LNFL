@@ -1,7 +1,12 @@
+C     author:    $Author$
+C     revision:  $Revision$
+C     created:   $Date$
+
 LNFL_v2.6
 
 Dec., 2010
 
+* Updated physical constants to be consistent in value and name with LBLRTM
 * Fixed minor issues associated with reading F160 line files and handling of default line rejection with coupled lines.
 * Modified makefile system to include additional platforms and simplified execution.
 * Updated lnfl_instructions.
