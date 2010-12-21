@@ -7378,8 +7378,11 @@ C                                                                        LN19800
       DATA MOLIND / 64*0 /,MIND1 / 64*0 /,MIND2 / 64*0 /                 LN19860
       DATA MINDC / 64*0 /,IOUT / 51*0 /,IOUTC / 51*0 /                   LN19870
       DATA MCNTNL / 64*0 /,ILINNL / 0 /                                  LN19880
-      DATA PLANCK / 6.626176E-27 /,BOLTZ / 1.380662E-16 /,               LN19890
-     *     CLIGHT / 2.99792458E10 /,AVOG / 6.022045E23 /                 LN19900
+
+      DATA PLANCK / 6.62606876E-27 /, BOLTZ  / 1.3806503E-16 /,
+     *     CLIGHT / 2.99792458E+10 /, 
+     *     AVOGAD / 6.02214199E+23 /
+
       DATA ILIN3 / 0 /,NMAX / 250 /,NBLOCK / 0 /                         LN19910
       data negflag / 0 /
 C                                                                        LN19920
