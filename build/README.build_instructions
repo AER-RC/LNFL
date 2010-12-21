@@ -1,0 +1,21 @@
+#     author:    $Author$
+#     revision:  $Revision$
+#     created:   $Date$
+
+* Makefiles are designed for use with gmake. 
+* From lnfl/build directory, type: gmake -f make_lnfl <TARGET>
+
+TARGET            DESCRIPTION                                                       COMPILE EXECUTABLE NAME
+aixIBMsgl         IBM/AIX OS using IBM fortran,single precision                     xlf90
+linuxPGIsgl       Linux OS using PGI fortran,single precision                       pgf90
+linuxGNUsgl       Linux OS using GNU fortran,single precision                       gfortran
+linuxG95sgl       Linux OS using G95 fortran,single precision                       g95
+linuxINTELsgl     Linux OS using Intel fortran,single precision                     ifort
+mingwGNUsgl       Windows unix shell environment using gfortran,single precision    gfortran
+osxABSOFTsgl      Mac OS_X using Absoft Pro fortran,singleprecision                 f90
+osxGNUsgl         Mac OS_X using GNU fortran,singleprecision                        gfortran
+osxIBMsgl         Mac OS_X using IBM XL fortran,singleprecision                     xlf90
+osxINTELsgl       Mac OS_X using Intel fortran,single precision                     ifort
+sunSUNsgl         Sun/Solaris OS using Sun fortran,single precision                 sunf90
+sgiMIPSsgl        SGI/IRIX64 OS using MIPS fortran,single precision                 f90
+
