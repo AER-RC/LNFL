@@ -357,8 +357,8 @@ osxIBMsgl:
 # window unix shell environment using gfortran and double precision
 ##############################################################
 
-mingwdbl:
-	${MAKE} -f ${MAKEFILE} all P_TYPE=dbl FC_TYPE=gnu PLTFRM=linux \
+mingwGNUdbl:
+	${MAKE} -f ${MAKEFILE} all P_TYPE=dbl FC_TYPE=gnu PLTFRM=mingw \
 	FC=gfortran  \
 	FCFLAG="-fdefault-integer-8 -fdefault-real-8 -Wall -frecord-marker=4" \
 	UTIL_FILE=util_gfortran.f
@@ -367,8 +367,8 @@ mingwdbl:
 # window unix shell environment using gfortran and single precision
 ##############################################################
 
-mingwsgl:
-	${MAKE} -f ${MAKEFILE} all P_TYPE=sgl FC_TYPE=gnu PLTFRM=linux \
+mingwGNUsgl:
+	${MAKE} -f ${MAKEFILE} all P_TYPE=sgl FC_TYPE=gnu PLTFRM=mingw \
 	FC=gfortran \
 	FCFLAG="-Wall -frecord-marker=4" \
 	UTIL_FILE=util_gfortran.f
