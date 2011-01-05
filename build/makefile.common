@@ -52,7 +52,7 @@ default:
 	echo 'osxIBMdbl    : OSX using IBM XL Fortran and double precision'
 	echo 'osxIBMsgl    : OSX using IBM XL Fortran and single precision'
 	echo 'mingwGNUdbl' : Window unix shell environment using gfortran and double precision'
-	echo 'mingwGNUSgl' : Window unix shell environment using gfortran and single precision'
+	echo 'mingwGNUsgl' : Window unix shell environment using gfortran and single precision'
 	echo 'aixIBMsgl    : AIX using IBM XL Fortran and double precision'
 	echo 'aixIBMsgl    : AIX using IBM XL Fortran and single precision'
 	echo
