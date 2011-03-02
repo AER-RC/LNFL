@@ -3,6 +3,7 @@
 #     created:   $Date$
 
 * Makefiles are designed for use with gmake. 
+* LNFL is designed for a single-precision compile.
 * From lnfl/build directory, type: gmake -f make_lnfl <TARGET>
 
 TARGET            DESCRIPTION                                                       COMPILE EXECUTABLE NAME
