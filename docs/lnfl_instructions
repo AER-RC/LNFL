@@ -78,9 +78,9 @@ RECORD 3
       
        MIND1(M=1,39),      HOLIND1
    
-                1-39,       43-82
+                1-39,       44-83
    
-                39I1,4X,     A40
+                39I1,4X,    A40
    
    
    
@@ -132,9 +132,9 @@ RECORD 4            IF MRG2 SELECTED ON RECORD 3:       second line for TAPE2 da
    
        MIND2(M=1,39),      HOLIND2
    
-               1-39,       44-82
+               1-39,       44-83
    
-               39I1,4X,     A40
+               39I1,4X,    A40
    
   
    
