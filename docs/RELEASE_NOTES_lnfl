@@ -8,7 +8,7 @@ Dec., 2010
 
 * Updated physical constants to be consistent in value and name with LBLRTM
 * Fixed minor issues associated with reading F160 line files and handling of default line rejection with coupled lines.
-* Modified makefile system to include additional platforms and simplified execution.
+* Simplified makefile system in the build directory; includes new platforms such as Windows and capability to easily add new platforms.
 * Updated lnfl_instructions.
 
 
