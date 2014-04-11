@@ -4,6 +4,7 @@
 #This script links the utility files from there repository
 #to the src directory
 
-ln -s /storm/rc1/rt_utils_local_version/util*.f90 .
+ln -s ../../aer_rt_utils/*.f .
+
 
 
