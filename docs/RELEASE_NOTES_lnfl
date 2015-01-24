@@ -1,6 +1,57 @@
-C     author:    $Author$
-C     revision:  $Revision$
-C     created:   $Date$
+LNFL_v3.0
+
+Jan., 2015
+
+* LNFL_v3.0 is an update to MonoLNFL_v1.0 (see below) that includes the capability to handle 
+  all the transitions in the HITRAN 2012 line file, as well as the extra broadening
+  and speed dependent parameters that were included in MonoLNFL_v1.0. 
+
+* LNFL_v3.0 should only be used for: LBLRTM_v13.0 or later versions
+                                     MonoRTM_v5.0 or later versions
+
+* LNFL_v3.0 has been updated to handle all 47 molecules in the HITRAN 2012 line list, 
+  all of their isotopologues, and all of their vibrational states. MonoLNFL_v1.0 
+  and LNFL_v2.6 will not pass many of these lines through to the TAPE3, so only 
+  LNFL_v3.0 should be used with HITRAN 2012.
+
+MonoLNFL_v1.0
+
+Dec., 2013
+
+* MonoLNFL is an update to LNFL_v2.6 made to include extra broadening and 
+  speed-dependent line parameters in the TAPE3 for use in MonoRTM v5.0 and 
+  later. LBLRTM v12.2 and earlier versions do not have the capability to use these 
+  parameters, so MonoLNFL should ONLY be used for MonoRTM v5.0 and later versions.  
+
+* MonoLNFL_v1.0 now has the capability to read the following files containing 
+  extra broadening and speed-dependent line parameters 
+  (D. Weisenstein, K. Cady-Pereira, M. Alvarado):
+    - co2_co2_brd_param -> CO2 self broadening parameters based on calculations by 
+                           R. Gamache of U. Mass. Lowell. 
+    - o2_h2o_brd_param  -> O2 transitions broadened by H2O based on Drouin et al. (2013). 
+    - co2_h2o_brd_param -> CO2 transitions broadened by H2O based on Sung (2009)
+    - wv_co2_brd_param  -> H2O transitions broadened by CO2 based on calculations by 
+                           R. Gamache of U. Mass. Lowell. 
+    - spd_dep_param     -> Speed-dependent Voigt parameters for CO2 transitions in the bands 
+                           68<-1 and 71<-1 (i.e., 30012<-00001 and 30013<-00001) following 
+                           Devi et al. (2007a,b).
+   These files, with parameters consistent with the line files spectral_lines.dat.0_55.v5.0_fast 
+   and aer_v_3.3, are included with the MonoLNFL_v1.0 package.
+
+* Special reduced microwave ASCII line files, corresponding to the old "spectral_lines.dat" of 
+  MonoRTM v4.2, are provided to be used as TAPE1 inputs of MonoLNFL in the microwave. (M. Alvarado, 
+  E. Mlawer, K. Cady-Pereira). 
+  
+  The calculational accuracy of these reduced line lists at any frequency between 0 and 
+  899.4 GHz (0-30 cm-1) with respect to the corresponding full line list aer_v_3.3 is:
+    - spectral_lines.dat.0_55.v5.0_fast (corresponds to ISPD=0 in MonoRTM v4.2 and older): 
+             0.1 K for upwelling, 0.2 K for downwelling  
+    - spectral_lines.dat.0_55.v5.0_veryfast (corresponds to ISPD=1 in MonoRTM v4.2 and older): 
+             0.5 K for upwelling, 1.0 K for downwelling  
+
+* A special reduced near IR ASCII line file for the ASCENDS region (6300-6700 cm-1) containing
+  the first 7 HITRAN molecules is also included (spectral_lines.dat.6300_6700.v5.0). These line parameters
+  are consistent with aer_v_3.2 and aer_v_3.3 (which are indentical for wavenumbers greater than 55 cm-1).
 
 LNFL_v2.6
 

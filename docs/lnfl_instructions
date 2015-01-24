@@ -4,20 +4,26 @@
 
 
     
-           INSTRUCTIONS FOR LINE FILE CREATION FOR LBLRTM...     LNFL
+    INSTRUCTIONS FOR LINE FILE CREATION FOR LBLRTM AND MonoRTM USING LNFL
    
-    LNFL now accommodates the 160 character format adopted for HITRAN_2004.  
-    However, the default format for LNFL will remain the 100 character format.  
-    The rationale for this choice is that the vibrational data as stored in the 
+    LNFL now accommodates the 160 character '.par' format adopted for 
+    HITRAN_2004. However, the default format for LNFL will remain the 100 
+    character format. 
+    
+    The rationale for this choice is that the vibrational data as stored in the
     100 character format is more amenable to utlization in LBLRTM, particularly
     for LBLRTM Non-LTE calculation than that associated with the 160 character 
-    format for which the vibrational information had been expanded to facilitate 
-    association of the lines with the quantum mechanical vibrational designations.
+    format for which the vibrational information had been expanded to 
+    facilitate association of the lines with the quantum mechanical 
+    vibrational designations.
    
-    Presently, the capability to accomodate the 160 character format is restricted
-    to TAPE1.
+    The capability to accomodate the 160 character format is restricted
+    to TAPE1. The TAPE2 files should be in 100 character format - you can 
+    generate this from the 160 character format by running LNFL with the 
+    160 cahacter file as TAPE1, and then use the 100 character TAPE7 file 
+    that LNFL produces as the TAPE2 for your next run.
 
-    Note 1: To facilitate the change to HITRAN2004 format some of the LNFL flags
+    Note 1: To facilitate the change to HITRAN2004, some of the LNFL flags
     on Record 3 in older releases have been distributed to Records 3 and 4.  
     On Record 3, the flags include those that are general for the LNFL run and 
     those that are relevant to TAPE1.  On Record 4, the flags include those 
@@ -27,25 +33,70 @@
     default. Flags NBLK1 and NBLK2 are no longer necessary and are ignored.
 
     Note 3. The writing of internally stored line coupling information to TAPE2
-    is no longer supported.  Line coupling information may be included explicitly
-    on TAPE1 or TAPE2 by the user.
+    is no longer supported.  Line coupling information may be included 
+    explicitly on TAPE1 or TAPE2 by the user.
+
+    Note 4. As of Dec. 2013, LNFL requires additional broadening parameter
+    input files. These files are listed below, and example files are included 
+    in the LNFL package. 
 
 -------------------------------------------------------------------------
 
     FILE ASSIGNMENTS FOR LNFL
 
        TAPE1    ASCII LINE FILE (e.g., HITRAN database)
+                NOTE: Special reduced microwave ASCII line files, 
+                corresponding to the old "spectral_lines.dat" of MonoRTM v4.2, 
+                are provided to be used as the TAPE1 inputs of MonoLNFL in 
+                the microwave.
+  
+                The calculational accuracy of these reduced line lists at any 
+                frequency between 0 and 899.4 GHz (0-30 cm-1) with respect to 
+                the corresponding full line list (aer_v_3.3) is:
+                   - spectral_lines.dat.0_55.v5.0_fast: 0.1 K upwelling, 
+                                                        0.2 K downwelling  
+                   - spectral_lines.dat.0_55.v5.0_veryfast: 0.5 K upwelling, 
+                                                            1.0 K downwelling
 
+                A special reduced near IR ASCII line file for the ASCENDS 
+                region (6300-6700 cm-1) containing the first 7 HITRAN 
+                molecules is also included (spectral_lines.dat.6300_6700.v5.0).
+                These line parameters are consistent with aer_v_3.2 
+                and aer_v_3.3 (which are indentical for wavenumbers 
+                greater than 55 cm-1).See files headers and MonoRTM v5.0 
+                relase notes for more details.
+
+                Users who wish to run MonoRTM v5.0 in other spectral regions 
+                should use the full AER line file (aer_v_4.0), with a caution
+                that the full line file can take a long time to run.
+        
        TAPE2    Supplemenatry ASCII Line File to be merged with TAPE1
+                MUST be in older 100 character HITRAN format
 
-       TAPE3    BINARY OUTPUT FILE (input for LBLRTM)
+       TAPE3    BINARY OUTPUT FILE (input for LBLRTM and MonoRTM)
 
-       TAPE5    LNFL INPUT FILE (see lnfl_instructions)   
+       TAPE5    LNFL INPUT FILE (see below)  
+  
+       TAPE6    LOG FILE
 
-       TAPE7    ASCII OUTPUT FILE (ascii version of TAPE3)
-   
+       TAPE7    ASCII OUTPUT FILE (ascii version of TAPE3 in older 100 
+                                   character HITRAN format, does not
+                                    include extra broadening parameters)
+
+       co2_co2_brd_param -> CO2 self broadening parameters (input)
+
+       co2_h2o_brd_param -> CO2 transitions broadened by H2O (input)
+
+       o2_h2o_brd_param  -> O2 transitions broadened by H2O (input)
+
+       wv_co2_brd_param  -> H2O transitions broadened by CO2 (input)
+
+       spd_dep_param     -> Speed-dependent Voigt parameters (input)
+                               Note that LBLRTM v13.0 ignores the speed 
+                               dependence parameters, but they are used by 
+                               MonoRTM v5.0 and later.
 -------------------------------------------------------------------------
-
+TAPE5 format
    
 RECORD 1
    
@@ -96,7 +147,7 @@ RECORD 3
         SPECIES   (15)  HCL  (16)  HBR  (17)    HI (18)   CLO (19)   OCS (20)  H2CO (21)  HOCL
                   (22)   N2  (23)  HCN  (24) CH3CL (25)  H2O2 (26)  C2H2 (27)  C2H6 (28)   PH3
                   (29) COF2  (30)  SF6  (31)   H2S (32) HCOOH (33)   HO2 (34)     O (35)CLONO2
-                  (36)  NO+  (37) HOBR  (38)  C2H4 (39) C3HOH
+                  (36)  NO+  (37) HOBR  (38)  C2H4 (39) C3HOH (40)
    
    
      HOLIND1   HOLlerith INDicator to select general LNFL options and specific options for TAPE1
@@ -107,7 +158,7 @@ RECORD 3
    
                NOCPL  suppresses all line coupling information on TAPE3 and TAPE7
    
-                NLTE  preserves transition parameters for LBLRTM 
+                NLTE  preserves transition parameters (quantum numbers) for LBLRTM 
                       Non Local Thermodynamic Equilibrium (NLTE) option
    
                  REJ  selects line rejection and requires input data for 
@@ -119,12 +170,6 @@ RECORD 3
 
                 BLK1  indicates TAPE1 is blocked  (Note: NBLK1 is ignored)  
    
-      **       H86T1  omits SHIFT line coupling information in 1986 HITRAN or later from TAPE1
-
-      **       Not available in this version of LNFL 
-     
-
-
    
 RECORD 4            IF MRG2 SELECTED ON RECORD 3:       second line for TAPE2 data source required
    
@@ -152,14 +197,7 @@ RECORD 4            IF MRG2 SELECTED ON RECORD 3:       second line for TAPE2 da
                F80  replacement or supplemental line data in 80 character format from TAPE2
                     merged with line data from TAPE1. TAPE3 parameters required for LBLRTM
                     from 80 character formatted data are set to default parameters by LNFL
-                                 ( 1982 HITRAN format ).
-     
-  **         H86T2  omits SHIFT line coupling information in 1986 HITRAN or later from TAPE2
-  
-  **         Not available in this version of LNFL 
-
-
-
+                                 ( 1982 HITRAN format ).     
 
 RECORD 5...            IF  ( HOLIND .EQ. REJ )           line rejection option selected
    
@@ -183,8 +221,8 @@ RECORD 5...            IF  ( HOLIND .EQ. REJ )           line rejection option s
                 a value of 0. for SR(M) implies no rejection for molecule M,
                 all lines for that molecule are retained
    
-                values for SR(M) are relative to LBLRTM line strengths:
-                AFGL strengths / ( v * (1-exp(v/kT)) )
+                values for SR(M) are relative to LBLRTM line strengths, 
+                which are equal to HITRAN strengths / ( v * (1-exp(v/kT)) )
    
                 NMOL is 7 or the number of the highest molecule selected,
                 whichever is larger
