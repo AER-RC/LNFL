@@ -2,8 +2,6 @@
  Revision : $Revision$
  Created  : $Date$    
 
-
-    
     INSTRUCTIONS FOR LINE FILE CREATION FOR LBLRTM AND MonoRTM USING LNFL
    
     LNFL now accommodates the 160 character '.par' format adopted for 
@@ -39,6 +37,11 @@
     Note 4. As of Dec. 2013, LNFL requires additional broadening parameter
     input files. These files are listed below, and example files are included 
     in the LNFL package. 
+
+    Note 5. As of Jan. 2015, LNFL allows you to specify the name of
+    the ASCII line file at the command line rahter than having to link it
+    to TAPE1. For example, if you wanted to use aer_v_4.0 as your ASCII line 
+    file you could type: 'lnfl_v3.0_linux_pgi_sgl aer_v_4.0'
 
 -------------------------------------------------------------------------
 

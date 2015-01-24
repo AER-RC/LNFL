@@ -14,6 +14,10 @@ Jan., 2015
   and LNFL_v2.6 will not pass many of these lines through to the TAPE3, so only 
   LNFL_v3.0 should be used with HITRAN 2012.
 
+* LNFL_v3.0 now allows the TAPE1 file to be specified at the command line when the 
+  lnfl executable is called. See 'run_examples/run_example_infrared/run_lnfl' to
+  see how the new functionality works.
+
 MonoLNFL_v1.0
 
 Dec., 2013
