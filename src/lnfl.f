@@ -218,7 +218,7 @@ C                                                                        LN01670
       CHARACTER HBLK1*4,HBLK2*4,HF80*3,HF100*4,HOLIND2*40,HCPL*3   
       CHARACTER*5 HNBLK1,HNBLK2,HLNOUT,HH86T1,HH86T2                     LN01690
       CHARACTER*27 QUANT1,QUANTC                                         LN01700
-      CHARACTER*100 ALIN1,ALIN2,ALINC,ALIN                               LN01710
+      CHARACTER*100 ALIN1,ALIN2,ALINC,ALIN, ITAPE1                       LN01710
 C     MJA, 01-20-2012 Add SISO variable
       CHARACTER*1 SISO
 c
@@ -234,7 +234,7 @@ C     MJA, 01-19-2012
 C     Increased array sizes to accomodate self-line coupling coefficients
       COMMON /LCHAR/ ALIN1(52),ALIN2(40),ALINC(52),ALIN(250)  
 C                                                                        LN01740 
-      common /vib_map/ ncl_v,nclass_v(64),n_lvl_v(32),h_vib(32,400)
+      common /vib_map/ ncl_v,nclass_v(64),n_lvl_v(32),h_vib(32,800)
       common /rot_map/ ncl_r,nclass_r(64),n_lvl_r(32)
 c
 c        VNU3 IS REAL*8
@@ -390,11 +390,19 @@ c
       IFIL2 = 2                                                          LN02310
       LINFIL = 3                                                         LN02320
 c
-      OPEN (LINFIL,FILE='TAPE3',STATUS='NEW',FORM=CFORM)                 LN02330
+      
+      if (IARGC()>0) then
+          call getarg(1, ITAPE1)
+          print *, "Reading line parameters (TAPE1) from file", ITAPE1
+      else
+          ITAPE1 = 'TAPE1'
+      end if
+      
+      
+      
+      OPEN (LINFIL,FILE='TAPE3',STATUS='UNKNOWN',FORM=CFORM)             LN02330
       OPEN (IRD,FILE='TAPE5',STATUS='UNKNOWN',FORM='FORMATTED')          LN02340
       OPEN (IPR,FILE='TAPE6',STATUS='UNKNOWN',FORM='FORMATTED')          LN02350
-c      WRITE(IPR,*) 'NWDLIN=',NWDLIN,'  NWDLIN2=',NWDLIN2
-c      WRITE(IPR,*) '  LRC=',LRC,'  ILNGTH=',ILNGTH,'  ILNADD=',ILNADD
       LINMRG = 10                                                        LN02360
       OPEN (LINMRG,FILE='TAPE10',STATUS='UNKNOWN',FORM=CFORM)            LN02370
       ILIN = 0                                                           LN02380
@@ -481,7 +489,7 @@ C                                                                        LN02730
       IF (IPUOUT.EQ.1)                                                   LN02740
      *     OPEN (IPU,FILE='TAPE7',STATUS='UNKNOWN',FORM='FORMATTED')     LN02750
 C                                                                        LN02800
-      OPEN (IFIL1,FILE='TAPE1',STATUS='OLD',FORM='FORMATTED')            LN02810
+      OPEN (IFIL1,FILE=ITAPE1,STATUS='OLD',FORM='FORMATTED')            LN02810
 c
 c     ----------------------------------------------------------------
 c     the following may be required by the Absoft f90 compiler:
@@ -1222,7 +1230,7 @@ C     MJA, 01-19-2012 new array sizes
       COMMON /QUANT/ QUANT1(52),QUANTC(52)                               LN10100
       COMMON /LCHAR/ ALIN1(52),ALIN2(40),ALINC(52),ALINE(250)      
 c 
-      common /vib_map/ ncl_v,nclass_v(64),n_lvl_v(32),h_vib(32,400)
+      common /vib_map/ ncl_v,nclass_v(64),n_lvl_v(32),h_vib(32,800)
       common /rot_map/ ncl_r,nclass_r(64),n_lvl_r(32)
 c
       parameter (mol_max=47)
@@ -3418,7 +3426,7 @@ c__________________________________________________________________________
      *               SUMSTR(64),NMOL,FLINLO,FLINHI,ILIN,ILINLC,ILINNL,   LN11620
      *               IREC,IRECTL,HID1(2),LSTWD                           LN11630
 
-      common /vib_map/ ncl_v,nclass_v(64),n_lvl_v(32),h_vib(32,400)
+      common /vib_map/ ncl_v,nclass_v(64),n_lvl_v(32),h_vib(32,800)
 
 c     molecules:       64
 c     classes:         32
