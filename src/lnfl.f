@@ -2,8 +2,8 @@ C     author:    $Author$
 C     revision:  $Revision$
 C     created:   $Date$
 C
-C  --------------------------------------------------------------------------
-C |  Copyright ©, Atmospheric and Environmental Research, Inc., 2011         |
+C  -------------------------------------------------------------------------
+C |  Copyright ©, Atmospheric and Environmental Research, Inc., 2015         |
 C |                                                                          |
 C |  All rights reserved. This source code is part of the LNFL software      |
 C |  and is designed for scientific and research purposes. Atmospheric and   |
@@ -23,9 +23,10 @@ C
       PROGRAM LNFL
 C**********************************************************************  
 C                                                                        
-C                            LNFL                     14 DECEMBER 2010   
+C                               LNFL                     23 January 2015   
 C                                                                        
-C    THIS PROGRAM CREATES A TAPE3 LINE DATA FILE FOR LBLRTM.                   
+C    THIS PROGRAM CREATES A TAPE3 LINE DATA FILE FOR LBLRTM v13.0 AND 
+C    LATER and MonoRTM v5.0 AND LATER.           
 C                                                                        
 C    FOR USE WITH HITRAN F100/F160 FORMAT FOR TAPE1 AND SUPPLEMENTAL OR  
 C    REPLACEMENT LINE DATA ON TAPE2.                                     
@@ -80,7 +81,7 @@ C    PRESSURE SHIFT, UPPER AND LOWER STATE VIBRATIONAL AND ROTATIONAL
 C    IDENTIFICATIONS, REFERENCE PARAMETERS (AND FOR F100, A FLAG FOR 
 C    LINE COUPLING).                                                           
 C                                                                        
-C    MOLECULE NUMBERS 1 THROUGH 39 MAY BE SELECTED.                      
+C    MOLECULE NUMBERS 1 THROUGH 47 MAY BE SELECTED.                      
 C                                                                        
 C                                                                        
 C______________________________________________________________________  
@@ -91,7 +92,7 @@ C
 C    TAPE2 IS AVAILABLE FOR THE USER TO PROVIDE ALTERNATE LINE DATA     
 C               (REPLACEMENT OR SUPPLEMENTAL)                          
 C                                                                        
-C    MOLECULE NUMBERS 1 THROUGH 39 MAY BE SELECTED.                      
+C    MOLECULE NUMBERS 1 THROUGH 47 MAY BE SELECTED.                      
 C                                                                        
 C    TWO FORMAT OPTIONS ARE AVAILABLE: OPTION SELECTED ON RECORD 2.      
 C                                                                        
@@ -99,6 +100,21 @@ C
 C    F80        1982 AFGL FORMAT                                         
 C                                                                        
 C    F100       1986 AFGL FORMAT 
+C______________________________________________________________________  
+C
+C
+C              EXTRA BROADENING PARAMETER FILES
+C
+C   THE FOLLOWING FILES ARE REQUIRED TO SUPPLY SPECTROSCOPIC PARAMETERS
+C   BEYOND THOSE INCLUDED IN HITRAN
+C 
+C    co2_co2_brd_param -> CO2 self broadening parameters
+C    co2_h2o_brd_param -> CO2 transitions broadened by H2O
+C    o2_h2o_brd_param  -> O2 transitions broadened by H2O
+C    wv_co2_brd_param  -> H2O transitions broadened by CO2
+C    spd_dep_param     -> Speed-dependent Voigt parameters
+C
+C    FILES FORMATS AND REFERENCES ARE GIVEN IN THE FILE HEADERS
 C______________________________________________________________________  
 C                                                                        
 C                                                                        
@@ -190,7 +206,7 @@ C----------------------------------------------------------------------  LN01600
 C                                                                        LN01610
       IMPLICIT REAL*8           (V)                                     !LN01620
 c
-      parameter (mol_max=39)
+      parameter (mol_max=47)
 C                                                                        LN01630
       character*8 HID,HTIME,HDATE,HID1,HMOL  
 C                                                                        LN01650
@@ -203,16 +219,74 @@ C                                                                        LN01670
       CHARACTER*5 HNBLK1,HNBLK2,HLNOUT,HH86T1,HH86T2                     LN01690
       CHARACTER*27 QUANT1,QUANTC                                         LN01700
       CHARACTER*100 ALIN1,ALIN2,ALINC,ALIN                               LN01710
+C     MJA, 01-20-2012 Add SISO variable
+      CHARACTER*1 SISO
 c
       character*15 h_vib
+C     MJA, 06-05-2013 SDEP variables
+      INTEGER*4 MOLEC_SDEP, ISO_SDEP
+      REAL*8 VNU_SDEP
+      REAL*4 SDEP
+      CHARACTER*24 STR_QNUM
 C                                                                        LN01720
-      COMMON /LCHAR/ ALIN1(51),ALIN2(40),ALINC(51),ALIN(250)             LN01730
+C      COMMON /LCHAR/ ALIN1(51),ALIN2(40),ALINC(51),ALIN(250)             LN01730
+C     MJA, 01-19-2012
+C     Increased array sizes to accomodate self-line coupling coefficients
+      COMMON /LCHAR/ ALIN1(52),ALIN2(40),ALINC(52),ALIN(250)  
 C                                                                        LN01740 
-      common /vib_map/ ncl_v,nclass_v(64),n_lvl_v(32),h_vib(32,256)
+      common /vib_map/ ncl_v,nclass_v(64),n_lvl_v(32),h_vib(32,400)
       common /rot_map/ ncl_r,nclass_r(64),n_lvl_r(32)
 c
+c        VNU3 IS REAL*8
+C        STR3, ALF3, EPP3, HWHMS, TMPALF, PSHIFT ARE REAL*4
+C        MOL3, IFLG ARE INTEGER*4
+c        STORAGE IS 10x250 4-BYTE WORDS to end of IFLG
+C                   38X250 4-BYTE WORDS TO END OF ADDDATA
       COMMON VNU3(250),STR3(250),ALF3(250),EPP3(250),MOL3(250),          LN01750
-     *       HWHMS(250),TMPALF(250),PSHIFT(250),IFLG(250),LSTW2          LN01760
+     *       HWHMS(250),TMPALF(250),PSHIFT(250),IFLG(250),
+     *       ADDFLAG(7,250),ADDDATA(21,250),SDEP_DATA(250),LSTW3
+      REAL*4 ADDDATA
+      INTEGER*4 ADDFLAG,IFLG
+      equivalence (addflag(1,1),lstw2)
+c        lstw2 is used to determine length of storage in unnamed common 
+C              up to end of IFLG
+c        lstw3 is used to determine length of storage in unnamed common 
+c              up to end of ADDDATA
+
+      REAL*4 YMOL
+
+      DIMENSION TAPE3BLOCK(9500)
+      EQUIVALENCE (VNU3(1),TAPE3BLOCK(1))
+
+      PARAMETER (MXBRD=135000)
+
+      COMMON /WV_CO2_BRD/ VNU_WV_CO2(MXBRD),HW_WV_CO2(MXBRD),
+     *                   TEMP_WV_CO2(MXBRD),SHFT_WV_CO2(MXBRD)
+
+
+      COMMON /CO2_CO2_BRD/ VNU_CO2_CO2(MXBRD),HW_CO2_CO2(MXBRD),
+     *                   TEMP_CO2_CO2(MXBRD),SHFT_CO2_CO2(MXBRD)
+
+      COMMON /CO2_H2O_BRD/ VNU_CO2_H2O(MXBRD),HW_CO2_H2O(MXBRD),
+     *                   TEMP_CO2_H2O(MXBRD),SHFT_CO2_H2O(MXBRD)
+
+      COMMON /O2_H2O_BRD/ VNU_O2_H2O(MXBRD),HW_O2_H2O(MXBRD),
+     *                   TEMP_O2_H2O(MXBRD),SHFT_O2_H2O(MXBRD)
+
+      common /max_brd_lines/maxwvco2,maxco2co2,nwvco2,nco2co2,
+     *                      maxco2h2o, nco2h2o, maxo2h2o, no2h2o
+C*******************************************************
+C      !MJA, speed dependent common blocks, 06-05-2013
+      PARAMETER (MXSDEP=135000)
+
+      COMMON /SDEP/ MOLEC_SDEP(MXSDEP), ISO_SDEP(MXSDEP),
+     *          VNU_SDEP(MXSDEP),SDEP(MXSDEP),
+     *          STR_QNUM(MXSDEP)
+C     !Above is molecule number, isotopologue number, wavenumber
+C     !speed dependent parameter, upper global state, lower global state,
+C     !and rotational quantum numbers for the speed dependent line.
+      common /max_sdep_lines/maxsdep,nsdep
+C*******************************************************      
       COMMON /IFIL/ IRD,IPR,IPU,NWDR,LRC,ILNGTH,INLTE,IER,IPUOUT         LN01770
       COMMON /CONTRL/ VMIN,VMAX,VLO,VHI,LINES,NWDS,LSTW1                 LN01780
       COMMON /HBLOCK/ INBLK1,INBLK2,I86T1,I86T2
@@ -227,26 +301,40 @@ C                                                                        LN01860
       COMMON /BUFIDC/ CMOL(64),CHID10,CHID08                             LN01870
       CHARACTER CMOL*6,CHID10*8,CHID08*8,CFORM*11                        LN01880
       COMMON /UNITS/ PI,PLANCK,BOLTZ,CLIGHT,AVOGAD,RADCN1,RADCN2           LN01890
-      COMMON /MANE/ VNU1(51),STR1(51),ALF1(51),EPP1(51),MOL1(51),        LN01900
-     *              HWHM1(51),TMPAL1(51),PSHIF1(51),IFG1(51),            LN01910
-     *              MIND1(64),IOUT(51)                                   LN01920
-      COMMON /MAINC/ VNUC(51),STRC(51),ALFC(51),EPPC(51),MOLC(51),       LN01930
-     *               HWHMC(51),TMPALC(51),PSHIFC(51),IFGC(51),           LN01940
-     *               MINDC(64),IOUTC(51)                                 LN01950
+C      COMMON /MANE/ VNU1(51),STR1(51),ALF1(51),EPP1(51),MOL1(51),        LN01900
+C     *              HWHM1(51),TMPAL1(51),PSHIF1(51),IFG1(51),            LN01910
+C     *              MIND1(64),IOUT(51)                                   LN01920
+C      COMMON /MAINC/ VNUC(51),STRC(51),ALFC(51),EPPC(51),MOLC(51),       LN01930
+C     *               HWHMC(51),TMPALC(51),PSHIFC(51),IFGC(51),           LN01940
+C     *               MINDC(64),IOUTC(51)                                 LN01950
+C     MJA, 01-19-2012
+C     Increased array sizes to accomodate self-line coupling coefficients
+      COMMON /MANE/ VNU1(52),STR1(52),ALF1(52),EPP1(52),MOL1(52),        LN01900
+     *              HWHM1(52),TMPAL1(52),PSHIF1(52),IFG1(52),            LN01910
+     *              MIND1(64),IOUT(52)                                   LN01920
+      COMMON /MAINC/ VNUC(52),STRC(52),ALFC(52),EPPC(52),MOLC(52),       LN01930
+     *               HWHMC(52),TMPALC(52),PSHIFC(52),IFGC(52),           LN01940
+     *               MINDC(64),IOUTC(52)                                 LN01950
       COMMON /TRAC/ VNU2(40),STR2(40),ALF2(40),EPP2(40),MOL2(40),        LN01960
      *              HWHM2(40),TMPAL2(40),PSHIF2(40),IFG2(40),            LN01970
      *              MIND2(64)                                            LN01980
       COMMON /CPLMOL/ MOLCPL(38),NCPL                                    LN01990
       COMMON /SREJ/ SR(64),SRD(64),TALF(64)                              LN02000
       COMMON /ICN/ ILIN3,NMAX,NBLOCK,inocpl
-      COMMON /QUANT/ QUANT1(51),QUANTC(51)                               LN02020
+C     MJA, 01-19-2012
+C     Increased array sizes to accomodate self-line coupling coefficients
+C      COMMON /QUANT/ QUANT1(51),QUANTC(51)                              LN02020
+      COMMON /QUANT/ QUANT1(52),QUANTC(52)                               
       COMMON /CVRLBL/ HNAMLNFL,HVRLNFL
       COMMON /CVRUTL/ HNAMUTL,HVRUTL
       common /eppinfo/ negflag
 C                                                                        LN02030
       DIMENSION MOLCNT(64),IID(10),RCDHDR(5)                             LN02040
       dimension iid2(10)
-      DIMENSION IWD1(2),IWD2(2500),AMOL1(51),AMOL2(40),AMOLC(51)         LN02050
+C     MJA, 01-19-2012
+C     Increased array sizes to accomodate self-line coupling coefficients
+C      DIMENSION IWD1(2),IWD2(2500),AMOL1(51),AMOL2(40),AMOLC(51)         LN02050
+      DIMENSION IWD1(2),IWD2(2500),AMOL1(52),AMOL2(40),AMOLC(52)         LN02050
 C                                                                        LN02060
       EQUIVALENCE (IWD1(1),VLO) , (IWD2(1),VNU3(1))                      LN02070
       EQUIVALENCE (IID(1),HID(1)) , (RCDHDR(1),VLO)                      LN02080
@@ -266,9 +354,11 @@ C                                                                        LN02110
 C                                                                        LN02190
 C#    DATA CFORM/'BUFFERED   '/                                          LN02200
       DATA CFORM / 'UNFORMATTED'/                                        LN02210
-C                                                                        LN02220
+C
       HNAMLNFL= '           lnfl.f:'     
       HVRLNFL = '$Revision$'
+      nwvco2=0
+      nco2co2=0
 c
       read(hvrlnfl,900) rev_num
       write(chid08,901) rev_num
@@ -283,8 +373,10 @@ C                                                                        LN02240
       lstw1 = -654321
       LRC = NWDL(IWD1,LSTW1)                                             LN02270
       lstw2 = -654321
+      lstw3 = -765432
       ILNGTH = NWDL(IWD2,LSTW2)                                          LN02280
-C      RADCN2 = PLANCK*CLIGHT/BOLTZ                                       LN02290
+      ILNADD = NWDL(IWD2,LSTW3)                                          LN02280
+      RADCN2 = PLANCK*CLIGHT/BOLTZ                                       LN02290
 
       do 5 m=1,64
          n_negepp(m) = 0
@@ -301,6 +393,8 @@ c
       OPEN (LINFIL,FILE='TAPE3',STATUS='NEW',FORM=CFORM)                 LN02330
       OPEN (IRD,FILE='TAPE5',STATUS='UNKNOWN',FORM='FORMATTED')          LN02340
       OPEN (IPR,FILE='TAPE6',STATUS='UNKNOWN',FORM='FORMATTED')          LN02350
+c      WRITE(IPR,*) 'NWDLIN=',NWDLIN,'  NWDLIN2=',NWDLIN2
+c      WRITE(IPR,*) '  LRC=',LRC,'  ILNGTH=',ILNGTH,'  ILNADD=',ILNADD
       LINMRG = 10                                                        LN02360
       OPEN (LINMRG,FILE='TAPE10',STATUS='UNKNOWN',FORM=CFORM)            LN02370
       ILIN = 0                                                           LN02380
@@ -492,7 +586,7 @@ C                                                                        LN03380
    20 CONTINUE                                                           LN03390
 C                                                                        LN03400
       NMOL = MAX(NMOL,7)                                                 LN03410
-      WRITE (IPR,945) (HMOL(I),MOLIND(I),I=1,NMOL)                       LN03420
+      WRITE (IPR,945) (HMOL(I),MOLIND(I),I=1,NMOL)
       WRITE (IPR,945)                                                    LN03430
       IF (IREJ.EQ.1) THEN                                                LN03440
          READ (GREJ,902) HID(9)                                          LN03450
@@ -642,14 +736,72 @@ C                                                                        LN04640
       endif
       WRITE (IPR,970) NBLOCK                                             LN04750
 C                                                                        LN04760
+C     READ EXTRA BROADENING PARAMETER FILES
+      CALL RDWVCO2
+      CALL RDCO2CO2
+      CALL RDCO2H2O
+      CALL RDO2H2O
+      CALL RDSPDDEP
+
+C     MJA, new TAPE8 output 01-20-2012
+C      IPX = 8
+C      OPEN (IPX,FILE='TAPE8',STATUS='UNKNOWN',FORM='FORMATTED')
+      isumtot=0
       DO 130 I = 1, NBLOCK                                               LN04770
          CALL BUFIN (LINMRG,IEOF,RCDHDR(1),LRC)                          LN04780
-         NWDS = ILNGTH                                                   LN04790
+         NWDS = ilnadd
          CALL BUFOUT (LINFIL,RCDHDR(1),LRC)                              LN04800
          CALL BUFIN (LINMRG,IEOF,VNU3(1),ILNGTH)                         LN04810
          CALL CKFL (VLO,VHI,LINES,VNU3,IFLG)                             LN04820
-         CALL BUFOUT (LINFIL,VNU3(1),ILNGTH)                             LN04830
+         CALL BRDMATCH(i)
+         CALL SPDMATCH(i)
+         isumtot=isumtot+sum(addflag)
+C       MJA, test new TAPE8 output 01-20-2012
+C         do j = 1,249
+             !Write broadening flags only on main line, not line coupling
+             !lines
+C             print *, j, iflg(j)
+C             if (IFLG(J).GE.0) then !main line
+C                imol = mod(MOL3(J),100)
+C                iiso = floor(MOL3(J)/100.0) 
+C                str_hit = STR3(J)*VNU3(J)*
+C     *                    (1.0-exp(-VNU3(J)* RADCN2/296.0 ))
+C                tmpalf_hit = 1.0-TMPALF(J)              
+C                write(IPX,999) imol, iiso, VNU3(J),str_hit,ALF3(J),
+C     *           HWHMS(J),EPP3(J),tmpalf_hit,PSHIFT(J),-IFLG(J),
+C     *          (ADDFLAG(itest,J), itest=1,7),SDEP_DATA(J)                    
+C                if(sum(addflag(:,J)).GT.0) then
+C                  write(IPX, 998) imol,(ADDDATA(itest,J), itest = 1, 21)
+C                endif
+C             else !Line coupling line
+C                ymol =  transfer(mol3(J),ymol)
+C                print *, imol,VNU3(J),STR3(J), ALF3(J), EPP3(J), 
+C     *                         ymol,HWHMS(J), TMPALF(J), PSHIFT(J),
+C     *                         IFLG(J)
+C                write(IPX,995) imol,VNU3(J),STR3(J), ALF3(J), EPP3(J), 
+C     *                         ymol,HWHMS(J), TMPALF(J), PSHIFT(J),
+C     *                         IFLG(J)
+C             endif
+C         enddo
+  999    format(I2,I1,F12.6,ES10.3,10X,2F5.4,F10.4,F4.2,F8.6,31X,
+     *          I2,7I2,F9.5) 
+  998    format(I2,21F8.4) 
+  997    FORMAT (I2)   
+  996    format(2X,A1)
+  995    format(I2,4(ES13.6,ES11.4),I2) 
+C         write(ipr,981) i,vnu3(1),vnu3(249),sum(addflag)
+  981    format('linefile block ',i4,'  vmin=',f12.4,'  vmax=',f12.4,
+     $        '  sumflags=',i4)
+         CALL BUFOUT (LINFIL,VNU3(1),ILNADD)
+
   130 CONTINUE                                                           LN04840
+      write(ipr,*) 'Total modified lines=',isumtot
+      write(ipr,*) 'Total modified wv lines (co2 brd) = ',nwvco2
+      write(ipr,*) 'Total modified co2 lines (self brd) = ',nco2co2
+      write(ipr,*) 'Total modified co2 lines (h2o brd) = ',nco2h2o
+      write(ipr,*) 'Total modified o2 lines (h2o brd) = ',no2h2o
+      write(ipr,*) 'Total speed dependent Voigt lines = ',nsdep
+      
 C                                                                        LN04850
       CALL CPUTIM (TIME1)                                                LN04860
       TIME = TIME1-TIME0                                                 LN04870
@@ -666,7 +818,7 @@ C                                                                        LN04910
  915  FORMAT ('0',20X,'VMIN =',F12.6,' CM-1,      VMAX =',F12.6,         LN04950
      *        ' CM-1')                                                   LN04960
 c            mol_max
- 920  FORMAT (39I1,4X,A40)                                               LN04970
+ 920  FORMAT (47I1,4X,A40)                                               LN04970
  925  FORMAT ('0',' ** NOTE IFLG SET - ',A5,' *****',/)                  LN04980
  930  FORMAT ('0',' ** NOTE IFLG SET - ',A4,' *****',/)                  LN04990
  935  FORMAT (A6)                                                        LN05000
@@ -679,11 +831,11 @@ c            mol_max
  960  FORMAT ('0',9X,'TAPE NO. =',I2/10X,'LOWEST LINE =',F13.6,          LN05070
      *        ' CM-1,  ','HIGHEST LINE =',F13.6,                         LN05080
      *        ' CM-1,  TOTAL NUMBER OF LINES =',I7)                      LN05090
- 965  FORMAT ('0',/,23X,'COUPLED',4X,'NLTE',3X,'NEGATIVE',3X,
+ 965  FORMAT ('0',/,24X,'COUPLED',4X,'NLTE',3X,'NEGATIVE',3X,
      *        'RESET',4X,'SUM LBLRTM',6X,                                LN05100
-     *        'STRENGTH',/,7X,'MOL',5X,'LINES',4X,'LINES',4X,'LINES',
+     *        'STRENGTH',/,7X,'MOL',6X,'LINES',4X,'LINES',4X,'LINES',
      *        6X,'EPP',6X,'EPP',   
-     *        6X,'STRENGTHS',6X,'REJECTION',2(/),(' ',4X,A6,' = ',I6,    LN05120
+     *        6X,'STRENGTHS',6X,'REJECTION',2(/),(' ',4X,A6,' = ',I7,    LN05120
      *        3X,I6,3X,I6,3X,I6,3X,i6,3X,1PE12.4,5X,E10.3,0P))           LN05130
  970  FORMAT ('0',20X,'NUMBER OF BLOCKS =',I4)                           LN05140
  975  FORMAT ('0',10X,' TOTAL TIME =',F10.3,' TIME IN =',F10.3,          LN05150
@@ -696,8 +848,10 @@ C                                                                        LN05170
 C                                                                        LN06500
       DIMENSION IWD(*)                                                   LN06510
 C                                                                        LN06520
-c      ILAST = -654321                                                    LN06530
-      DO 10 I = 1, 9000                                                  LN06540
+c      ILAST = -654321                                                   LN06530
+C      DO 10 I = 1, 9501                                                  LN06540
+C      MJA 06-05-2013, to allow SDEP_data
+       DO 10 I = 1, 9751 
          IF (IWD(I).EQ.ILAST) THEN                                       LN06550
             NWDL = I-1                                                   LN06560
             RETURN                                                       LN06570
@@ -733,9 +887,13 @@ C                                                                        LN06860
       DIMENSION VNU3(250),IFLG(250)                                      LN06870
 C                                                                        LN06880
       VST = VLO                                                          LN06890
-      DO 10 I = 1, LINES                                                 LN06900
+      DO 10 I = 1, LINES  
+C         write(*,*) IFLG(I),VNU3(I)                                      LN06900
          IF (IFLG(I).GE.0) THEN                                          LN06910
-            IF (VNU3(I).LT.VST) PRINT 900,I,VST,VNU3(I)                  LN06920
+            IF (VNU3(I).LT.VST) THEN
+                PRINT 900,I,VST,VNU3(I) 
+C                STOP  
+            ENDIF                                                        LN06920
             VST = VNU3(I)                                                LN06930
             IF (VNU3(I).GT.VHI) PRINT 905,I,VHI,VNU3(I)                  LN06940
          ENDIF                                                           LN06950
@@ -777,53 +935,57 @@ c  ****************************************
       BLOCK DATA Isotop
 c  ****************************************
 c
-      PARAMETER (NMOL=39)
+      PARAMETER (NMOL=47)
       COMMON /ISVECT/ ISO_MAX(NMOL)
-      common /iso_id/ iso_82(98)
+      common /iso_id/ iso_82(120)
 c
 c    The number of isotopes for a particular molecule:
       DATA (ISO_MAX(I),I=1,NMOL)/
 c     H2O, CO2, O3, N2O, CO, CH4, O2,
-     +  6,   9,  9,   5,  6,   3,  3,
+     +  6,  10,  9,   5,  6,   4,  3,
 c      NO, SO2, NO2, NH3, HNO3, OH, HF, HCl, HBr, HI,
-     +  3,   2,   1,   2,    1,  3,  1,   2,   2,  1,
+     +  3,   2,   1,   2,    2,  3,  2,   4,   4,  2,
 c     ClO, OCS, H2CO, HOCl, N2, HCN, CH3Cl, H2O2, C2H2, C2H6, PH3
-     +  2,   5,    3,    2,  1,   3,     2,    1,    2,    1,   1,
+     +  2,   5,    3,    2,  2,   3,     2,    1,    3,    2,   1,
 c     COF2, SF6, H2S, HCOOH, HO2, O, ClONO2, NO+, HOBr, C2H4,C3HOH
-     +  1,   1,   3,     1,   1,  1,     2,    1,    2,    2,   1/
+     +  2,   1,   3,     1,   1,  1,     2,    1,    2,    2,   1,
+c     CH3Br, CH3CN, CF4, C4H2, HC3N, H2, CS, SO3
+     +  2,      1,    1,    1,    1,  2,  4,   1/
 c
       DATA ISO_82/
 c       H2O
      +   161,181,171,162,182,172,
 c       CO2
-     +  626,636,628,627,638,637,828,728,727,
+     +  626,636,628,627,638,637,828,728,727,838,
 c       O3
      +  666,668,686,667,676,886,868,678,768,
 c       N2O
      +  446,456,546,448,447,
 c       CO,                 CH4
-     +  26,36,28,27,38,37,  211,311,212,
+     +  26,36,28,27,38,37,  211,311,212,312,
 c       O2,        NO,        SO2
      +  66,68,67,  46,56,48  ,626,646,
 c       NO2,   NH3,        HNO3
      +  646,   4111,5111,  146,
-c       OH,        HF,  HCl,    HBr,    HI
-     +  61,81,62,  19,  15,17,  19,11,  17,
+c       OH,        HF,     HCl,          HBr,         HI
+     +  61,81,62,  19,29,  15,17,25,27,  19,11,29,21  17,27
 c       ClO,    OCS,                 H2CO
      +  56,76,  622,624,632,623,822,  126,136,128,
-c       HOCl,     N2,  HCN
-     +  165,167,  44,  124,134,125
-c      CH3Cl,    H2O2,  C2H2,       C2H6,  PH3
-     +, 215,217,  1661,  1221,1231,  1221,  1111,
-c       COF2, SF6, H2S,           HCOOH,  HO2, O,   ClONO2      NO+
-     +  269,  29,  121,141,131,   126,    166, 6,   5646,7646,  46,
-c       HOBr,      C2H4,       CH3OH
-     +  169,161,   221,231,    2161/  
+c       HOCl,     N2,    HCN
+     +  165,167,  44,45  124,134,125
+c      CH3Cl,    H2O2,  C2H2,             C2H6,       PH3
+     +, 215,217,  1661,  1221,1231,1222,  1221,1231,  1111,
+c       COF2,     SF6, H2S,           HCOOH,  HO2, O,   ClONO2      NO+
+     +  269,369,  29,  121,141,131,   126,    166, 6,   5646,7646,  46,
+c       HOBr,      C2H4,       CH3OH,  CH3Br,     CH3CN,  CF4,
+     +  169,161,   221,231,    2161,   219, 211,  2124,   29, 
+c       C4H2, HC3N, H2,       CS,              SO3
+     +  2211, 1224, 11, 12,   22, 24, 32, 23,  26/  
 c
 C
       END
 c*******************************************************************************
-c
+
       SUBROUTINE MOVE (LINMRG,I,VNU2,STR2,ALF2,EPP2,MOL2,AMOL2,HWHM2,    LN08580
      *                 TMPAL2,PSHIF2,IFG2,MOLCNT,ALIN2)                  LN08590
 C                                                                        LN08600
@@ -837,7 +999,10 @@ C                                                                        LN08620
       common /eppinfo/ negflag
 
       COMMON VNU3(250),STR3(250),ALF3(250),EPP3(250),MOL3(250),          LN08660
-     *       HWHMS(250),TMPALF(250),PSHIFT(250),IFLG(250),LSTW2          LN08670
+     *       HWHMS(250),TMPALF(250),PSHIFT(250),IFLG(250),
+     *       ADDFLAG(7,250),ADDDATA(21,250),SDEP_DATA(250),LSTW3
+      REAL*4 ADDDATA
+      INTEGER*4 ADDFLAG
 C                                                                        LN08680
       CHARACTER*8      HID,HID1,HMOL                                    &LN08690
 C                                                                        LN08700
@@ -846,7 +1011,9 @@ C                                                                        LN08700
       DIMENSION MOLCNT(*)                                                LN08730
       COMMON /ICN/ ILIN3,NMAX,NBLOCK,inocpl
       COMMON /CONTRL/ VMIN,VMAX,VLO,VHI,LINES,NWDS,LSTW1                 LN08750
-      COMMON /LCHAR/ ALIN1(51),ALINE(40),ALINC(51),ALIN(250)             LN08760
+C     MJA, 01-19-2012 Increase array sizes for self-line coupling
+C      COMMON /LCHAR/ ALIN1(51),ALINE(40),ALINC(51),ALIN(250)             LN08760
+      COMMON /LCHAR/ ALIN1(52),ALINE(40),ALINC(52),ALIN(250)             LN08760
 C                                                                        LN08770
       CHARACTER*100 ALIN1,ALIN2,ALINC,ALIN,ALINE                         LN08780
       DIMENSION AMOL3(250)                                               LN08790
@@ -896,13 +1063,32 @@ c     If ENERGY = -n, then set ENERGY to n
          MCNTLC(M) = MCNTLC(M)+1                                         LN09120
          ILINLC = ILINLC+1                                               LN09130
       ENDIF                                                              LN09140
+C     MJA 01-19-2012 Allow 5 flag to do self-line coupling
+      IF (IFG2(I).EQ.5) THEN                                             
+         NWDS = NWDS+9                                                   
+         ILIN3 = ILIN3+1                                                 
+         VNU3(ILIN3) = VNU2(I+2)                                         
+         STR3(ILIN3) = STR2(I+2)                                         
+         ALF3(ILIN3) = ALF2(I+2)                                         
+         EPP3(ILIN3) = EPP2(I+2)                                         
+         AMOL3(ILIN3) = AMOL2(I+2)                                       
+         HWHMS(ILIN3) = HWHM2(I+2)                                       
+         TMPALF(ILIN3) = TMPAL2(I+2)                                     
+         PSHIFT(ILIN3) = PSHIF2(I+2)                                     
+         IFLG(ILIN3) = IFG2(I+2)                                         
+         ALIN(ILIN3) = ALIN2(I+2)                                        
+C         MCNTLC(M) = MCNTLC(M)+1   Don't double count coupled lines MJA                                
+         ILINLC = ILINLC+1                                               
+      ENDIF                                                              
 c
       MIS = MOD(MOL2(I),1000)                                            LN09143
       IF (MIS.NE.MOL2(I)) THEN                                           LN09146
          MCNTNL(M) = MCNTNL(M)+1                                         LN09150
          ILINNL = ILINNL+1                                               LN09160
       ENDIF                                                              LN09165
-      IF (ILIN3.GE.NMAX-1) CALL BLKOUT (LINMRG)                          LN09170
+C      IF (ILIN3.GE.NMAX-1) CALL BLKOUT (LINMRG)                          LN09170
+C     MJA 01-23-2012 Account for self line coupling in NMAX
+      IF (ILIN3.GE.NMAX-2) CALL BLKOUT (LINMRG) 
 C                                                                        LN09180
       RETURN                                                             LN09190
 C                                                                        LN09200
@@ -922,8 +1108,13 @@ C                                                                        LN09290
 C                                                                        LN09310
       COMMON /CONTRL/ VMIN,VMAX,VLO,VHI,LINES,NWDS,LSTW1                 LN09320
       COMMON VNU3(250),STR3(250),ALF3(250),EPP3(250),MOL3(250),          LN09330
-     *       HWHMS(250),TMPALF(250),PSHIFT(250),IFLG(250),LSTW2          LN09340
-      COMMON /LCHAR/ ALIN1(51),ALIN2(40),ALINC(51),ALIN(250)             LN09350
+     *       HWHMS(250),TMPALF(250),PSHIFT(250),IFLG(250),
+     *       ADDFLAG(7,250),ADDDATA(21,250),SDEP_DATA(250),LSTW3
+      REAL*4 ADDDATA
+      INTEGER*4 ADDFLAG
+C      COMMON /LCHAR/ ALIN1(51),ALIN2(40),ALINC(51),ALIN(250)             LN09350
+C     MJA, 01-19-2012 Increase array sizes for self-line coupling
+      COMMON /LCHAR/ ALIN1(52),ALIN2(40),ALINC(52),ALIN(250)  
       CHARACTER*100 ALIN1,ALIN2,ALINC,ALIN,ALINE                         LN09360
       COMMON /ICN/ I3,NMAX,NBLOCK,inocpl
       COMMON /IFIL/ IRD,IPR,IPU,NWDR,LRC,ILNGTH,INLTE,IER,IPUOUT         LN09380
@@ -962,6 +1153,9 @@ C                                                                        LN09460
       IF (NBLOCK.EQ.1) FLINLO = VLO                                      LN09710
       FLINHI = VHI                                                       LN09720
       LINES = I3                                                         LN09730
+C      write(*,*) "I3", I3 
+C      WRITE(*,*) "LRC", LRC
+C      WRITE(*,*) "ILNGTH", ILNGTH
       CALL BUFOUT (LINMRG,RCDHDR(1),LRC)                                 LN09740
       CALL BUFOUT (LINMRG,VNU3(1),ILNGTH)                                LN09750
       IF (IPUOUT.NE.1) GO TO 50                                          LN09760
@@ -976,11 +1170,28 @@ C                                                                        LN09840
       RETURN                                                             LN09850
 C                                                                        LN09860
   900 FORMAT (2A50)                                                      LN09870
-  905 FORMAT (A100)                                                      LN09880
+  905 FORMAT (A100,7I2)                                                      LN09880
+  906 FORMAT (7I2,21F10.6) 
 C                                                                        LN09890
       END                                                                LN09900
+
 c-------------------------------------------------------------------------------
       SUBROUTINE RDFIL1_f160 (LINBCD,I1,N1,IEOF)                              LN09910
+C     PLNFL Updates to read self-line coupling paramaters for CO2
+C     Matt Alvarado, (malvarad@aer.com) 01-19-2012
+C     
+C     To inlcude self-line coupling, we want to:
+C     (a) read in 3 ASCII lines for every spectral line with a "-5" line
+C         coupling flag - main (HITRAN F100) line, foreign line 
+C         coupling line,and self line coupling line.
+C     (b) Place self-line coupling paramaters in the position, strength,
+C         etc. arrays right after the foregin paramaters.
+C     
+C     To do this, I made these changes:
+C     (a) Inceased max array and loop indices to 52 (in case block ends 
+C         on the main line with a "-5" flag.
+C     (b) set code to read in self-line coupling parameters if IFLAG
+C         is "-5" and add them to the arrays
 C                                                                        LN09920
       IMPLICIT REAL*8           (V)                                     !LN09930
 C                                                                        LN09940
@@ -999,16 +1210,22 @@ C                                                                        LN10000
       COMMON /IFIL/ IRD,IPR,IPU,NWDR,LRC,ILNGTH,INLTE,IER,IPUOUT         LN10040
       COMMON /UNITS/ PI,PLANCK,BOLTZ,CLIGHT,AVOGAD,RADCN1,RADCN2           LN10050
       COMMON /IC1/ ILIN3                                                 LN10060
-      COMMON /MANE/ VNU1(51),STR1(51),ALF1(51),EPP1(51),MOL1(51),        LN10070
-     *              HWHM1(51),TMPAL1(51),PSHIF1(51),IFG1(51),            LN10080
-     *              MIND1(64),IOUT(51)                                   LN10090
-      COMMON /QUANT/ QUANT1(51),QUANTC(51)                               LN10100
-      COMMON /LCHAR/ ALIN1(51),ALIN2(40),ALINC(51),ALINE(250)            LN10110
+C      COMMON /MANE/ VNU1(51),STR1(51),ALF1(51),EPP1(51),MOL1(51),        LN10070
+C     *              HWHM1(51),TMPAL1(51),PSHIF1(51),IFG1(51),            LN10080
+C     *              MIND1(64),IOUT(51)                                   LN10090
+C      COMMON /QUANT/ QUANT1(51),QUANTC(51)                               LN10100
+C      COMMON /LCHAR/ ALIN1(51),ALIN2(40),ALINC(51),ALINE(250)            LN10110
+C     MJA, 01-19-2012 new array sizes
+      COMMON /MANE/ VNU1(52),STR1(52),ALF1(52),EPP1(52),MOL1(52),        LN10070
+     *              HWHM1(52),TMPAL1(52),PSHIF1(52),IFG1(52),            LN10080
+     *              MIND1(64),IOUT(52)                                   LN10090
+      COMMON /QUANT/ QUANT1(52),QUANTC(52)                               LN10100
+      COMMON /LCHAR/ ALIN1(52),ALIN2(40),ALINC(52),ALINE(250)      
 c 
-      common /vib_map/ ncl_v,nclass_v(64),n_lvl_v(32),h_vib(32,256)
+      common /vib_map/ ncl_v,nclass_v(64),n_lvl_v(32),h_vib(32,400)
       common /rot_map/ ncl_r,nclass_r(64),n_lvl_r(32)
 c
-      parameter (mol_max=39)
+      parameter (mol_max=47)
 c
       COMMON /ISVECT/ ISO_MAX(MOL_MAX)
       common /eppinfo/ negflag
@@ -1018,7 +1235,9 @@ c
       data h_rdlin1/' tape1 '/
 C                                                                        LN10120
       CHARACTER*100 ALIN1,ALIN2,ALINC,ALINE
-      CHARACTER*160 ALIN(51)  
+C      CHARACTER*160 ALIN(51)  
+C     MJA, 01-19-2012 new array sizes
+      CHARACTER*160 ALIN(52)
       character*15 h_vib,hvib_u,hvib_l
       character*15 h_cup,h_clo
       CHARACTER*50 ZEROFL                                                LN10140
@@ -1026,7 +1245,7 @@ C                                                                        LN10120
       CHARACTER*9 CUP,CLO
       character*8 clo_rd
       CHARACTER*7 HOL                                                    LN10160
-      CHARACTER*1 CFLAG,CBLNK,CMINUS,hr_1,h_1,h_2
+      CHARACTER*1 CFLAG,CBLNK,CMINUS,hr_1,h_1,h_2, CFLAG2
 
       character*1 a_15
       character*2 a_11,a_12,a_13,a_14
@@ -1056,8 +1275,11 @@ C                                                                        LN10120
       character*1 b_61,b_63
       character*3 b_62
       character*5 b_64
+      character*2 TFLAG
  
-      DIMENSION AMOL1(51)                                                LN10180
+C      DIMENSION AMOL1(51)                                                LN10180
+C     MJA, 01-19-2012 new array sizes
+      DIMENSION AMOL1(52)
 C                                                                        LN10190
       EQUIVALENCE (MOL1(1),AMOL1(1))                                     LN10200
 C                                                                        LN10210
@@ -1084,12 +1306,49 @@ C                                                                        LN10330
          DO 20 I = 1, IBLK                                               LN10420
             READ (LINBCD,900,END=30) ALIN(I)                             LN10430
  20      CONTINUE                                                        LN10440
-         READ (ALIN(IBLK),905) CFLAG,IFLAG                               LN10450
-         IF (IFLAG.LT.0.AND.CFLAG.NE.CBLNK.AND.CFLAG.NE.CMINUS) THEN     LN10460
-            IBLK = 51                                                    LN10470
-            READ (LINBCD,900,END=30) ALIN(IBLK)                          LN10480
-         ENDIF                                                           LN10490
-      ENDIF                                                              LN10500
+C        MJA 01-19-2012 IFLAG format code is off...
+         READ (ALIN(IBLK),805) CFLAG, TFLAG
+         READ (ALIN(IBLK-1),805) CFLAG2,TFLAG2    
+C         READ (ALIN(IBLK),905) CFLAG,IFLAG                               LN10450
+C         READ (ALIN(IBLK-1),905) CFLAG2,IFLAG2    
+C         write(*,*) "Block check: ", IFLAG, CFLAG, CFLAG2
+         IF (TFLAG.EQ.'-1'.OR.TFLAG.EQ.'-3'.OR.TFLAG.EQ.'-5') THEN !Line coupling
+            READ (ALIN(IBLK),905) CFLAG,IFLAG                               LN10450
+            READ (ALIN(IBLK-1),905) CFLAG2,IFLAG2  
+            IF (IFLAG.NE.-5) THEN !Foreign line coupling only
+               IF(CFLAG.NE.CBLNK.AND.CFLAG.NE.CMINUS) THEN !Main line
+                 IBLK = 51                                               
+                 READ (LINBCD,900,END=30) ALIN(IBLK)  
+               ELSE !Foreign line coupling line
+                 IBLK = 50    
+               ENDIF
+            ELSE !Foreign and self line coupling (IFLAG = -5)
+               IF(CFLAG.NE.CBLNK.AND.CFLAG.NE.CMINUS) THEN !Main line
+                  IBLK = 52                                                 
+                  READ (LINBCD,900,END=30) ALIN(IBLK-1) 
+                  READ (LINBCD,900,END=30) ALIN(IBLK) 
+               ELSEIF(CFLAG2.NE.CBLNK.AND.CFLAG2.NE.CMINUS) THEN !Foreign line coupling line
+                  IBLK = 51                                              
+                  READ (LINBCD,900,END=30) ALIN(IBLK)        
+               ELSE !Self line coupling line
+                  IBLK = 50 
+               ENDIF
+            ENDIF
+         ENDIF
+      ENDIF 
+
+C        IF (IFLAG.LT.0.AND.CFLAG.NE.CBLNK.AND.CFLAG.NE.CMINUS) THEN     LN10460
+C           MJA 01-19-2012 Read 52 lines if IFLAG = -5
+C            IF(IFLAG.EQ.-5) THEN
+C              IBLK = 52                                                 
+C              READ (LINBCD,900,END=30) ALIN(IBLK-1) 
+C              READ (LINBCD,900,END=30) ALIN(IBLK) 
+C            ELSE
+C              IBLK = 51                                                  LN10470
+C              READ (LINBCD,900,END=30) ALIN(IBLK)                        LN10480
+C            ENDIF
+C         ENDIF                                                           LN10490
+C      ENDIF                                                              LN10500
 C                                                                        LN10510
       IEOF = 0                                                           LN10520
       GO TO 40                                                           LN10530
@@ -1097,7 +1356,9 @@ C                                                                        LN10510
       IF (IBLK.LE.0) GO TO 60                                            LN10550
    40 IFLGM1 = 0                                                         LN10560
 
-      DO 50 I = 1, 51                                                    LN10570
+C      DO 50 I = 1, 51                                                    LN10570
+C      MJA, 01-19-2012 Increase array size
+      DO 50 I = 1, 52 
          IF (I.GT.IBLK) WRITE (ALIN(I),910) ZEROFL,ZEROFL                LN10580
 c
 c     skip over header records:
@@ -1117,6 +1378,11 @@ c     test for invalid molecule number:
          IF (MOL.le.0) GO TO 50                                          LN10600
          M = MOL                                                         LN10610
          IF (MIND1(M).EQ.0) GO TO 50                                     LN10620
+
+C        MJA, 01-19-2012
+C        IF IFLGM1 <= 0, main HITRAN F100 line, read normally
+C        ELSE IF IFLGM1 = 5, both foreign and self line coupling (new!)
+C        ELSE (IFLGM1 = 1 or 3) just read foreign line coupling
          IF (IFLGM1.LE.0) THEN                                          
 
 c           not a record with line coupling
@@ -1205,12 +1471,11 @@ c     hitran upper:
 c               10x,a5
 c     hitran lower:
 c                5x,a1,i3,a1,a5
- 
+
 
 c              write (clo,962)  b_21,  b_22, b_23
 c%%% 962           format     (4x,a1, 1X,a2,   a1)
  962           format         (4x,a1,    a3,   a1)
-C               write(*,*) b_21, b_22, b_23
 
 c     The symmetry has been dropped here!
 C     And added back in (MJA, 11-5-2010)
@@ -1351,10 +1616,10 @@ c
                 write(*,*) ALIN(I) 
                 stop ' molecule value is less than 1 '
             endif
-            if (iso .lt. 1) then
-                write(*,*) ALIN(I) 
-                stop '  isotope value is less than 1 '
-            endif
+            !if (iso .lt. 1) then
+            !    write(*,*) ALIN(I) 
+            !    stop '  isotope value is less than 1 '
+            !endif
 c
 c   the TIPS program in lblrtm is currently limited to molecules up to 38.
 c
@@ -1471,9 +1736,39 @@ C           SET FLAG FOR O2 0.0 CM-1 BAND CASE
 C
             IOUT(N1) = ILINS                                             LN11090
 
+C        MJA, 01-19-2012
+C        New case for IFLAG = "-5" in TAPE1 to read foreign and self
+C        line coupling coefficients
+         ELSEIF (IFLGM1.EQ.5) THEN                                      
+C
+C           FOREIGN LINE COUPLING INFORMATION READ IN
+C
+            READ (ALIN(I),925) Y1,G1,Y2,G2,Y3,G3,Y4,G4,IFLAG             
+C
+C
+C           SKIP OVER UNEEDED WAVENUMBERS
+C
+            IF (VNUS.LT.VMIN) GO TO 50
+            ILIN3 = ILIN3 + 1                                            
+            ALIN1(ILIN3)  = ALIN(I)                                      
+            VNU1(ILIN3)   = Y1                                           
+            STR1(ILIN3)   = G1                                           
+            ALF1(ILIN3)   = Y2                                           
+            EPP1(ILIN3)   = G2                                           
+            AMOL1(ILIN3)  = Y3                                           
+            HWHM1(ILIN3)  = G3                                           
+            TMPAL1(ILIN3) = Y4                                           
+            PSHIF1(ILIN3) = G4                                           
+            IFG1(ILIN3)   = IFLAG       
+
+C           SET IFLGM1 TO ONE TO ENSURE THE NEXT PASS READS THE 
+C           SELF LINE COUPLING INFORMATION USING the else
+C           statement below (MJA, 01-20-2012)
+C
+            IFLGM1 = 1                                                   LN11120                                                                      
          ELSE                                                            LN11100
 C
-C           LINE COUPLING INFORMATION READ IN
+C           FOREIGN LINE COUPLING INFORMATION READ IN
 C
             READ (ALIN(I),925) Y1,G1,Y2,G2,Y3,G3,Y4,G4,IFLAG             LN11110
 C
@@ -1517,8 +1812,11 @@ c      ENDIF                                                              LN1139
 C                                                                        LN11400
       RETURN                                                             LN11410
 C                                                                        LN11420
- 900  FORMAT (51(A160))                                                  LN11430
+C 900  FORMAT (51(A160))                                                  LN11430
+C MJA 01-19-2012 Increase array size for self line coupling
+ 900  FORMAT (52(A160))  
  905  FORMAT (2X,A1,95X,I2)                                              LN11440
+ 805  FORMAT (2X,A1,95X,A2) 
  910  FORMAT (2A50)                                                      LN11450
  913  format (a1)
  914  format ( ' skipping over header records on TAPE1')
@@ -1540,6 +1838,21 @@ C                                                                        LN11550
       END                                                                LN11560
 c-------------------------------------------------------------------------------
       SUBROUTINE RDFIL1 (LINBCD,I1,N1,IEOF)                              LN09910
+C     PLNFL Updates to read self-line coupling paramaters for CO2
+C     Matt Alvarado, (malvarad@aer.com) 01-19-2012
+C     
+C     To inlcude self-line coupling, we want to:
+C     (a) read in 3 ASCII lines for every spectral line with a "-5" line
+C         coupling flag - main (HITRAN F100) line, foreign line 
+C         coupling line,and self line coupling line.
+C     (b) Place self-line coupling paramaters in the position, strength,
+C         etc. arrays right after the foregin paramaters.
+C     
+C     To do this, I made these changes:
+C     (a) Inceased max array and loop indices to 52 (in case block ends 
+C         on the main line with a "-5" flag.
+C     (b) set code to read in self-line coupling parameters if IFLAG
+C         is "-5" and add them to the arrays
 C                                                                        LN09920
       IMPLICIT REAL*8           (V)                                     !LN09930
 C                                                                        LN09940
@@ -1558,13 +1871,19 @@ C                                                                        LN10000
       COMMON /IFIL/ IRD,IPR,IPU,NWDR,LRC,ILNGTH,INLTE,IER,IPUOUT         LN10040
       COMMON /UNITS/ PI,PLANCK,BOLTZ,CLIGHT,AVOGAD,RADCN1,RADCN2           LN10050
       COMMON /IC1/ ILIN3                                                 LN10060
-      COMMON /MANE/ VNU1(51),STR1(51),ALF1(51),EPP1(51),MOL1(51),        LN10070
-     *              HWHM1(51),TMPAL1(51),PSHIF1(51),IFG1(51),            LN10080
-     *              MIND1(64),IOUT(51)                                   LN10090
-      COMMON /QUANT/ QUANT1(51),QUANTC(51)                               LN10100
-      COMMON /LCHAR/ ALIN1(51),ALIN2(40),ALINC(51),ALINE(250)            LN10110
+C      COMMON /MANE/ VNU1(51),STR1(51),ALF1(51),EPP1(51),MOL1(51),        LN10070
+C     *              HWHM1(51),TMPAL1(51),PSHIF1(51),IFG1(51),            LN10080
+C     *              MIND1(64),IOUT(51)                                   LN10090
+C      COMMON /QUANT/ QUANT1(51),QUANTC(51)                               LN10100
+C      COMMON /LCHAR/ ALIN1(51),ALIN2(40),ALINC(51),ALINE(250)            LN10110
+C     MJA, 01-19-2012 new array sizes
+      COMMON /MANE/ VNU1(52),STR1(52),ALF1(52),EPP1(52),MOL1(52),        LN10070
+     *              HWHM1(52),TMPAL1(52),PSHIF1(52),IFG1(52),            LN10080
+     *              MIND1(64),IOUT(52)                                   LN10090
+      COMMON /QUANT/ QUANT1(52),QUANTC(52)                               LN10100
+      COMMON /LCHAR/ ALIN1(52),ALIN2(40),ALINC(52),ALINE(250)            LN10110
 c 
-      parameter (mol_max=39)
+      parameter (mol_max=47)
 c
       COMMON /ISVECT/ ISO_MAX(MOL_MAX)
       common /eppinfo/ negflag
@@ -1575,13 +1894,17 @@ c
       data h_rdlin1/' tape1 '/, h_blnk/' '/,
      *     h_alin_70/' '/, h_alin_73/' '/
 C                                                                        LN10120
-      CHARACTER*100 ALIN1,ALIN2,ALINC,ALINE,ALIN(51)                     LN10130
+C      CHARACTER*100 ALIN1,ALIN2,ALINC,ALINE,ALIN(51)                     LN10130
+C     MJA, 01-19-2012 new array sizes
+      CHARACTER*100 ALIN1,ALIN2,ALINC,ALINE,ALIN(52)
       CHARACTER*50 ZEROFL                                                LN10140
       CHARACTER*27 QUANT1,QUANTC                                         LN10150
       CHARACTER*9 CUP,CLO
       CHARACTER*7 HOL                                                    LN10160
-      CHARACTER*1 CFLAG,CBLNK,CMINUS,a_1,h_1,h_2
-      DIMENSION AMOL1(51)                                                LN10180
+      CHARACTER*1 CFLAG,CBLNK,CMINUS,a_1,h_1,h_2,CFLAG2
+C      DIMENSION AMOL1(51)                                                LN10180
+C     MJA, 01-19-2012 new array sizes
+      DIMENSION AMOL1(52)
 C                                                                        LN10190
       EQUIVALENCE (MOL1(1),AMOL1(1))                                     LN10200
 C                                                                        LN10210
@@ -1609,19 +1932,56 @@ C                                                                        LN10330
             READ (LINBCD,900,END=30) ALIN(I)                             LN10430
    20    CONTINUE                                                        LN10440
          READ (ALIN(IBLK),905) CFLAG,IFLAG                               LN10450
-         IF (IFLAG.LT.0.AND.CFLAG.NE.CBLNK.AND.CFLAG.NE.CMINUS) THEN     LN10460
-            IBLK = 51                                                    LN10470
-            READ (LINBCD,900,END=30) ALIN(IBLK)                          LN10480
-         ENDIF                                                           LN10490
-      ENDIF                                                              LN10500
+         READ (ALIN(IBLK-1),905) CFLAG2,IFLAG2    
+C         write(*,*) "Block check: ", IFLAG, CFLAG, CFLAG2
+         IF (IFLAG.LT.0) THEN !Line coupling
+            IF (IFLAG.NE.-5) THEN !Foreign line coupling only
+               IF(CFLAG.NE.CBLNK.AND.CFLAG.NE.CMINUS) THEN !Main line
+                 IBLK = 51                                               
+                 READ (LINBCD,900,END=30) ALIN(IBLK)  
+               ELSE !Foreign line coupling line
+                 IBLK = 50    
+               ENDIF
+            ELSE !Foreign and self line coupling (IFLAG = -5)
+               IF(CFLAG.NE.CBLNK.AND.CFLAG.NE.CMINUS) THEN !Main line
+                  IBLK = 52                                                 
+                  READ (LINBCD,900,END=30) ALIN(IBLK-1) 
+                  READ (LINBCD,900,END=30) ALIN(IBLK) 
+               ELSEIF(CFLAG2.NE.CBLNK.AND.CFLAG2.NE.CMINUS) THEN !Foreign line coupling line
+                  IBLK = 51                                              
+                  READ (LINBCD,900,END=30) ALIN(IBLK)        
+               ELSE !Self line coupling line
+                  IBLK = 50 
+               ENDIF
+            ENDIF
+         ENDIF
+      ENDIF
+C         IF (IFLAG.LT.0.AND.CFLAG.NE.CBLNK.AND.CFLAG.NE.CMINUS) THEN     LN10460
+C           MJA 01-19-2012 Read 52 lines if IFLAG = -5
+C            IF(IFLAG.EQ.-5) THEN
+C              IBLK = 52                                                 
+C              READ (LINBCD,900,END=30) ALIN(IBLK-1) 
+C              READ (LINBCD,900,END=30) ALIN(IBLK) 
+C            ELSE
+C              IBLK = 51                                                  LN10470
+C              READ (LINBCD,900,END=30) ALIN(IBLK)                        LN10480
+C            ENDIF
+C         ENDIF                                                           LN10490
+C      ENDIF                                                              LN10500
 C                                                                        LN10510
+C      do I = 1, IBLK
+C        write(*,*) I, ALIN(I)
+C      enddo
       IEOF = 0                                                           LN10520
       GO TO 40                                                           LN10530
    30 IBLK = I-1                                                         LN10540
 
       IF (IBLK.LE.0) GO TO 60                                            LN10550
    40 IFLGM1 = 0                                                         LN10560
-      DO 50 I = 1, 51                                                    LN10570
+C      MJA 01-19-2012 Self line coupling fix
+C      DO 50 I = 1, 51                                                    LN10570
+      DO 50 I = 1, 52                                                    LN10570
+C         WRITE(*,*) I, IFLGM1
          IF (I.GT.IBLK) WRITE (ALIN(I),910) ZEROFL,ZEROFL                LN10580
 c
 c     skip over header records:
@@ -1639,6 +1999,12 @@ c     test for invalid molecule number:
          IF (MOL.le.0) GO TO 50                                          LN10600
          M = MOL                                                         LN10610
          IF (MIND1(M).EQ.0) GO TO 50                                     LN10620
+
+C        MJA, 01-19-2012
+C        IF IFLGM1 <= 0, main HITRAN F100 line, read normally
+C        ELSE IF IFLGM1 = 5, both foreign and self line coupling (new!)
+C        ELSE (IFLGM1 = 1 or 3) just read foreign line coupling
+C         WRITE(*,*) IFLGM1
          IF (IFLGM1.LE.0) THEN                                           LN10630
 c
 c     check vibrational data 
@@ -1653,10 +2019,13 @@ c     check vibrational data
      *              '***  check format specification of TAPE1  ***')
                stop '***        invalid TAPE1                  ***'
             endif
+C           MJA 01-23-2012 debugging 
+C            write(*,*) alin(I), IFLGM1
 
             READ (ALIN(I),920) ISO,VNU,STRSV,TRANS,HWHMF,HWHMS,ENERGY,   LN10640
      *                         TDEP,SHIFT,IVUP,IVLO,CUP,CLO,HOL,IFLGSV   LN10650
             IFLAG = IFLGSV                                               LN10660
+C          write(*,*)  IFLAG, IFLGSV  
 c
 c     check that molecule and isotope are within proper range
 c
@@ -1683,6 +2052,9 @@ c
             endif
 c
             MOL = MOL+100*ISO                                            LN10670
+C           MJA 01-19-2012
+C           If line coupling (IFLAG < 0) take absolute value of IFLAG
+C           and place in IFLAGM1
             IF (IFLAG.LT.0) THEN                                         LN10680
                IFLAG = IABS(IFLAG)                                       LN10690
             ELSE                                                         LN10700
@@ -1690,6 +2062,7 @@ c
             ENDIF                                                        LN10720
             IFLGM1 = IFLAG
             VNUS = VNU                                                   LN10730
+C            write(*,*) IFLGM1
 C
 C           SKIP OVER UNEEDED WAVENUMBERS
 C
@@ -1741,6 +2114,41 @@ C
 C           SET FLAG FOR O2 0.0 CM-1 BAND CASE
 C
             IOUT(N1) = ILINS                                             LN11090
+
+C            write(*,*) IFLGM1
+
+C        MJA, 01-19-2012
+C        New case for IFLAG = "-5" in TAPE1 to read foreign and self
+C        line coupling coefficients
+         ELSEIF (IFLGM1.EQ.5) THEN                                      
+C         write(*,*) "Foreign and self"
+C
+C           FOREIGN LINE COUPLING INFORMATION READ IN
+C
+            READ (ALIN(I),925) Y1,G1,Y2,G2,Y3,G3,Y4,G4,IFLAG             
+C
+C
+C           SKIP OVER UNEEDED WAVENUMBERS
+C
+            IF (VNUS.LT.VMIN) GO TO 50
+            ILIN3 = ILIN3 + 1                                            
+            ALIN1(ILIN3)  = ALIN(I)                                      
+            VNU1(ILIN3)   = Y1                                           
+            STR1(ILIN3)   = G1                                           
+            ALF1(ILIN3)   = Y2                                           
+            EPP1(ILIN3)   = G2                                           
+            AMOL1(ILIN3)  = Y3                                           
+            HWHM1(ILIN3)  = G3                                           
+            TMPAL1(ILIN3) = Y4                                           
+            PSHIF1(ILIN3) = G4                                           
+            IFG1(ILIN3)   = IFLAG                                        
+
+C           SET IFLGM1 TO ONE TO ENSURE THE NEXT PASS READS THE 
+C           SELF LINE COUPLING INFORMATION USING the else
+C           statement below (MJA, 01-20-2012)
+C
+            IFLGM1 = 1                                                   LN11120
+
          ELSE                                                            LN11100
 C
 C           LINE COUPLING INFORMATION READ IN
@@ -1786,7 +2194,9 @@ C                                                                        LN11350
 
       RETURN                                                             LN11410
 C                                                                        LN11420
- 900  FORMAT (51(A100))                                                  LN11430
+C 900  FORMAT (51(A100))                                                  LN11430
+C MJA 01-19-2012 Increase array sizes for self line coupling
+ 900  FORMAT (52(A100))
  905  FORMAT (2X,A1,95X,I2)                                              LN11440
  910  FORMAT (2A50)                                                      LN11450
  913  format (a1)
@@ -1804,6 +2214,21 @@ C                                                                        LN11420
 C                                                                        LN11550
       END                                                                LN11560
       SUBROUTINE RDFIL2 (LINBCD,I2,N2,IEOF)                              LN11570
+C     PLNFL Updates to read self-line coupling paramaters for CO2
+C     Matt Alvarado, (malvarad@aer.com) 01-19-2012
+C     
+C     To inlcude self-line coupling, we want to:
+C     (a) read in 3 ASCII lines for every spectral line with a "-5" line
+C         coupling flag - main (HITRAN F100) line, foreign line 
+C         coupling line,and self line coupling line.
+C     (b) Place self-line coupling paramaters in the position, strength,
+C         etc. arrays right after the foregin paramaters.
+C     
+C     To do this, I made these changes:
+C     (a) Inceased max array and loop indices to 52 (in case block ends 
+C         on the main line with a "-5" flag.
+C     (b) set code to read in self-line coupling parameters if IFLAG
+C         is "-5" and add them to the arrays
 C                                                                        LN11580
       IMPLICIT REAL*8           (V)                                     !LN11590
 C                                                                        LN11600
@@ -1822,13 +2247,19 @@ C                                                                        LN11660
       COMMON /IFIL/ IRD,IPR,IPU,NWDR,LRC,ILNGTH,INLTE,IER,IPUOUT         LN11700
       COMMON /UNITS/ PI,PLANCK,BOLTZ,CLIGHT,AVOGAD,RADCN1,RADCN2           LN11710
       COMMON /IC2/ ILIN3                                                 LN11720
-      COMMON /MAINC/ VNUC(51),STRC(51),ALFC(51),EPPC(51),MOLC(51),       LN11730
-     *               HWHMC(51),TMPALC(51),PSHIFC(51),IFGC(51),           LN11740
-     *               MINDC(64),IOUTC(51)                                 LN11750
-      COMMON /QUANT/ QUANT1(51),QUANTC(51)                               LN11760
-      COMMON /LCHAR/ ALIN1(51),ALIN2(40),ALINC(51),ALINE(250)            LN11770
+C      COMMON /MAINC/ VNUC(51),STRC(51),ALFC(51),EPPC(51),MOLC(51),       LN11730
+C     *               HWHMC(51),TMPALC(51),PSHIFC(51),IFGC(51),           LN11740
+C     *               MINDC(64),IOUTC(51)                                 LN11750
+C      COMMON /QUANT/ QUANT1(51),QUANTC(51)                               LN11760
+C      COMMON /LCHAR/ ALIN1(51),ALIN2(40),ALINC(51),ALINE(250)            LN11770
+C     MJA 01-19-2012 New array sizes
+      COMMON /MAINC/ VNUC(52),STRC(52),ALFC(52),EPPC(52),MOLC(52),       LN11730
+     *               HWHMC(52),TMPALC(52),PSHIFC(52),IFGC(52),           LN11740
+     *               MINDC(64),IOUTC(52)                                 LN11750
+      COMMON /QUANT/ QUANT1(52),QUANTC(52)                               LN11760
+      COMMON /LCHAR/ ALIN1(52),ALIN2(40),ALINC(52),ALINE(250)            LN11770
 c 
-      parameter (mol_max=39)
+      parameter (mol_max=47)
 c
       COMMON /ISVECT/ ISO_MAX(MOL_MAX) 
 c
@@ -1836,13 +2267,17 @@ c
 c
       data h_rdlin2/' tape2 '/
 C                                                                        LN11780
-      CHARACTER*100 ALIN1,ALIN2,ALINC,ALINE,ALIN(51)                     LN11790
+C      CHARACTER*100 ALIN1,ALIN2,ALINC,ALINE,ALIN(51)                     LN11790
+C     MJA 01-19-2012 New array sizes
+      CHARACTER*100 ALIN1,ALIN2,ALINC,ALINE,ALIN(52)                     LN11790
       CHARACTER*50 ZEROFL                                                LN11800
       CHARACTER*27 QUANT1,QUANTC                                         LN11810
       CHARACTER*9 CUP,CLO                                                LN11820
       CHARACTER*7 HOL
-      CHARACTER*1 CFLAG,CBLNK,CMINUS,hr_1,h_1,h_2
-      DIMENSION AMOLC(51)                                                LN11840
+      CHARACTER*1 CFLAG,CBLNK,CMINUS,hr_1,h_1,h_2,CFLAG2
+C      DIMENSION AMOLC(51)                                                LN11840
+C     MJA 01-19-2012 New array sizes
+      DIMENSION AMOLC(52)   
 C                                                                        LN11850
       EQUIVALENCE (MOLC(1),AMOLC(1))                                     LN11860
 C                                                                        LN11870
@@ -1870,11 +2305,43 @@ C                                                                        LN11990
             READ (LINBCD,900,END=30) ALIN(I)                             LN12090
    20    CONTINUE                                                        LN12100
          READ (ALIN(IBLK),905) CFLAG,IFLAG                               LN12110
-         IF (IFLAG.LT.0.AND.CFLAG.NE.CBLNK.AND.CFLAG.NE.CMINUS) THEN     LN12120
-            IBLK = 51                                                    LN12130
-            READ (LINBCD,900,END=30) ALIN(IBLK)                          LN12140
-         ENDIF                                                           LN12150
-      ENDIF                                                              LN12160
+         READ (ALIN(IBLK-1),905) CFLAG2,IFLAG2    
+C         write(*,*) "Block check: ", IFLAG, CFLAG, CFLAG2
+         IF (IFLAG.LT.0) THEN !Line coupling
+            IF (IFLAG.NE.-5) THEN !Foreign line coupling only
+               IF(CFLAG.NE.CBLNK.AND.CFLAG.NE.CMINUS) THEN !Main line
+                 IBLK = 51                                               
+                 READ (LINBCD,900,END=30) ALIN(IBLK)  
+               ELSE !Foreign line coupling line
+                 IBLK = 50    
+               ENDIF
+            ELSE !Foreign and self line coupling (IFLAG = -5)
+               IF(CFLAG.NE.CBLNK.AND.CFLAG.NE.CMINUS) THEN !Main line
+                  IBLK = 52                                                 
+                  READ (LINBCD,900,END=30) ALIN(IBLK-1) 
+                  READ (LINBCD,900,END=30) ALIN(IBLK) 
+               ELSEIF(CFLAG2.NE.CBLNK.AND.CFLAG2.NE.CMINUS) THEN !Foreign line coupling line
+                  IBLK = 51                                              
+                  READ (LINBCD,900,END=30) ALIN(IBLK)        
+               ELSE !Self line coupling line
+                  IBLK = 50 
+               ENDIF
+            ENDIF
+         ENDIF
+      ENDIF
+
+C         IF (IFLAG.LT.0.AND.CFLAG.NE.CBLNK.AND.CFLAG.NE.CMINUS) THEN     LN12120
+C           MJA 01-19-2012 Read 52 lines if IFLAG = -5
+C            IF(IFLAG.EQ.-5) THEN
+C              IBLK = 52                                                 
+C              READ (LINBCD,900,END=30) ALIN(IBLK-1) 
+C              READ (LINBCD,900,END=30) ALIN(IBLK) 
+C            ELSE
+C              IBLK = 51                                                  LN12130
+C              READ (LINBCD,900,END=30) ALIN(IBLK)                        LN12140
+C            ENDIF
+C         ENDIF                                                           LN12150
+C      ENDIF                                                              LN12160
 C                                                                        LN12170
       IEOF = 0                                                           LN12180
       GO TO 40                                                           LN12190
@@ -1883,7 +2350,9 @@ C                                                                        LN12170
       IF (IBLK.LE.0) GO TO 60                                            LN12210
    40 IFLGM1 = 0                                                         LN12220
 c
-      DO 50 I = 1, 51                                                    LN12230
+C      DO 50 I = 1, 51                                                    LN12230
+C      MJA 01-19-2011 Increase array sizes for self line coupling
+      DO 50 I = 1, 52   
          IF (I.GT.IBLK) WRITE (ALIN(I),910) ZEROFL,ZEROFL                LN12240
 c
 c        check for header records and write to 'tape2_header'
@@ -1906,6 +2375,11 @@ c     test for invalid molecule number:
          IF (MOL.EQ.0) GO TO 50                                          LN12260
          M = MOL                                                         LN12270
          IF (MINDC(M).EQ.0) GO TO 50                                     LN12280
+
+C        MJA, 01-19-2012
+C        IF IFLGM1 <= 0, main HITRAN F100 line, read normally
+C        ELSE IF IFLGM1 = 5, both foreign and self line coupling (new!)
+C        ELSE (IFLGM1 = 1 or 3) just read foreign line coupling
          IF (IFLGM1.LE.0) THEN                                           LN12290
             READ (ALIN(I),920) ISO,VNU,STRSV,TRANS,HWHMF,HWHMS,ENERGY,   LN12300
      *                         TDEP,SHIFT,IVUP,IVLO,CUP,CLO,HOL,IFLGSV   LN12310
@@ -1994,9 +2468,41 @@ C                                                                        LN12660
 C           SET FLAG FOR O2 0.0 CM-1 BAND CASE                           LN12670
 C                                                                        LN12680
             IOUTC(N2) = ILINS                                            LN12700
+
+C        MJA, 01-19-2012
+C        New case for IFLAG = "-5" in TAPE1 to read foreign and self
+C        line coupling coefficients
+         ELSEIF(IFLGM1.EQ.5) THEN    
+C                                                                        
+C           FOREIGN LINE COUPLING INFORMATION READ IN                           
+C                                                                        
+            READ (ALIN(I),925) Y1,G1,Y2,G2,Y3,G3,Y4,G4,IFLAG             
+C
+C
+C           SKIP OVER UNEEDED WAVENUMBERS
+C
+            IF (VNUS.LT.VMIN) GO TO 50
+            ILIN3 = ILIN3 + 1                                            
+            ALINC(ILIN3)  = ALIN(I)                                     
+            VNUC(ILIN3)   = Y1                                           
+            STRC(ILIN3)   = G1                                           
+            ALFC(ILIN3)   = Y2                                           
+            EPPC(ILIN3)   = G2                                           
+            AMOLC(ILIN3)  = Y3                                           
+            HWHMC(ILIN3)  = G3                                           
+            TMPALC(ILIN3) = Y4                                           
+            PSHIFC(ILIN3) = G4                                           
+            IFGC(ILIN3)   = IFLAG    
+
+C           SET IFLGM1 TO ONE TO ENSURE THE NEXT PASS READS THE 
+C           SELF LINE COUPLING INFORMATION USING the else
+C           statement below (MJA, 01-20-2012)
+C
+            IFLGM1 = 1                                       
+                     
          ELSE                                                            LN12710
 C                                                                        LN12720
-C           LINE COUPLING INFORMATION READ IN                            LN12730
+C           FOREIGN LINE COUPLING INFORMATION READ IN                    LN12730
 C                                                                        LN12740
             READ (ALIN(I),925) Y1,G1,Y2,G2,Y3,G3,Y4,G4,IFLAG             LN12750
 C
@@ -2032,7 +2538,9 @@ C                                                                        LN12990
 C                                                                        LN13020
       RETURN                                                             LN13030
 C                                                                        LN13040
- 900  FORMAT (51(A100))                                                  LN13050
+C 900  FORMAT (51(A100))                                                  LN13050
+C MJA 01-19-2012 Increase array size for self-line coupling
+ 900  FORMAT (52(A100))
  905  FORMAT (2X,A1,95X,I2)                                              LN13060
  910  FORMAT (2A50)                                                      LN13070
  913  format (a1)
@@ -2051,6 +2559,7 @@ C                                                                        LN13140
       END                                                                LN13150
 c-----------------------------------------------------------------------
 c
+
       subroutine line_exception(ind,ipr,h_sub,mol,nmol,iso,iso_max)
 
       character*8 h_sub
@@ -2112,15 +2621,15 @@ c-----------------------------------------------------------------------
 
       BlockData set_vib_map
 
-      parameter (nmol=39)
+      parameter (nmol=47)
 
       character*15 h_vib
 
-      common /vib_map/ ncl_v,nclass_v(64),n_lvl_v(32),h_vib(32,256)
+      common /vib_map/ ncl_v,nclass_v(64),n_lvl_v(32),h_vib(32,800)
 
 c     molecules:       64
 c     classes:         32
-c     vib_ids/class:  256
+c     vib_ids/class:  800
       
       data ncl_v /10/
 
@@ -2146,17 +2655,22 @@ c    *      29,      30,      31,      32,      33,      34,      35,
 c    *    COF2,     SF6,     H2S,   HCOOH,     HO2,       O,  ClONO2,
      *       9,      10,       6,      10,       6,       1,      10,
 c
-c    *      36,      37,      38,      39,
-c    *     NO+,    HOBr,    C2H4,   CH3OH,
-     *       1,       6,      10,      10 /
+c    *      36,      37,      38,      39,       40,      41,      42, 
+c    *     NO+,    HOBr,    C2H4,   CH3OH,    CH3Br,   CH3CN,     CF4,
+     *       1,       6,      10,      10,       10,      10,      10,
+
+c    *      43,      44,      45,      46       47 
+c    *    C4H2,    HC3N,      H2,      CS,     SO3
+     *      10,      10,       1,       1,       8  /
+
 c
       data (n_lvl_v(j),j=1,10)    /
 c    *    1,    2,    3,    4,    5,    6,    7,
-     *   24,   29,   38,   91,  132,  116,   36,
-c    *    8,    9,   10,   11,   12,   13,   14,
-     *   47,   39,   91/
+     *   36,   139,   38,   105,  346,  340,   137,
+c    *    8,    9,     10
+     *   156,   72,   747/
 
-      data ( h_vib(1,lvl),lvl=1,24 ) /
+      data ( h_vib(1,lvl),lvl=1,36 ) /
      1 '              0', '              1', '              2',
      1 '              3', '              4', '              5',
      1 '              6', '              7', '              8',
@@ -2164,9 +2678,13 @@ c    *    8,    9,   10,   11,   12,   13,   14,
      1 '             12', '             13', '             14',
      1 '             15', '             16', '             17',
      1 '             18', '             19', '             20',
-     1 '             21', '             22', '             23'/
+     1 '             21', '             22', '             23',    
+     1 '       I  1 0 5', '       I  1 2 4', '       I  2 0 5',    
+     1 '       I  2 2 3', '       I  2 3 3', '      II  1 0 5',    
+     1 '      II  1 2 4', '      II  2 2 3', '      II  2 3 3',
+     1 '             24', '             25', '             26'/    
 
-      data ( h_vib(2,lvl),lvl=1,29) /
+      data ( h_vib(2,lvl),lvl=1,139) /
      2 '       X      0', '       X      1', '       a      0',
      2 '       a      1', '       b      0', '       b      1',
      2 '       b      2', '               ', '       X      2',
@@ -2176,7 +2694,44 @@ c    *    8,    9,   10,   11,   12,   13,   14,
      2 '       B      9', '       B     10', '       B     11',
      2 '       B     12', '       B     13', '       B     14',
      2 '       B     15', '       B     16', '       B     17',
-     2 '       B     18', '       B     19'/
+     2 '       B     18', '       B     19', '            3V2',    
+     2 '            3V3', '          V2+V3', '          V2+V5',    
+     2 '          V2+V6', '         2V2 E ', '         2V3+V6',    
+     2 '         3V5 A1', '         3V5 E ', '         V3+2V6',    
+     2 '         V5+2V6', '       V1+V2+V6', '       V1+V5 E ',    
+     2 '       V1+V6 E ', '       V2+V4+V6', '       V3+V4 E ',    
+     2 '       V3+V5+V6', '       V4+V5 A1', '       V4+V5 A2',    
+     2 '       V4+V5 E ', '       V4+V6 A1', '       V4+V6 A2',    
+     2 '       V4+V6 E ', '      2V3+V5 E ', '      2V5+V6 A1',    
+     2 '      2V5+V6 A2', '      2V5+V6 E ', '      V2+2V5+V6',    
+     2 '      V2+2V6 A1', '      V2+2V6 E ', '      V3+2V5 A1',    
+     2 '      V3+2V5 E ', '    0 0 0 2 1A1', '    0 0 0 2 1E ',    
+     2 '    0 0 0 2 1F2', '    0 0 0 3 1A1', '    0 0 0 3 1F1',    
+     2 '    0 0 0 3 1F2', '    0 0 0 5  A1', '    0 0 0 5  E ',    
+     2 '    0 0 0 5  F1', '    0 0 0 5  F2', '    0 0 1 0 1F2',    
+     2 '    0 0 1 1 1E ', '    0 0 1 1 1F1', '    0 0 1 1 1F2',    
+     2 '    0 0 1 2 1A1', '    0 0 1 2 1E ', '    0 0 1 2 1F1',    
+     2 '    0 0 2 0  A1', '    0 0 2 0  E ', '    0 0 2 0  F2',    
+     2 '    0 1 0 0 1E ', '    0 1 0 1 1F1', '    0 1 0 1 1F2',    
+     2 '    0 1 0 2 1E ', '    0 1 0 2 1F1', '    0 1 0 2 1F2',    
+     2 '    0 1 0 2 2E ', '    0 1 0 3 1F1', '    0 1 0 4  A1',    
+     2 '    0 1 0 4  A2', '    0 1 0 4  E ', '    0 1 0 4  F1',    
+     2 '    0 1 0 4  F2', '    0 1 1 0 1F1', '    0 1 1 0 1F2',    
+     2 '    0 1 1 1    ', '    0 1 1 1  A1', '    0 1 1 1  A2',    
+     2 '    0 1 1 1  E ', '    0 1 1 1  F1', '    0 1 1 1  F2',    
+     2 '    0 1 1 1 1A1', '    0 1 1 1 1A2', '    0 1 1 1 1E ',    
+     2 '    0 1 1 1 1F1', '    0 1 1 1 1F2', '    0 2 0 0 1A1',    
+     2 '    0 2 0 0 1E ', '    0 2 0 1 1F1', '    0 2 0 1 1F2',    
+     2 '    0 2 0 1 2F2', '    0 2 0 2 1A1', '    0 2 0 2 1E ',    
+     2 '    0 2 0 2 1F1', '    0 2 0 2 1F2', '    0 2 1 0    ',    
+     2 '    0 2 1 0  F1', '    0 2 1 0  F2', '    0 3 0 0 1A1',    
+     2 '    0 3 0 0 1A2', '    0 3 0 0 1E ', '    0 3 0 1  F1',    
+     2 '    0 3 0 1  F2', '    0 3 0 1 1F1', '    0 3 0 1 1F2',    
+     2 '    1 0 0 0 1A1', '    1 0 0 1 1F2', '    1 0 0 2 1F2',    
+     2 '    1 0 0 3  A1', '    1 0 0 3  F2', '    1 0 1 0  F2',    
+     2 '    1 0 1 0 1F2', '    1 1 0 0 1E ', '    1 1 0 1 1F2',    
+     2 '    1 2 0 0  E ', '    1 2 0 0  F1', '    2 0 0 0  A1',    
+     2 '    2 0 0 0 1A1'/                                          
 
       data ( h_vib(3,lvl),lvl=1,38) /
      3 '       X3/2   0', '       X3/2   1', '       X3/2   2',
@@ -2193,7 +2748,7 @@ c    *    8,    9,   10,   11,   12,   13,   14,
      3 '       A2     3', '       X3/2  13', '       X3/2  14',
      3 '       X1/2  13', '       X1/2  14'/
 
-      data ( h_vib(4,lvl),lvl=1,91 ) /
+      data ( h_vib(4,lvl),lvl=1,105 ) /
      4 '        0 0 0 0', '        0 1 1 0', '        0 2 0 0',
      4 '        0 2 2 0', '        1 0 0 0', '        0 3 1 0',
      4 '        0 3 3 0', '        1 1 1 0', '        0 4 0 0',
@@ -2224,9 +2779,13 @@ c    *    8,    9,   10,   11,   12,   13,   14,
      4 '        3 2 0 1', '        4 0 0 1', '        1 0 0 3',
      4 '        2 2 2 1', '        0 9 1 0', '        0 7 1 1',
      4 '        0 2 0 2', '        0 5 1 1', '        1 1 1 2',
-     4 '        3 4 2 0'/
+     4 '        3 4 2 0', '       I  1 0 5', '       I  1 2 4',    
+     4 '       I  2 0 5', '       I  2 2 3', '       I  2 3 3',    
+     4 '      II  1 0 5', '      II  1 2 4', '      II  2 2 3',    
+     4 '      II  2 3 3', '        0 3 1 2', '        0 4 0 2',    
+     4 '        0 4 2 2', '        1 2 0 2', '        1 2 2 2'/                       
 
-      data ( h_vib(5,lvl),lvl=1,132 ) /
+      data ( h_vib(5,lvl),lvl=1,346 ) /
      5 '       0 0 0 01', '       0 1 1 01', '       1 0 0 02',
      5 '       0 2 2 01', '       1 0 0 01', '       1 1 1 02',
      5 '       0 3 3 01', '       1 1 1 01', '       0 0 0 11',
@@ -2270,9 +2829,81 @@ c    *    8,    9,   10,   11,   12,   13,   14,
      5 '       2 1 1 33', '       2 1 1 32', '       2 1 1 31',
      5 '       2 3 3 03', '       1 5 5 02', '       2 3 3 02',
      5 '       0 7 7 01', '               ', '       1 0 0 41',
-     5 '       1 0 0 51', '       1 0 0 52', '       0 0 0 51'/
+     5 '       1 0 0 51', '       1 0 0 52', '       0 0 0 51',    
+     5 '       0 4 4 21', '       0 5 5 11', '       0 5 5 21',    
+     5 '       0 7 7 11', '       0 8 8 01', '       0 8 8 11',    
+     5 '       0 9 9 01', '       1 3 3 21', '       1 3 3 22',    
+     5 '       1 4 4 21', '       1 4 4 22', '       1 5 5 01',    
+     5 '       1 5 5 11', '       1 5 5 12', '       1 6 6 01',    
+     5 '       1 6 6 02', '       1 6 6 11', '       1 6 6 12',    
+     5 '       1 7 7 01', '       1 7 7 02', '       1 7 7 11',    
+     5 '       1 7 7 12', '       2 2 2 13', '       2 2 2 21',    
+     5 '       2 2 2 22', '       2 2 2 23', '       2 4 4 01',    
+     5 '       2 4 4 02', '       2 4 4 03', '       2 4 4 11',    
+     5 '       2 4 4 12', '       2 4 4 13', '       2 5 5 01',    
+     5 '       2 5 5 02', '       2 5 5 03', '       2 5 5 11',    
+     5 '       2 5 5 12', '       2 5 5 13', '       2 6 6 01',    
+     5 '       2 6 6 02', '       3 0 0 14', '       3 0 0 21',    
+     5 '       3 0 0 22', '       3 0 0 23', '       3 0 0 24',    
+     5 '       3 2 2 01', '       3 2 2 02', '       3 2 2 04',    
+     5 '       3 2 2 11', '       3 2 2 12', '       3 2 2 14',    
+     5 '       3 3 3 01', '       3 3 3 02', '       3 3 3 03',    
+     5 '       3 3 3 04', '       3 3 3 11', '       3 3 3 12',    
+     5 '       3 3 3 13', '       3 3 3 14', '       3 4 4 01',    
+     5 '       3 4 4 02', '       3 4 4 03', '       3 4 4 04',    
+     5 '       3 4 4 14', '       3 5 5 01', '       3 5 5 02',    
+     5 '       4 0 0 01', '       4 0 0 03', '       4 0 0 05',    
+     5 '       4 0 0 11', '       4 0 0 13', '       4 0 0 15',    
+     5 '       4 1 1 01', '       4 1 1 03', '       4 1 1 04',    
+     5 '       4 1 1 05', '       4 1 1 11', '       4 1 1 14',    
+     5 '       4 1 1 15', '       4 2 2 01', '       4 2 2 02',    
+     5 '       4 2 2 03', '       4 2 2 04', '       4 2 2 05',    
+     5 '       4 2 2 13', '       4 2 2 14', '       4 2 2 15',    
+     5 '       4 3 3 01', '       4 3 3 04', '       4 4 4 02',    
+     5 '       4 4 4 03', '       5 0 0 01', '       5 0 0 02',    
+     5 '       5 0 0 03', '       5 0 0 04', '       5 0 0 05',    
+     5 '       5 0 0 06', '       5 0 0 14', '       5 0 0 15',    
+     5 '       5 0 0 16', '       5 1 1 03', '       5 1 1 04',    
+     5 '       5 1 1 05', '       6 0 0 01', '       2 6 6 13',
+     5 '       2 6 6 13', '       5 1 1 16', '       3 1 1 24',
+     5 '       5 2 2 04', '       4 3 3 03', '       4 3 3 02',
+     5 '       5 2 2 03', '       3 1 1 23', '       4 2 2 12',
+     5 '       5 1 1 15', '       3 1 1 22', '       2 3 3 22',
+     5 '       5 1 1 14', '       5 0 0 13', '       3 4 4 13',
+     5 '       4 3 3 14', '       2 6 6 12', '       3 4 4 12',
+     5 '       5 0 0 12', '       5 1 1 01', '       3 1 1 21',
+     5 '       5 2 2 01', '       5 0 0 11', '       4 2 2 11',
+     5 '       3 4 4 11', '       2 6 6 11', '       4 4 4 01',
+     5 '       0 0 0 41', '       5 1 1 06', '       4 3 3 15',
+     5 '       6 0 0 04', '       4 0 0 24', '       6 0 0 03',
+     5 '       6 0 0 16', '       3 5 5 13', '       6 0 0 15',
+     5 '       4 3 3 13', '       4 0 0 23', '       5 1 1 13',
+     5 '       6 1 1 03', '       5 4 4 03', '       5 2 2 02',
+     5 '       6 0 0 02', '       4 0 0 22', '       5 1 1 12',
+     5 '       5 3 3 02', '       4 3 3 12', '       3 5 5 12',
+     5 '       6 1 1 01', '       0 4 4 31', '       0 1 1 41',
+     5 '       0 5 5 31', '       1 3 3 32', '       1 3 3 31',
+     5 '       0 2 2 41', '       1 0 0 42', '       6 0 0 06',
+     5 '       5 2 2 05', '       5 2 2 15', '       6 1 1 04', 
+     5 '       6 0 0 14', '       5 2 2 14', '       6 0 0 13',
+     5 '       5 2 2 13', '       4 1 1 25', '       5 2 2 12',
+     5 '       2 3 3 23', '       6 1 1 02', '       6 0 0 12',
+     5 '       1 4 4 32', '       2 2 2 33', '       5 1 1 11',
+     5 '       3 0 0 34', '       4 3 3 11', '       2 2 2 32', 
+     5 '       1 1 1 42', '       3 0 0 33', '       3 0 0 32', 
+     5 '       5 2 2 11', '       4 0 0 21', '       2 3 3 21', 
+     5 '       1 1 1 41', '       3 0 0 31', '       2 2 2 31', 
+     5 '       1 4 4 31', '       0 0 0 00', '       6 0 0 17', 
+     5 '       6 1 1 15', '       6 1 1 14', '       2 3 3 33', 
+     5 '       3 1 1 34', '       3 1 1 33', '       4 0 0 34', 
+     5 '       2 0 0 42', '       2 3 3 32', '       4 0 0 33', 
+     5 '       3 1 1 32', '       2 0 0 41', '       3 1 1 31', 
+     5 '       2 3 3 31', '       0 1 1 51', '       0 2 2 51', 
+     5 '       1 1 1 51', '       1 2 2 52', '       2 0 0 53', 
+     5 '       1 1 1 52', '       2 0 0 52', '       2 0 0 51', 
+     5 '       1 2 2 51'/                       
 
-      data ( h_vib(6,lvl),lvl=1,116 ) /
+      data ( h_vib(6,lvl),lvl=1,340 ) /
 c******
 c**
 c** There is a deuterated water vapor line in HITRAN 2004 at 12657.367357 cm-1
@@ -2320,9 +2951,84 @@ c******
      6 '          6 0 0', '          6 0 1', '          6 1 0',
      6 '          6 1 1', '          6 2 0', '          7 0 0',
      6 '          7 0 1', '          8 0 0', '          0 5 0',
-     6 '          0 6 0', '          2 3 0'/
+     6 '          0 6 0', '          2 3 0', '         -2-2-2',    
+     6 '          0 0 5', '          0 0 6', '          0 0 7',    
+     6 '          0 1 4', '          0 1 5', '          0 2 4',    
+     6 '          0 2 5', '          0 3 5', '          0 4 4',    
+     6 '          0 4 5', '          0 5 2', '          0 6 2',    
+     6 '          0 7 2', '          0 7 3', '          0 8 1',    
+     6 '          0 8 2', '          0 9 0', '          0 9 1',    
+     6 '          0 9 2', '          0 9 3', '          010 0',    
+     6 '          010 1', '          011 0', '          011 1',    
+     6 '          012 0', '          012 1', '          013 0',    
+     6 '          014 0', '          015 0', '          1 0 5',    
+     6 '          1 0 6', '          1 1 4', '          1 2 4',    
+     6 '          1 2 5', '          1 3 4', '          1 4 3',    
+     6 '          1 5 2', '          1 5 3', '          1 5 4',    
+     6 '          1 6 1', '          1 6 2', '          1 6 3',    
+     6 '          1 7 1', '          1 8 0', '          1 8 1',    
+     6 '          1 8 2', '          1 9 0', '          1 9 1',    
+     6 '          110 0', '          110 1', '          111 0',    
+     6 '          111 1', '          114 0', '          2 0 4',    
+     6 '          2 1 4', '          2 2 4', '          2 3 3',    
+     6 '          2 4 2', '          2 4 3', '          2 5 0',    
+     6 '          2 5 1', '          2 5 3', '          2 6 0',    
+     6 '          2 6 1', '          2 7 0', '          2 7 1',    
+     6 '          2 7 2', '          2 8 0', '          2 8 1',    
+     6 '          2 9 0', '          210 0', '          210 1',    
+     6 '          211 0', '          3 2 3', '          3 3 2',    
+     6 '          3 3 3', '          3 4 2', '          3 5 0',    
+     6 '          3 5 1', '          3 5 2', '          3 6 0',    
+     6 '          3 6 1', '          3 7 0', '          3 7 1',    
+     6 '          3 8 0', '          3 8 1', '          4 2 2',    
+     6 '          4 3 2', '          4 4 0', '          4 4 1',    
+     6 '          4 5 0', '          4 5 1', '          4 6 0',    
+     6 '          4 7 0', '          5 0 2', '          5 1 2',    
+     6 '          5 2 1', '          5 3 0', '          5 3 1',    
+     6 '          5 5 0', '          6 2 1', '          6 3 0',    
+     6 '          6 4 0', '          7 1 0', '       I  1 0 5',    
+     6 '       I  1 2 4', '       I  2 0 5', '       I  2 2 3',    
+     6 '       I  2 3 3', '      II  1 0 5', '      II  1 2 4',    
+     6 '      II  2 2 3', '      II  2 3 3', '            3V2',    
+     6 '            3V3', '          V2+V3', '          V2+V5',    
+     6 '          V2+V6', '         2V2 E ', '         2V3+V6',    
+     6 '         3V5 A1', '         3V5 E ', '         V3+2V6',    
+     6 '         V5+2V6', '       V1+V2+V6', '       V1+V5 E ',    
+     6 '       V1+V6 E ', '       V2+V4+V6', '       V3+V4 E ',    
+     6 '       V3+V5+V6', '       V4+V5 A1', '       V4+V5 A2',    
+     6 '       V4+V5 E ', '       V4+V6 A1', '       V4+V6 A2',    
+     6 '       V4+V6 E ', '      2V3+V5 E ', '      2V5+V6 A1',    
+     6 '      2V5+V6 A2', '      2V5+V6 E ', '      V2+2V5+V6',    
+     6 '      V2+2V6 A1', '      V2+2V6 E ', '      V3+2V5 A1',    
+     6 '      V3+2V5 E ', '    0 0 0 2 1A1', '    0 0 0 2 1E ',    
+     6 '    0 0 0 2 1F2', '    0 0 0 3 1A1', '    0 0 0 3 1F1',    
+     6 '    0 0 0 3 1F2', '    0 0 0 5  A1', '    0 0 0 5  E ',    
+     6 '    0 0 0 5  F1', '    0 0 0 5  F2', '    0 0 1 0 1F2',    
+     6 '    0 0 1 1 1E ', '    0 0 1 1 1F1', '    0 0 1 1 1F2',    
+     6 '    0 0 1 2 1A1', '    0 0 1 2 1E ', '    0 0 1 2 1F1',    
+     6 '    0 0 2 0  A1', '    0 0 2 0  E ', '    0 0 2 0  F2',    
+     6 '    0 1 0 0 1E ', '    0 1 0 1 1F1', '    0 1 0 1 1F2',    
+     6 '    0 1 0 2 1E ', '    0 1 0 2 1F1', '    0 1 0 2 1F2',    
+     6 '    0 1 0 2 2E ', '    0 1 0 3 1F1', '    0 1 0 4  A1',    
+     6 '    0 1 0 4  A2', '    0 1 0 4  E ', '    0 1 0 4  F1',    
+     6 '    0 1 0 4  F2', '    0 1 1 0 1F1', '    0 1 1 0 1F2',    
+     6 '    0 1 1 1    ', '    0 1 1 1  A1', '    0 1 1 1  A2',    
+     6 '    0 1 1 1  E ', '    0 1 1 1  F1', '    0 1 1 1  F2',    
+     6 '    0 1 1 1 1A1', '    0 1 1 1 1A2', '    0 1 1 1 1E ',    
+     6 '    0 1 1 1 1F1', '    0 1 1 1 1F2', '    0 2 0 0 1A1',    
+     6 '    0 2 0 0 1E ', '    0 2 0 1 1F1', '    0 2 0 1 1F2',    
+     6 '    0 2 0 1 2F2', '    0 2 0 2 1A1', '    0 2 0 2 1E ',    
+     6 '    0 2 0 2 1F1', '    0 2 0 2 1F2', '    0 2 1 0    ',    
+     6 '    0 2 1 0  F1', '    0 2 1 0  F2', '    0 3 0 0 1A1',    
+     6 '    0 3 0 0 1A2', '    0 3 0 0 1E ', '    0 3 0 1  F1',    
+     6 '    0 3 0 1  F2', '    0 3 0 1 1F1', '    0 3 0 1 1F2',    
+     6 '    1 0 0 0 1A1', '    1 0 0 1 1F2', '    1 0 0 2 1F2',    
+     6 '    1 0 0 3  A1', '    1 0 0 3  F2', '    1 0 1 0  F2',    
+     6 '    1 0 1 0 1F2', '    1 1 0 0 1E ', '    1 1 0 1 1F2',    
+     6 '    1 2 0 0  E ', '    1 2 0 0  F1', '    2 0 0 0  A1',    
+     6 '    2 0 0 0 1A1'/                                          
 
-      data ( h_vib(7,lvl),lvl=1,36 ) /
+      data ( h_vib(7,lvl),lvl=1,137 ) /
      7 ' 0 0 0 0 1 1   ', ' 0 0 0 0 0 0+  ', ' 0 0 1 0 0 0+  ',
      7 ' 1 0 1 0 0 0+  ', ' 0 0 0 0 1 1  u', ' 0 0 0 0 0 0+ g',
      7 ' 0 0 0 0 3 1  u', ' 0 0 0 1 1 0+ u', ' 0 0 0 2 1 1 1u',
@@ -2334,9 +3040,43 @@ c******
      7 ' 0 0 0 1 1 0- u', ' 0 0 0 1 1 2  u', ' 0 0 0 1 3 0+ u',
      7 ' 0 0 0 1 3 0- u', ' 0 0 0 1 3 2 1u', ' 0 0 0 1 3 2 2u',
      7 ' 0 0 0 3 1 0+ u', ' 0 0 0 3 1 0- u', ' 0 0 0 3 1 2 1u',
-     7 ' 0 0 0 3 1 2 2u', ' 0 1 0 0 1 1  u', ' 1 0 1 1 0 1  u'/
+     7 ' 0 0 0 3 1 2 2u', ' 0 1 0 0 1 1  u', ' 1 0 1 1 0 1  u',    
+     7 ' 0 0 0 1 2 1 1g', ' 0 0 0 1 2 1 2g', ' 0 0 0 1 3 2  u',    
+     7 ' 0 0 0 2 1 3   ', ' 0 0 0 2 2 0+ g', ' 0 0 0 3 1 0+ u',    
+     7 ' 0 0 0 3 1 2  u', ' 0 0 1 0 1 1  g', ' 0 0 1 0 2 0+  ',    
+     7 ' 0 0 1 0 2 2   ', ' 0 0 1 1 0 1  u', ' 0 0 1 1 1 0+ g',    
+     7 ' 0 0 1 1 1 0- g', ' 0 0 1 1 1 2  g', ' 0 0 1 2 0 0+ u',    
+     7 ' 0 0 1 2 0 2  u', ' 0 0 1 3 0 1  u', ' 0 0 2 0 0 0+ g',    
+     7 ' 0 0 2 0 1 1  u', ' 0 0 2 1 0 1  g', ' 0 0 2 1 1 0+ u',    
+     7 ' 0 0 2 2 0 2  g', ' 0 0 3 0 0 0+ u', ' 0 0 3 1 0 1  u',    
+     7 ' 0 1 0 0 0 0+ g', ' 0 1 0 0 3 1  u', ' 0 1 0 1 2 1 2g',    
+     7 ' 0 1 0 1 3 0+2u', ' 0 1 0 1 3 2 2u', ' 0 1 0 2 1 1 2u',    
+     7 ' 0 1 0 2 2 0- g', ' 0 1 0 2 2 2 2g', ' 0 1 0 2 3 1 3u',    
+     7 ' 0 1 0 3 1 0+ u', ' 0 1 0 3 1 0+2u', ' 0 1 0 3 1 2 2u',    
+     7 ' 0 1 0 4 1 1  u', ' 0 1 0 4 1 1 2u', ' 0 1 1 0 0 0+ u',    
+     7 ' 0 1 1 0 2 0+ g', ' 0 1 1 1 0 1  u', ' 0 1 1 2 0 0+ u',    
+     7 ' 0 2 0 1 1 0+ u', ' 0 2 0 1 3 0+ u', ' 0 2 0 2 1 1 2u',    
+     7 ' 0 2 0 3 1 0+ u', ' 1 0 0 0 0 0+ g', ' 1 0 0 0 1 1  u',    
+     7 ' 1 0 0 0 2 0+ g', ' 1 0 0 0 2 2  g', ' 1 0 0 0 3 1  u',    
+     7 ' 1 0 0 1 0 1  g', ' 1 0 0 1 1 0+ u', ' 1 0 0 1 1 0- u',    
+     7 ' 1 0 0 1 1 2  u', ' 1 0 0 1 2 1  g', ' 1 0 0 2 1 1  u',    
+     7 ' 1 0 0 2 1 1 1u', ' 1 0 1 0 2 0+ u', ' 1 0 1 0 2 2  u',    
+     7 ' 1 0 1 1 1 0+ g', ' 1 0 1 1 1 0- g', ' 1 0 1 1 1 2  g',    
+     7 ' 1 0 1 2 0 0+ u', ' 1 0 1 2 0 2  u', ' 1 1 0 1 2 1 2g',    
+     7 ' 1 1 0 2 0 0+ g', ' 1 1 0 2 1 1  u', ' 1 1 0 2 1 1 1u',    
+     7 ' 1 1 0 2 1 1 2u', ' 1 1 1 0 0 0+ u', ' 1 1 1 2 0 0+ u',    
+     7 ' 1 2 0 1 1 0+ u', ' 2 0 0 0 0 0+ g', ' 2 0 0 0 1 1  u',    
+     7 ' 2 0 0 1 0 1  g', ' 2 0 1 0 0 0+ u', ' 0 0 0 2 0 0+ g', 
+     7 ' 0 0 0 2 0 2  g', ' 0 0 0 2 1 3  u', ' 0 0 1 0 0 2  u', 
+     7 ' 0 0 1 0 2 0+ u', ' 0 1 1 0 2 0+ u', ' 0 0 1 0 2 2  u', 
+     7 ' 0 0 0 0 2 2   ', ' 0 0 0 1 1 2   ', ' 0 0 0 1 1 0-  ', 
+     7 ' 0 0 0 1 1 2   ', ' 0 0 0 1 0 1   ', ' 0 0 0 2 0 0+  ', 
+     7 ' 0 0 0 2 0 2   ', ' 0 0 0 3 0 1   ', ' 0 0 0 2 1 3   ', 
+     7 ' 0 0 0 3 0 3   ', ' 0 0 0 2 1 1   ', ' 0 0 0 1 2 3   ', 
+     7 ' 0 0 0 0 3 3   ', ' 0 0 0 1 1 0+  ', ' 0 0 0 1 2 1   ', 
+     7 ' 0 0 0 0 2 0+  ', ' 0 0 0 0 3 1   '/
 
-      data ( h_vib(8,lvl),lvl=1,47 ) /
+      data ( h_vib(8,lvl),lvl=1,156 ) /
      8 '      0 0 0 0  ', '      0 1 0 0  ', '      0 2 0 0  ',
      8 '      0 0 0 1  ', '      0 1 0 1  ', '      0 0 0 2  ',
      8 '      0 0 1 0  ', '      1 0 0 0  ', '      0 0 0 0 a',
@@ -2352,9 +3092,45 @@ c******
      8 '      0 1 0 2Aa', '      0 1 0 2Ea', '      1 1 0 0 s',
      8 '      1 1 0 0 a', '      0 1 1 0 s', '      0 1 1 0 a',
      8 '      0 3 0 1 a', '      1 0 0 1 s', '      1 0 0 1 a',
-     8 '      0 0 1 1 s', '      0 0 1 1 a'/
+     8 '      0 0 1 1 s', '      0 0 1 1 a', '               ',    
+     8 ' 0000 00 0     ', ' 0000 00 0 A1'' ',' 0000 00 0 A2" ',   
+     8 ' 0001 01 1     ', ' 0001 01 1 E"  ', ' 0001 01 1 E''  ',   
+     8 ' 0002 00 0     ', ' 0002 00 0 A1'' ',' 0002 00 0 A2" ',   
+     8 ' 0002 02 2     ', ' 0002 02 2 E"  ', ' 0002 02 2 E''  ',   
+     8 ' 0003 01 1     ', ' 0003 01 1 E"  ', ' 0003 01 1 E''  ',   
+     8 ' 0003 03 3     ', ' 0003 03 3 A2'' ',' 0010 10 1     ',   
+     8 ' 0010 10 1 E"  ', ' 0010 10 1 E''  ',' 0011 11 0 A1" ',   
+     8 ' 0011 11 2     ', ' 0011 11 2 A1" ', ' 0011 11 2 A1'' ',   
+     8 ' 0011 11 2 A2" ', ' 0011 11 2 A2'' ',' 0011 11 2 E"  ',   
+     8 ' 0011 11 2 E''  ',' 0012 10 1 E"  ', ' 0012 10 1 E''  ',  
+     8 ' 0012 11 1 E"  ', ' 0012 12 1 E"  ', ' 0012 12 1 E''  ',   
+     8 ' 0012 12 3     ', ' 0020 00 0 A1'' ',' 0020 00 0 A2" ',   
+     8 ' 0020 20 2 E"  ', ' 0020 20 2 E''  ',' 0100 00 0     ',   
+     8 ' 0100 00 0 A1'' ',' 0100 00 0 A2" ', ' 0101 01 1     ',   
+     8 ' 0101 01 1 E"  ', ' 0101 01 1 E''  ',' 0102 00 0 A1'' ',  
+     8 ' 0102 02 2 E''  ',' 0110 10 1     ', ' 0110 10 1 E"  ',   
+     8 ' 0110 10 1 E''  ',' 0200 00 0     ', ' 0200 00 0 A1'' ',  
+     8 ' 0200 00 0 A2" ', ' 0201 01 1 E"  ', ' 0201 01 1 E''  ',   
+     8 ' 0202 00 0     ', ' 0202 00 0 A1'' ',' 0202 00 0 A2" ',   
+     8 ' 0202 02 2     ', ' 0202 02 2 E"  ', ' 0203 01 1 E"  ',    
+     8 ' 0203 01 1 E''  ',' 0210 10 1     ', ' 0210 10 1 E''  ',  
+     8 ' 0300 00 0     ', ' 0300 00 0 A1'' ',' 0300 00 0 A2" ',   
+     8 ' 0301 01 1 E"  ', ' 0400 00 0 A1'' ',' 0401 01 1     ',   
+     8 ' 0401 01 1 E''  ',' 1000 00 0     ', ' 1000 00 0 A1'' ',  
+     8 ' 1000 00 0 A2" ', ' 1001 01 1     ', ' 1001 01 1 E"  ',    
+     8 ' 1001 01 1 E''  ',' 1002 02 2 E"  ', ' 1002 02 2 E''  ',  
+     8 ' 1010 10 1 E"  ', ' 1010 10 1 E''  ',' 1100 00 0     ',   
+     8 ' 1100 00 0 A1'' ',' 1100 00 0 A2" ', ' 1101 01 1 E''  ',  
+     8 ' 1200 00 0     ', ' 1200 00 0 A1'' ',' 0000 00 0 A2'' ',
+     8 '    0000 00 0  ', '      0 3 0 0  ', '      0 3 0 0  ',
+     8 '      0 4 0 0  ', '      0 2 0 1  ', '      0 1 0 2  ',
+     8 '      1 1 0 0  ', '      0 1 1 0  ', '      1 0 0 1  ',
+     8 '      0 0 1 1  ', ' 0 0 0 0 0 0A1''',' 0 1 0 0 0 0A2"',
+     8 ' 0 2 0 0 0 0A1''',' 0 1 0 0 0 0A2"', ' 0 1 0 0 1 1E" ',
+     8 ' 0 0 0 0 1 1E'' ',' 0 0 0 0 2 0A1''',' 0 0 0 0 2 2E'' ',
+     8 ' 1 0 0 0 0 0A1''',' 0 0 1 1 0 0E'' ',' 0 0 2 2 0 0E'' '/                      
 
-       data ( h_vib(9,lvl),lvl=1,39 ) /
+       data ( h_vib(9,lvl),lvl=1,72 ) /
      9 '    0 0 0 0 0 0', '    0 0 0 0 0 2', '    0 0 1 1 0 0',
      9 '    0 0 1 0 0 1', '    1 0 0 0 0 0', '    0 0 0 0 1 0',
      9 '    0 1 0 1 0 0', '    0 1 0 0 0 1', '    0 0 0 0 0 1',
@@ -2367,9 +3143,20 @@ c******
      9 '    0 0 111 0 0', '    0 0 112 0 0', '    0 0 003 0 0',
      9 '    0 0 004 0 0', '    0 0 013 0 0', '    0 0 014 0 0',
      9 '    0 0 023 0 0', '    0 0 024 0 0', '    0 0 033 0 0',
-     9 '    0 0 034 0 0', '    0 0 103 0 0', '    0 0 104 0 0'/
+     9 '    0 0 034 0 0', '    0 0 103 0 0', '    0 0 104 0 0',
+     9 '    0 0 1 0 0 0', '    0 0 0 1 0 1', '    0 0 0 2 0 0',
+     9 '    0 0 2 0 0 0', '    0 1 1 0 0 0', '    0 0 131 0 0',
+     9 '    0 0 132 0 0', '    0 0 133 0 0', '    0 0 134 0 0',
+     9 '    0 0 001 0 1', '    0 0 002 0 1', '    0 0 003 0 1',
+     9 '    0 0 004 0 1', '    0 0 011 0 1', '    0 0 012 0 1', 
+     9 '    0 0 013 0 1', '    0 0 014 0 1', '    0 0 021 0 1',
+     9 '    0 0 022 0 1', '    0 1 003 0 0', '    0 1 003 0 0',
+     9 '    0 1 004 0 0', '    0 0 113 0 0', '    0 1 001 0 0', 
+     9 '    0 0 023 0 1', '    0 0 114 0 0', '    0 1 012 0 0', 
+     9 '    0 1 014 0 0', '    0 0 024 0 1', '    0 1 013 0 0', 
+     9 '    0 1 002 0 0', '    0 1 011 0 0', '    0 0 0 0 1 1'/
 
-      data ( h_vib(10,lvl),lvl=1,91 ) /
+      data ( h_vib(10,lvl),lvl=1,747 ) /
      * '         GROUND', '             V1', '             V2',
      * '             V4', '             V5', '             V9',
      * '            2V5', '            2V9', '            3V6',
@@ -2400,7 +3187,225 @@ c******
      * '    0 0 0 2 1A1', '    0 0 0 2 1F2', '    0 0 0 3 1A1',
      * '    0 0 0 3 1F1', '    0 0 0 3 1F2', '    0 0 0 3 2F2',
      * '    0 0 1 1 1 E', '    0 0 1 1 1A1', '    0 0 1 1 1F1',
-     * '    0 0 1 1 1F2'/
+     * '    0 0 1 1 1F2', '            3V2', '            3V3',    
+     * '          V2+V3', '          V2+V5', '          V2+V6',    
+     * '         2V2 E ', '         2V3+V6', '         3V5 A1',    
+     * '         3V5 E ', '         V3+2V6', '         V5+2V6',    
+     * '       V1+V2+V6', '       V1+V5 E ', '       V1+V6 E ',    
+     * '       V2+V4+V6', '       V3+V4 E ', '       V3+V5+V6',    
+     * '       V4+V5 A1', '       V4+V5 A2', '       V4+V5 E ',    
+     * '       V4+V6 A1', '       V4+V6 A2', '       V4+V6 E ',    
+     * '      2V3+V5 E ', '      2V5+V6 A1', '      2V5+V6 A2',    
+     * '      2V5+V6 E ', '      V2+2V5+V6', '      V2+2V6 A1',    
+     * '      V2+2V6 E ', '      V3+2V5 A1', '      V3+2V5 E ',    
+     * '    0 0 0 2 1A1', '    0 0 0 2 1E ', '    0 0 0 2 1F2',    
+     * '    0 0 0 3 1A1', '    0 0 0 3 1F1', '    0 0 0 3 1F2',    
+     * '    0 0 0 5  A1', '    0 0 0 5  E ', '    0 0 0 5  F1',    
+     * '    0 0 0 5  F2', '    0 0 1 0 1F2', '    0 0 1 1 1E ',    
+     * '    0 0 1 1 1F1', '    0 0 1 1 1F2', '    0 0 1 2 1A1',    
+     * '    0 0 1 2 1E ', '    0 0 1 2 1F1', '    0 0 2 0  A1',    
+     * '    0 0 2 0  E ', '    0 0 2 0  F2', '    0 1 0 0 1E ',    
+     * '    0 1 0 1 1F1', '    0 1 0 1 1F2', '    0 1 0 2 1E ',    
+     * '    0 1 0 2 1F1', '    0 1 0 2 1F2', '    0 1 0 2 2E ',    
+     * '    0 1 0 3 1F1', '    0 1 0 4  A1', '    0 1 0 4  A2',    
+     * '    0 1 0 4  E ', '    0 1 0 4  F1', '    0 1 0 4  F2',    
+     * '    0 1 1 0 1F1', '    0 1 1 0 1F2', '    0 1 1 1    ',    
+     * '    0 1 1 1  A1', '    0 1 1 1  A2', '    0 1 1 1  E ',    
+     * '    0 1 1 1  F1', '    0 1 1 1  F2', '    0 1 1 1 1A1',    
+     * '    0 1 1 1 1A2', '    0 1 1 1 1E ', '    0 1 1 1 1F1',    
+     * '    0 1 1 1 1F2', '    0 2 0 0 1A1', '    0 2 0 0 1E ',    
+     * '    0 2 0 1 1F1', '    0 2 0 1 1F2', '    0 2 0 1 2F2',    
+     * '    0 2 0 2 1A1', '    0 2 0 2 1E ', '    0 2 0 2 1F1',    
+     * '    0 2 0 2 1F2', '    0 2 1 0    ', '    0 2 1 0  F1',    
+     * '    0 2 1 0  F2', '    0 3 0 0 1A1', '    0 3 0 0 1A2',    
+     * '    0 3 0 0 1E ', '    0 3 0 1  F1', '    0 3 0 1  F2',    
+     * '    0 3 0 1 1F1', '    0 3 0 1 1F2', '    1 0 0 0 1A1',    
+     * '    1 0 0 1 1F2', '    1 0 0 2 1F2', '    1 0 0 3  A1',    
+     * '    1 0 0 3  F2', '    1 0 1 0  F2', '    1 0 1 0 1F2',    
+     * '    1 1 0 0 1E ', '    1 1 0 1 1F2', '    1 2 0 0  E ',    
+     * '    1 2 0 0  F1', '    2 0 0 0  A1', '    2 0 0 0 1A1',    
+     * '          V5+V7', '          V6+V7', '         2V3+V5',    
+     * '          V6+V9', '          V4+V6', '          V4+V8',    
+     * '         V4+V12', '        2V4+V12', '            3V4',
+     * '         2V4+V9', '            2V4', ' 000000010 f u ',
+     * ' 000001000 f g ', ' 000001000 e g ', ' 000000010 e u ',
+     * '  0000001 0 0 1', '  0000000 0 0 0', '  0000010 0 1 0',
+     * '  0001010 0 1 0', '  0001011 0 1-1', '  0001011 0 1 1',
+     * '  0000011 0 1-1', '  0001012 0 1 0', '  0000011 0 1 1',
+     * '  0000012 0 1 0', '  0001012 0 1 2', '  0000012 0 1 2',
+     * '  0000013 0 1-1', '  0000020 0 2 0', '  0000013 0 1 3',
+     * '  0001020 0 2 0', '  0000110 1 1 0', '  0000014 0 1 0',
+     * '  0000021 0 2-1', '  0000014 0 1 2', '  0000021 0 2 1',
+     * '  0000014 0 1 4', '  0000111 1 1-1', '  0001013 0 1-1', 
+     * '  0000111-1 1 1', '  0000022 0 2-2', '  0000111 1 1 1',
+     * '  0000015 0 1-1', '  0000022 0 2 0', '  0000022 0 2 2',
+     * '  0000112 1 1 0', '  0000015 0 1 5', '  0000015 0 1 3',
+     * '  0000023 0 2 3', '  0000030 0 3 0', '  0001021 0 2-1',
+     * '  0000112 1 1-2', '  0000023 0 2-1', '  0000112 1 1 2',
+     * '  0000016 0 1 0', '  0000023 0 2 1', '  0001021 0 2 1',
+     * '  0000031 0 3-1', '  0000120-1 2 0', '  0000112-1 1 2',
+     * '  0000120 1 2 0', '  0000113-1 1 1', '  0000016 0 1 6',
+     * '  0000113 1 1-1', '  0000031 0 3 1', '  0000013 0 1 1',
+     * '  0000024 0 2 4', '  0000016 0 1 2', '  0000210 0 1 0',
+     * '  0000016 0 1 4', '  0000024 0 2-2', '  0000113 1 1 1',
+     * '  0000024 0 2 0', '  0000113 1 1 3', '  0000113-1 1 3',
+     * '  0000015 0 1 1', '  0000032 0 3-2', '  0000121 1 2-1',
+     * '  0000024 0 2 2', '  0000032 0 3 0', '  0000121-1 2 1',
+     * '  0000210 2 1 0', '  0000017 0 1-1', '  0000121 1 2 1',
+     * '  0000032 0 3 2', '  0000114-1 1 2', '  0000025 0 2 5',
+     * '  0000114 1 1 0', '  0000040 0 4 0', '  0001013 0 1 3',
+     * '  0000211 0 1 1', '  0000020 0 0 0', '  0001013 0 1 1',
+     * '  0001110 1 1 0', '  0000030 0 1 0', '  0000025 0 2-1',
+     * '  0000017 0 1 7', '  0000033 0 3-3', '  0000025 0 2 3',
+     * '  0000021 0 0 1', '  0000033 0 3-1', '  0000031 0 1-1',
+     * '  0000130-1 3 0', '  0000031 0 1 1', '  0000022 0 0 2', 
+     * '  0000022 0 0 0', '  0001020 0 0 0', '  0000041 0 4-1',
+     * '  0000032 0 1 0', '  0000023 0 0 1', '  0000114 1 1-2',
+     * '  0000120 1 0 0', '  0000032 0 1 2', '  0000017 0 1 5',
+     * '  0000023 0 0 3', '  0000040 0 2 0', '  0000017 0 1 1',
+     * '  0000017 0 1 3', '  0000114 1 1 2', '  0000211 2 1-1',
+     * '  0000122-1 2 0', '  0000211 0 1-1', '  0000122 1 2-2',
+     * '  0000024 0 0 2', '  0000025 0 2 1', '  0000114 1 1 4',
+     * '  0000122 1 2 2', '  0000121 1 0 1', '  0000211 2 1 1',
+     * '  0000122 1 2 0', '  0000122-1 2 2', '  0000033 0 3 1',
+     * '  0000121 1 0-1', '  0000024 0 0 4', '  0000024 0 0 0',
+     * '  0000130 1 3 0', '  0000033 0 3 3', '  0000041 0 4 1',
+     * '  0000130 1 1 0', '  0000040 0 0 0', '  0001021 0 0 1',
+     * '  0000041 0 2-1', '  0000033 0 1 3', '  0000041 0 2 1',
+     * '  0000033 0 1 1', '  0000033 0 1-1', '  0000025 0 0 1',
+     * '  0000122 1 0 0', '  0000122 1 0 2', '  0000122-1 0 2',
+     * '  0000041 0 0 1', '  0001001 0 0 1', '  0000300 1 0 0',
+     * '  0001100 1 0 0', '  0000200 0 0 0', '  0001000 0 0 0',
+     * '  0001002 0 0 2', '  0001002 0 0 0', '  0001101 1 0 1',
+     * '  0001101 1 0-1', '  0002000 0 0 0', '  0000201 0 0 1',
+     * '  0001102 1 0 2', '  0001003 0 0 3', '  0001102 1 0 0',
+     * '  0001003 0 0 1', '  0000202 0 0 2', '  0000202 0 0 0',
+     * '  0002001 0 0 1', '  0001004 0 0 2', '  0000100 1 0 0',
+     * '  0001004 0 0 4', '  0001004 0 0 0', '  0000203 0 0 3',
+     * '  0000203 0 0 1', '  0000101 1 0 1', '  0000102-1 0 2',
+     * '  0000101 1 0-1', '  0000102 1 0 2', '  0001102-1 0 2',
+     * '  0000102 1 0 0', '  0000103-1 0 3', '  0000103 1 0 3',
+     * '  0000103 1 0 1', '  0000009 0 0 1', '  0001005 0 0 1',
+     * '  0000104-1 0 4', '  0000103 1 0-1', '  0000104 1 0 2',
+     * '  0000104-1 0 2', '  0000006 0 0 2', '  0000009 0 0 5',
+     * '  0000007 0 0 1', '  0000104 1 0 0', '  0000104 1 0 4',
+     * '  0000005 0 0 1', '  0001005 0 0 5', '  0000105-1 0 3',
+     * '  0000200 2 0 0', '  0000009 0 0 3', '  0000105-1 0 5',
+     * '  0000105 1 0 1', '  0000105 1 0 3', '  0000008 0 0 4',
+     * '  0000008 0 0 2', '  0000006 0 0 0', '  0000008 0 0 0',
+     * '  0000203-2 0 3', '  0000201 2 0 1', '  0000105 1 0-1',
+     * '  0000201 2 0-1', '  0000114-1 1 4', '  0000106 1 0 2',
+     * '  0000106 1 0 4', '  0000106 1 0 0', '  0000300 3 0 0',
+     * '  0000106-1 0 6', '  0000106-1 0 2', '  0000007 0 0 3',
+     * '  0001005 0 0 3', '  0000202 2 0 0', '  0000202 2 0 2',
+     * '  0000202 2 0-2', '  0000008 0 0 6', '  0000106 1 0 6',
+     * '  0000007 0 0 5', '  0000203 2 0-1', '  0000203 2 0 1',
+     * '  0000006 0 0 4', '  0000004 0 0 0', '  0000203 2 0 3',
+     * '  0000106-1 0 4', '  0000005 0 0 3', '  0000025 0 0 3', 
+     * '  0000105 1 0 5', '  0000004 0 0 2', '  0000003 0 0 1', 
+     * '  0000009 0 0 7', '  0000025 0 0 5', '  0000002 0 0 0', 
+     * '  0000002 0 0 2', '  0000003 0 0 3', '  0000004 0 0 4', 
+     * '  0000012 0-1 2', '  0000005 0 0 5', '  0000013 0-1 3', 
+     * '  0000110 1-1 0', '  0000006 0 0 6', '  0000014 0-1 4', 
+     * '  0000014 0-1 2', '  0000111 1-1 1', '  0000015 0-1 5', 
+     * '  0000007 0 0 7', '  0000023 0-2 3', '  0000015 0-1 3', 
+     * '  0000112 1-1 0', '  0000112 1-1 2', ' 000001001 f u ', 
+     * ' 000001001 e u ', ' 000000011 e g ', ' 000000011 f g ', 
+     * ' 000000002 e g ', ' 000000001 e u ', ' 000000002 e u ', 
+     * ' 000000003 e u ', ' 000000001 e g ', ' 000000003 e g ', 
+     * ' 000000004 e u ', ' 000000003 f g ', ' 000000004 e g ', 
+     * ' 000000005 e u ', ' 000000002 f u ', ' 000000003 f u ', 
+     * ' 000000004 f g ', ' 000000002 f g ', ' 000000004 f u ', 
+     * ' 000000005 f u ', ' 000000005 e g ', ' 000000102 e u ', 
+     * ' 000000101 e u ', ' 000000101 f u ', ' 000000102 f u ', 
+     * ' 000000101 e g ', ' 000000101 f g ', ' 000000102 e g ', 
+     * ' 000000102 f g ', ' 000000005 f g ', ' 000000011 e u ',
+     * ' 000001001 e g ', ' 000001002 e u ', ' 000000012 e u ', 
+     * ' 000001002 f u ', ' 000001001 f g ', ' 000000012 f g ', 
+     * ' 000001002 f g ', ' 000000012 f u ', ' 000000011 f u ', 
+     * ' 000001002 e g ', ' 000000012 e g ', ' 000000201 e u ', 
+     * ' 001000001 e u ', ' 000000201 f u ', ' 000000201 e g ', 
+     * ' 001000001 e g ', ' 000000201 f g ', ' 001000001 f u ', 
+     * ' 001000001 f g ', ' 001000000 e u ', ' 001000000 e g ', 
+     * ' 000000001 f g ', ' 000000001 f u ', ' 000002010 e u ', 
+     * ' 000002010 f u ', ' 000002010 f g ', ' 000000010 e u ', 
+     * ' 000003000 e u ', ' 000003000 f g ', ' 000002000 e u ', 
+     * ' 000001010 e g ', ' 000003000 f u ', ' 000002010 e g ', 
+     * ' 000001010 e u ', ' 000003000 e g ', ' 000002000 e g ', 
+     * ' 000002001 f u ', ' 000001011 e u ', ' 000001011 f u ', 
+     * ' 000002001 f g ', ' 000001011 e g ', ' 000002001 e u ', 
+     * ' 000002001 e g ', ' 000001011 f g ', ' 000001012 e u ', 
+     * ' 000002002 e u ', ' 000001020 f u ', ' 000001012 f u ', 
+     * ' 000001012 e g ', ' 000001020 f g ', ' 000002002 f u ', 
+     * ' 000002002 e g ', ' 000001012 f g ', ' 000001020 e u ', 
+     * ' 000001110 f u ', ' 000002002 f g ', ' 000002100 e g ', 
+     * ' 000002100 f g ', ' 000001110 f g ', ' 000002100 e u ', 
+     * ' 000002100 f u ', ' 000001013 e g ', ' 000001110 e g ', 
+     * ' 000001013 f g ', ' 000001013 e u ', ' 000001013 f u ', 
+     * ' 000002003 f u ', ' 000002003 f g ', ' 000002003 e u ', 
+     * ' 000001110 e u ', ' 000001010 f u ', ' 000002003 e g ', 
+     * ' 000002000 f u ', ' 000000110 f u ', ' 000000110 e g ', 
+     * ' 000000013 e u ', ' 000000110 f g ', ' 000001010 f g ', 
+     * ' 000000013 e g ', ' 000000013 f u ', ' 000001020 e g ', 
+     * ' 000002000 f g ', ' 000000013 f g ', ' 000000110 e u ', 
+     * ' 000000111 e u ', ' 000000111 f u ', ' 000000014 e u ', 
+     * ' 000000111 f g ', ' 000000021 e g ', ' 000000014 f u ', 
+     * ' 001000010 e u ', ' 000000021 e u ', ' 000000014 f g ', 
+     * ' 000000014 e g ', ' 000000112 e g ', ' 000000111 e g ', 
+     * ' 000000112 f g ', ' 000000020 e g ', ' 000000112 e u ', 
+     * ' 000000210 e u ', ' 001000010 e g ', ' 000000112 f u ', 
+     * ' 000000210 e g ', ' 000000015 e u ', ' 001000011 e u ', 
+     * ' 000000020 e u ', ' 000000015 f u ', ' 000000210 f g ', 
+     * ' 000000015 e g ', ' 001000011 f u ', ' 000000015 f g ', 
+     * ' 000000021 f g ', ' 000000113 f u ', ' 001000011 f g ', 
+     * ' 000000113 e u ', ' 000000113 f g ', ' 000000113 e g ', 
+     * ' 001000011 e g ', ' 000000120 e u ', ' 000000211 e g ', 
+     * ' 000000021 f u ', ' 000000120 f g ', ' 001000012 e u ', 
+     * ' 000000211 f g ', ' 000000016 f g ', ' 000000120 e g ', 
+     * ' 000000016 e g ', ' 000000211 f u ', ' 000000016 f u ', 
+     * ' 001000012 f u ', ' 000000016 e u ', ' 000000030 e u ', 
+     * ' 000000022 e g ', ' 000000210 f u ', ' 001000012 f g ', 
+     * ' 000000030 f g ', ' 000000211 e u ', ' 000000020 f u ', 
+     * ' 001000012 e g ', ' 000000022 e u ', ' 000000022 f g ', 
+     * ' 000000030 f u ', ' 000000020 f g ', ' 000000120 f u ', 
+     * ' 000000030 e g ', ' 000000212 f u ', ' 000000022 f u ', 
+     * ' 000000212 e g ', ' 000000212 e u ', ' 000000212 f g ', 
+     * ' 000000023 e u ', ' 000000023 f g ', ' 000000023 f u ', 
+     * ' 000000023 e g ', ' 001000002 e g ', ' 001000100 f u ', 
+     * ' 001000002 f u ', ' 001000010 f u ', ' 001000100 e g ', 
+     * ' 001000002 f g ', ' 001000010 f g ', ' 001001000 f g ', 
+     * ' 001000002 e u ', ' 000000010 f u ', ' 001001000 f u ', 
+     * ' 001001000 e u ', ' 001000100 f g ', ' 001000003 e g ', 
+     * ' 001000100 e u ', ' 001001000 e g ', ' 001000003 f u ', 
+     * ' 001000003 e u ', ' 001000101 e g ', ' 001000003 f g ', 
+     * ' 001000101 e u ', ' 002000000 e u ', ' 002000000 e g ', 
+     * ' 001000101 f u ', ' 001001001 f u ', ' 000000007 f u ', 
+     * ' 001001001 f g ', ' 001000101 f g ', ' 001001001 e u ', 
+     * ' 000000007 e u ', ' 001001001 e g ', ' 000000007 e g ', 
+     * ' 000000007 f g ', ' 000000006 e g ', ' 001000004 f u ', 
+     * ' 000000006 e u ', ' 001000004 e u ', ' 000000006 f g ', 
+     * ' 000000006 f u ', ' 001000004 f g ', ' 001000102 f g ', 
+     * ' 001000102 e g ', ' 000000008 e g ', ' 001000102 f u ', 
+     * ' 001000102 e u ', ' 000000105 f u ', ' 000000105 e u ', 
+     * ' 001000004 e g ', ' 000000105 e g ', ' 000000105 f g ', 
+     * ' 000000008 e u ', ' 002000001 f g ', ' 002000001 f u ', 
+     * ' 001001002 f g ', ' 001001002 e g ', ' 001001002 f u ', 
+     * ' 001001002 e u ', ' 001000200 e g ', ' 000000106 f u ', 
+     * ' 001000200 f u ', ' 002000001 e g ', ' 001000200 f g ', 
+     * ' 002000001 e u ', ' 001000200 e u ', ' 000001006 e g ', 
+     * ' 000001006 f g ', ' 000001006 e u ', ' 000000106 f g ', 
+     * ' 000000106 e g ', ' 000000106 e u ', ' 000000008 f u ', 
+     * ' 000001005 f u ', ' 000000000 e g ', ' 000000000 e u ', 
+     * ' 000000100 e g ', ' 000000100 f g ', ' 000000100 e u ', 
+     * ' 000000100 f u ', ' 000000010 e g ', ' 000001000 e u ', 
+     * ' 000001000 f g ', ' 000001000 e g ', ' 000001000 f u ', 
+     * ' 000000010 f g ', ' 000000200 e g ', ' 000000200 f g ', 
+     * ' 000000200 e u ', ' 000000200 f u ', ' 000001100 f g ', 
+     * ' 000001100 f u ', ' 000001003 e u ', ' 000001100 e u ', 
+     * ' 000001003 f u ', ' 000001003 e g ', ' 000001003 f g ', 
+     * ' 000001100 e g ', ' 000000103 f g ', ' 000000103 e g ', 
+     * ' 000000103 f u ', ' 000000103 e u ', ' 000000202 f g ', 
+     * ' 000000202 e u ', ' 000000202 e g ', ' 000000202 f u '/                       
 
       end
 c__________________________________________________________________________
@@ -2413,7 +3418,7 @@ c__________________________________________________________________________
      *               SUMSTR(64),NMOL,FLINLO,FLINHI,ILIN,ILINLC,ILINNL,   LN11620
      *               IREC,IRECTL,HID1(2),LSTWD                           LN11630
 
-      common /vib_map/ ncl_v,nclass_v(64),n_lvl_v(32),h_vib(32,256)
+      common /vib_map/ ncl_v,nclass_v(64),n_lvl_v(32),h_vib(32,400)
 
 c     molecules:       64
 c     classes:         32
@@ -2450,7 +3455,7 @@ c     molecules:       64
 c     classes:         32
 c     rot_ids/class:  256
       
-      parameter (nmol=39)
+      parameter (nmol=47)
 
       data ncl_r / 6/
 
@@ -2476,9 +3481,13 @@ c    *      29,      30,      31,      32,      33,      34,      35,
 c    *    COF2,     SF6,     H2S,   HCOOH,     HO2,       O,  ClONO2,
      *       1,       3,       1,       1,       1,       0,       1,
 c
-c    *      36,      37,      38,      39
-c    *     NO+,    HOBr,    C2H4,   CH3OH
-     *       2,       1,       1,       1/
+c    *      36,      37,      38,      39,       40,      41,      42, 
+c    *     NO+,    HOBr,    C2H4,   CH3OH,    CH3Br,   CH3CN,     CF4,
+     *       2,       1,       1,       4,        4,       4,       3,
+
+c    *      43,      44,      45,      46       47 
+c    *    C4H2,    HC3N,      H2,      CS,     SO3
+     *       2,       2,       2,       2,       4  /
 c
       end
 c__________________________________________________________________________
@@ -2688,7 +3697,9 @@ C                                                                        LN14840
       COMMON /HBLOCK/ INBLK1,INBLK2,I86T1,I86T2
       COMMON /IFIL/ IRD,IPR,IPU,NWDR,LRC,ILNGTH,INLTE,IER,IPUOUT         LN14920
       COMMON /UNITS/ PI,PLANCK,BOLTZ,CLIGHT,AVOGAD,RADCN1,RADCN2           LN14930
-      COMMON /LCHAR/ ALIN1(51),ALIN(40),ALINC(51),ALINE(250)             LN14940
+C      COMMON /LCHAR/ ALIN1(51),ALIN(40),ALINC(51),ALINE(250)             LN14940
+C     MJA 01-19-2012 Increase array size to allow self-line coupling
+      COMMON /LCHAR/ ALIN1(52),ALIN(40),ALINC(52),ALINE(250)  
       DIMENSION IDATE(40),ISO(40)                                        LN14950
 C                                                                        LN14960
       CHARACTER*100 ALIN1,ALIN,ALINC,ALINE                               LN14970
@@ -2818,6 +3829,508 @@ C                                                                        LN16010
   920 FORMAT (2A50)                                                      LN16070
 C                                                                        LN16080
       END                                                                LN16090
+
+c*******************************************************************
+      SUBROUTINE RDWVCO2                                             
+C                                                                         
+      IMPLICIT REAL*8           (V)                                    
+C                                                                       
+C     SUBROUTINE RDWVCO2 INPUTS THE LINE DATA FROM LINFIL                 
+C                                                                         
+      PARAMETER (MXBRD=135000)
+
+      COMMON /WV_CO2_BRD/ VNU_WV_CO2(MXBRD),HW_WV_CO2(MXBRD),
+     *                   TEMP_WV_CO2(MXBRD),SHFT_WV_CO2(MXBRD)
+      common /max_brd_lines/maxwvco2,maxco2co2,nwvco2,nco2co2,
+     *                      maxco2h2o, nco2h2o, maxo2h2o, no2h2o
+      COMMON /IFIL/ IRD,IPR,IPU,NWDR,LRC,ILNGTH,INLTE,IER,IPUOUT         LN01770
+
+      REAL*8 dummy
+      CHARACTER*80 STR_WV_CO2
+      CHARACTER*1 CHAR1
+
+c read in co2 broadened parameters here
+     
+      OPEN (77,FILE='wv_co2_brd_param')
+      CHAR1 = '>'
+      DO WHILE (CHAR1.EQ.'>'.OR.CHAR1.EQ.'%')
+          READ (77,'(a80)',END=5) STR_WV_CO2
+	  READ (STR_WV_CO2,'(1A1)',END=5) CHAR1
+      END DO
+      DO IWV=1, MXBRD
+	  READ(STR_WV_CO2,*) VNU_WV_CO2(IWV),dummy,
+     *            HW_WV_CO2(IWV),dummy,TEMP_WV_CO2(IWV),
+     *            SHFT_WV_CO2(IWV)
+	  READ (77,'(a80)',END=5) STR_WV_CO2
+      END DO
+   5  CLOSE(77)
+      maxwvco2=iwv
+      write(ipr,*) maxwvco2,' lines of WV_CO2 data read in'
+      
+      RETURN
+
+  100 FORMAT(F12.6,E12.3,F7.4,F12.4,F6.2,F10.6)
+
+      END
+
+c*******************************************************************
+      SUBROUTINE RDCO2CO2                                                 D02650
+C                                                                         D02660
+      IMPLICIT REAL*8           (V)                                     ! D02670
+C                                                                         D02680
+C     SUBROUTINE RDCO2CO2 INPUTS THE LINE DATA FROM LINFIL                D02690
+C                                                                         D02700
+      PARAMETER (MXBRD=135000)
+
+      COMMON /CO2_CO2_BRD/ VNU_CO2_CO2(MXBRD),HW_CO2_CO2(MXBRD),
+     *                   TEMP_CO2_CO2(MXBRD),SHFT_CO2_CO2(MXBRD)
+      common /max_brd_lines/maxwvco2,maxco2co2,nwvco2,nco2co2,
+     *                      maxco2h2o, nco2h2o, maxo2h2o, no2h2o
+      COMMON /IFIL/ IRD,IPR,IPU,NWDR,LRC,ILNGTH,INLTE,IER,IPUOUT         LN01770
+
+      INTEGER*2 dummy
+      CHARACTER*80 STR_CO2_CO2
+      CHARACTER*1 CHAR1
+
+c read in co2 broadened parameters here
+     
+      OPEN (77,FILE='co2_co2_brd_param')
+      CHAR1 = '>'
+      DO WHILE (CHAR1.EQ.'>'.OR.CHAR1.EQ.'%')
+          READ (77,'(a80)',END=5) STR_CO2_CO2
+	  READ (STR_CO2_CO2,'(1A1)',END=5) CHAR1
+      END DO
+      DO I=1, MXBRD
+	  READ(STR_CO2_CO2,*) dummy,
+     *            VNU_CO2_CO2(I),HW_CO2_CO2(I),TEMP_CO2_CO2(I),
+     *            SHFT_CO2_CO2(I) 
+	  READ (77,'(a80)',END=5) STR_CO2_CO2
+      END DO
+   5  CLOSE(77) 
+      maxco2co2=i
+      write(ipr,*) maxco2co2,' lines of CO2_CO2 data read in'
+      
+      RETURN
+
+  100 FORMAT(I3,F12.6,F10.4,F8.4)
+
+      END
+c*******************************************************************
+      SUBROUTINE RDCO2H2O                                             
+C                                                                         
+      IMPLICIT REAL*8           (V)                                    
+C                                                                       
+C     SUBROUTINE RDCO2H2O READS THE FILE co2_h2o_brd_param FOR BROADENING OF
+C     CO2 LINES BY H2O                
+C                                                                         
+      PARAMETER (MXBRD=135000)
+
+      COMMON /CO2_H2O_BRD/ VNU_CO2_H2O(MXBRD),HW_CO2_H2O(MXBRD),
+     *                   TEMP_CO2_H2O(MXBRD),SHFT_CO2_H2O(MXBRD)
+      common /max_brd_lines/maxwvco2,maxco2co2,nwvco2,nco2co2,
+     *                      maxco2h2o, nco2h2o, maxo2h2o, no2h2o
+      COMMON /IFIL/ IRD,IPR,IPU,NWDR,LRC,ILNGTH,INLTE,IER,IPUOUT         LN01770
+
+      REAL*8 dummy
+      CHARACTER*80 STR_CO2_H2O
+      CHARACTER*1 CHAR1
+
+c read in co2 broadened parameters here
+     
+      OPEN (77,FILE='co2_h2o_brd_param')
+      CHAR1 = '>'
+      DO WHILE (CHAR1.EQ.'>'.OR.CHAR1.EQ.'%')
+          READ (77,'(a80)',END=5) STR_CO2_H2O
+	  READ (STR_CO2_H2O,'(1A1)',END=5) CHAR1
+      END DO
+      DO I=1, MXBRD
+	  READ(STR_CO2_H2O,*) dummy,
+     *            VNU_CO2_H2O(I),HW_CO2_H2O(I),TEMP_CO2_H2O(I),
+     *            SHFT_CO2_H2O(I) 
+	  READ (77,'(a80)',END=5) STR_CO2_H2O
+      END DO
+   5  CLOSE(77)
+      maxco2h2o=i
+
+      write(ipr,*) maxco2h2o,' lines of CO2_H2O data read in'
+      
+      RETURN
+
+  100 FORMAT(F12.6,E12.3,F7.4,F12.4,F6.2,F10.6)
+
+      END
+
+c*******************************************************************
+      SUBROUTINE RDO2H2O                                             
+C                                                                         
+      IMPLICIT REAL*8           (V)                                    
+C                                                                       
+C     SUBROUTINE RDO2H2O READS THE FILE o2_h2o_brd_param FOR BROADENING OF
+C     O2 LINES BY H2O                
+C                                                                         
+      PARAMETER (MXBRD=135000)
+
+      COMMON /O2_H2O_BRD/ VNU_O2_H2O(MXBRD),HW_O2_H2O(MXBRD),
+     *                   TEMP_O2_H2O(MXBRD),SHFT_O2_H2O(MXBRD)
+      common /max_brd_lines/maxwvco2,maxco2co2,nwvco2,nco2co2,
+     *                      maxco2h2o, nco2h2o, maxo2h2o, no2h2o
+      COMMON /IFIL/ IRD,IPR,IPU,NWDR,LRC,ILNGTH,INLTE,IER,IPUOUT        LN01770
+
+      REAL*8 dummy
+      CHARACTER*80 STR_O2_H2O
+      CHARACTER*1 CHAR1
+
+c read in o2 broadened parameters here
+     
+      OPEN (77,FILE='o2_h2o_brd_param')
+      CHAR1 = '>'
+      DO WHILE (CHAR1.EQ.'>'.OR.CHAR1.EQ.'%')
+          READ (77,'(a80)',END=5) STR_O2_H2O
+	  READ (STR_O2_H2O,'(1A1)',END=5) CHAR1
+      END DO
+      DO I=1, MXBRD
+	  READ(STR_O2_H2O,*) dummy,
+     *            VNU_O2_H2O(I),HW_O2_H2O(I),TEMP_O2_H2O(I),
+     *            SHFT_O2_H2O(I) 
+	  READ (77,'(a80)',END=5) STR_O2_H2O
+      END DO
+   5  CLOSE(77)
+      maxo2h2o=i
+
+      write(ipr,*) maxo2h2o,' lines of O2_H2O data read in'
+      
+      RETURN
+
+  100 FORMAT(F12.6,E12.3,F7.4,F12.4,F6.2,F10.6)
+
+      END
+
+c*******************************************************************
+      SUBROUTINE RDSPDDEP                                                 D02650
+C     MJA, 06-05-2013 (malvarad@aer.com)
+C     This subroutine reads in the data in the text file spd_dep_param
+C     that allows us to match the speed dependent parameters with the
+C     appropriate line.
+C                                                                         D02660
+      IMPLICIT REAL*8           (V)                                     ! D02670
+C                                                                         D02680
+C                                                                         D02700
+C     MJA, 06-05-2013 SDEP variables
+      INTEGER*4 MOLEC_SDEP, ISO_SDEP
+      REAL*8 VNU_SDEP
+      REAL*4 SDEP
+      CHARACTER*24 STR_QNUM
+
+      PARAMETER (MXSDEP=135000)
+
+      COMMON /SDEP/ MOLEC_SDEP(MXSDEP), ISO_SDEP(MXSDEP),
+     *           VNU_SDEP(MXSDEP),SDEP(MXSDEP),
+     *          STR_QNUM(MXSDEP)
+C     !Above is molecule number, isotopologue number, wavenumber
+C     !speed dependent parameter, upper global state, lower global state,
+C     !and rotational quantum numbers for the speed dependent line.
+      common /max_sdep_lines/maxsdep,nsdep
+      COMMON /IFIL/ IRD,IPR,IPU,NWDR,LRC,ILNGTH,INLTE,IER,IPUOUT         LN01770
+
+      CHARACTER*62 STR_SDEP
+      CHARACTER*1 CHAR1
+
+c read in co2 broadened parameters here
+     
+      OPEN (77,FILE='spd_dep_param')
+      CHAR1 = '>'
+      DO WHILE (CHAR1.EQ.'>'.OR.CHAR1.EQ.'%')
+          READ (77,'(a62)',END=5) STR_SDEP
+	  READ (STR_SDEP,'(1A1)',END=5) CHAR1
+      END DO
+      DO I=1, MXSDEP
+	  READ(STR_SDEP,100) 
+     *            MOLEC_SDEP(I), ISO_SDEP(I),
+     *            VNU_SDEP(I),SDEP(I), STR_QNUM(I)
+C          write(ipr,100) MOLEC_SDEP(I), 
+C     *            ISO_SDEP(I),
+C     *            VNU_SDEP(I),SDEP(I), STR_QNUM(I)
+	  READ (77,'(a62)',END=5) STR_SDEP
+      END DO
+   5  CLOSE(77) 
+      maxsdep=i
+      write(ipr,*) maxsdep,' lines of Speed Dep. Voigt data read in'
+      
+      RETURN
+
+  100 FORMAT(I2,I1,3X,F12.6,3X,F9.5,2X,A24)
+
+      END
+
+C-------------------------------------------------------------------------------
+
+      SUBROUTINE BRDMATCH(iblock)
+
+      IMPLICIT REAL*8           (V)                        
+
+      PARAMETER (MXBRD=135000)
+
+      COMMON /WV_CO2_BRD/ VNU_WV_CO2(MXBRD),HW_WV_CO2(MXBRD),
+     *                   TEMP_WV_CO2(MXBRD),SHFT_WV_CO2(MXBRD)
+
+      COMMON /CO2_CO2_BRD/ VNU_CO2_CO2(MXBRD),HW_CO2_CO2(MXBRD),
+     *                   TEMP_CO2_CO2(MXBRD),SHFT_CO2_CO2(MXBRD)
+
+      COMMON /CO2_H2O_BRD/ VNU_CO2_H2O(MXBRD),HW_CO2_H2O(MXBRD),
+     *                   TEMP_CO2_H2O(MXBRD),SHFT_CO2_H2O(MXBRD)
+
+      COMMON /O2_H2O_BRD/ VNU_O2_H2O(MXBRD),HW_O2_H2O(MXBRD),
+     *                   TEMP_O2_H2O(MXBRD),SHFT_O2_H2O(MXBRD)
+
+      common /max_brd_lines/maxwvco2,maxco2co2,nwvco2,nco2co2,
+     *                      maxco2h2o, nco2h2o, maxo2h2o, no2h2o
+      COMMON VNU3(250),STR3(250),ALF3(250),EPP3(250),MOL3(250),        
+     *       HWHMS(250),TMPALF(250),PSHIFT(250),IFLG(250),         
+     *       ADDFLAG(7,250),ADDDATA(21,250),SDEP_DATA(250),LSTW3
+      REAL*4 ADDDATA
+      INTEGER*4 IFLG,ADDFLAG
+
+
+
+      INTEGER INDI,INDJ,IND
+C      write(0,*) 'start brdmatch, maxwvco2=',maxwvco2,'  maxco2co2=',
+C     &       maxco2co2, '  maxco2h2o=',maxco2h2o
+c      write(0,*) 'mol3=',mol3
+c      write(0,*) 'vnu3=',vnu3
+
+      DO INDJ = 1,250
+         DO INDI = 1,21
+            ADDDATA(INDI,INDJ) = 0.
+         END DO
+         DO INDI=1,7
+            ADDFLAG(INDI,INDJ) = 0
+         END DO
+      END DO
+      DO IND = 1, 250
+c     molecule number is last 2 digits of MOL3, isotope number is 3rd digit from right
+C           molecule numbers:  H2O=1, CO2=2, O3=3, N2O=4, CO=5, CH4=6, O2=7
+         IF(MOL3(IND).EQ.101) THEN
+c            write(0,*) 'molec 101, ind=',ind
+            IW = 1
+            DO WHILE (VNU_WV_CO2(IW).LT.VNU3(IND))
+               IW = IW+1
+               if(IW.GT.MAXWVCO2) then
+                    print *, iw, maxwvco2
+                   STOP 'IN BRDMATCH, IW FOR WV_CO2>MAX'
+               endif
+            END DO          
+c##            if(abs(VNU_WV_CO2(IW)-VNU3(IND)).gt.
+c##     $           abs(VNU_WV_CO2(IW-1)-VNU3(IND))) iw=iw-1
+C            write(0,*) 'WV_CO2 MATCH, IW=',IW,VNU3(IND)
+            IF(VNU_WV_CO2(IW).ne.VNU3(IND)) then
+C               write(6,900) vnu3(ind),vnu_wv_co2(iw-1),vnu_wv_co2(iw)
+  900          format('poor wv-co2 match',3f16.6)
+c               stop 'wv-co2 vnu poor match'
+            else
+c               write(6,*) 'exact wv-co2 match',vnu_wv_co2(iw)
+c##            IF(ABS(VNU_WV_CO2(IW)-VNU3(IND)).GT.0.0001)
+c##     $           stop 'WV-CO2 VNU POOR MATCH'
+c##               write(0,*) VNU_WV_CO2(IW),VNU3(IND),VNU_WV_CO2(IW-1)
+c##               stop 'WV_CO2 match not close enough'
+c               write(6,*) 'WV_CO2 MATCH, IW=',IW,'  IND=',IND,VNU3(IND)
+               ADDDATA(4,IND) = HW_WV_CO2(IW)
+               ADDDATA(5,IND) = TEMP_WV_CO2(IW)
+               ADDDATA(6,IND) = SHFT_WV_CO2(IW)
+               ADDFLAG(2,IND) = 1
+               nwvco2=nwvco2+1
+c             write(6,910) iblock,ind,vnu3(ind),(addflag(i,ind),i=1,7),
+c    $           (adddata(i,ind),i=4,6)
+c 910          format(i4,'  wv-co2 line#=',i5,2x,f12.6,2x,7i1,2x,
+c    $             7(f9.4,f7.4,f7.4))
+            end if
+         ENDIF
+
+         IF(MOL3(IND).EQ.107) THEN
+c            write(0,*) 'molec 107, ind=',ind
+            IW = 1
+            DO WHILE (VNU_O2_H2O(IW).LT.VNU3(IND))
+               IW = IW+1
+               if(IW.GT.MAXO2H2O) then
+                    print *, iw, maxo2h2o
+                   STOP 'IN BRDMATCH, IW FOR O2_H2O>MAX'
+               endif
+            END DO          
+c##            if(abs(VNU_O2_H2O(IW)-VNU3(IND)).gt.
+c##     $           abs(VNU_O2_H2O(IW-1)-VNU3(IND))) iw=iw-1
+C            write(0,*) 'O2_H2O MATCH, IW=',IW,VNU3(IND)
+            IF(VNU_O2_H2O(IW).ne.VNU3(IND)) then
+C               write(6,901) vnu3(ind),vnu_o2_h2o(iw-1),vnu_o2_h2o(iw)
+ 901           format('poor o2-h2o match',3f16.6)
+c               stop 'o2-h2o vnu poor match'
+            else
+               !write(6,*) 'exact o2_h2o match',vnu_o2_h2o(iw)
+C               IF(ABS(VNU_O2_H2O(IW)-VNU3(IND)).GT.0.0001)
+C        $           stop 'O2-H2O VNU POOR MATCH'
+C                  write(0,*) VNU_O2_H2O(IW),VNU3(IND),VNU_O2_H2O(IW-1)
+C                  stop 'O2_H2O match not close enough'
+               !write(6,*) 'O2_H2O MATCH, IW=',IW,'  IND=',IND,VNU3(IND)
+               ADDDATA(1,IND) = HW_O2_H2O(IW)
+               ADDDATA(2,IND) = TEMP_O2_H2O(IW)
+               ADDDATA(3,IND) = SHFT_O2_H2O(IW)
+               ADDFLAG(1,IND) = 1
+               no2h2o=no2h2o+1
+c             write(6,910) iblock,ind,vnu3(ind),(addflag(i,ind),i=1,7),
+c    $           (adddata(i,ind),i=4,6)
+c 910          format(i4,'  o2-h2o line#=',i5,2x,f12.6,2x,7i1,2x,
+c    $             7(f9.4,f7.4,f7.4))
+            end if
+         ENDIF
+         IF(MOL3(IND).EQ.102) THEN
+C******************CO2_CO2 FIRST**************************************
+c            write(0,*) 'molec 102, ind=',ind
+            IW = 1
+            DO WHILE ((VNU_CO2_CO2(IW).LT.VNU3(IND)))
+               if(IW.GT.MAXCO2CO2) then
+                    print *, iw, maxco2co2
+                    print *, vnu_co2_co2(iw), vnu3(ind)
+                   STOP 'IN BRDMATCH, IW FOR CO2_CO2>MAX'
+               endif
+               IW = IW+1
+            END DO          
+c##            if(abs(VNU_CO2_CO2(IW)-VNU3(IND)).gt.
+c##     $           abs(VNU_CO2_CO2(IW-1)-VNU3(IND))) iw=iw-1
+            IF(VNU_CO2_CO2(IW).ne.VNU3(IND)) then
+C               write(6,920) vnu3(ind),vnu_co2_co2(iw-1),vnu_co2_co2(iw)
+  920          format('poor co2-co2 match',3f16.10)
+c               stop 'co2-co2 vnu poor match'
+            else
+c                write(6,*) 'exact co2-co2 match',vnu_co2_co2(iw)
+c##            IF(abs(VNU_CO2_CO2(IW)-VNU3(IND)).gt.0.0001)
+c##C                stop 'co2-co2 vnu poor match'
+c##               write(0,*) VNU_CO2_CO2(IW),VNU3(IND),VNU_CO2_CO2(IW-1)
+c##               stop 'CO2_CO2 match not close enough'
+c##            end if
+c               write(6,*) 'CO2_CO2 MATCH, IW=',IW,'  IND=',IND,VNU3(IND)
+               ADDDATA(4,IND) = HW_CO2_CO2(IW)
+               ADDDATA(5,IND) = TEMP_CO2_CO2(IW)
+               ADDDATA(6,IND) = SHFT_CO2_CO2(IW)
+               ADDFLAG(2,IND) = 1
+               nco2co2=nco2co2+1
+C               write(6,930) iblock,ind,vnu3(ind),(addflag(i,ind),i=1,7),
+C     $              (adddata(i,ind),i=4,6)
+C 930           format(i4,' co2-co2 line#=',i5,2x,f12.6,2x,7i1,2x
+C     $              7(f9.4,f7.4,f7.4))
+            end if
+C******************CO2_H2O SECOND**************************************
+            IW = 1
+            DO WHILE ((VNU_CO2_H2O(IW).LT.VNU3(IND)))
+               if(IW.GT.MAXCO2H2O) then
+                    print *, iw, maxco2h2o
+                    print *, vnu_co2_h2o(iw), vnu3(ind)
+                   STOP 'IN BRDMATCH, IW FOR CO2_H2O>MAX'
+               endif
+               IW = IW+1
+            END DO          
+c##            if(abs(VNU_CO2_H2O(IW)-VNU3(IND)).gt.
+c##     $           abs(VNU_CO2_H2O(IW-1)-VNU3(IND))) iw=iw-1
+            IF(VNU_CO2_H2O(IW).ne.VNU3(IND)) then
+C               write(6,820) vnu3(ind),vnu_co2_h2o(iw-1),vnu_co2_h2o(iw),
+C     $                      iw
+  820          format('poor co2-h2o match',3f16.10,I8)
+c               stop 'co2-h2o vnu poor match'
+            else
+c                write(6,*) 'exact co2-co2 match',vnu_co2_h2o(iw)
+c##            IF(abs(VNU_CO2_H2O(IW)-VNU3(IND)).gt.0.0001)
+c##C                stop 'co2-co2 vnu poor match'
+c##               write(0,*) VNU_CO2_H2O(IW),VNU3(IND),VNU_CO2_H2O(IW-1)
+c##               stop 'CO2_H2O match not close enough'
+c##            end if
+c               write(6,*) 'CO2_H2O MATCH, IW=',IW,'  IND=',IND,VNU3(IND)
+               ADDDATA(1,IND) = HW_CO2_H2O(IW)
+               ADDDATA(2,IND) = TEMP_CO2_H2O(IW)
+               ADDDATA(3,IND) = SHFT_CO2_H2O(IW)
+               ADDFLAG(1,IND) = 1
+               nco2h2o=nco2h2o+1
+C               write(6,830) iblock,ind,vnu3(ind),(addflag(i,ind),i=1,7),
+C     $              (adddata(i,ind),i=1,21)
+C 830           format(i4,' co2-h2o line#=',i5,2x,f12.6,2x,7i1,2x
+C     $              7(f9.4,f7.4,f7.4))
+            end if
+         ENDIF
+
+      END DO
+
+      RETURN
+      
+      END
+
+C-------------------------------------------------------------------------------
+
+      SUBROUTINE SPDMATCH(iblock)
+C     MJA, 06-05-2013
+C     Matches speed dependent parameters with main lines by quantum number
+      IMPLICIT REAL*8           (V)                        
+
+      REAL*4 ADDDATA, SDEP_DATA
+      INTEGER*4 IFLG,ADDFLAG
+ 
+      INTEGER*4 temp_mol, temp_iso, temp_mol3
+      REAL*8    temp_vnu
+      CHARACTER*24 temp_qnum
+
+      PARAMETER (MXSDEP=135000)
+
+      COMMON /SDEP/ MOLEC_SDEP(MXSDEP), ISO_SDEP(MXSDEP),
+     *           VNU_SDEP(MXSDEP),SDEP(MXSDEP),
+     *          STR_QNUM(MXSDEP)
+C     !Above is molecule number, isotopologue number, wavenumber
+C     !speed dependent parameter, upper global state, lower global state,
+C     !and rotational quantum numbers for the speed dependent line.
+      common /max_sdep_lines/maxsdep,nsdep 
+
+      COMMON /LCHAR/ ALIN1(52),ALIN2(40),ALINC(52),ALIN(250)  
+
+      COMMON VNU3(250),STR3(250),ALF3(250),EPP3(250),MOL3(250),        
+     *       HWHMS(250),TMPALF(250),PSHIFT(250),IFLG(250),         
+     *       ADDFLAG(7,250),ADDDATA(21,250),SDEP_DATA(250),LSTW3
+      COMMON /IFIL/ IRD,IPR,IPU,NWDR,LRC,ILNGTH,INLTE,IER,IPUOUT         LN01770
+      INTEGER INDJ,IND, IW, IW_start
+c      write(0,*) 'start brdmatch, maxwvco2=',maxwvco2,'  maxco2co2=',
+c     &       maxco2co2
+c      write(0,*) 'mol3=',mol3
+c      write(0,*) 'vnu3=',vnu3
+
+      DO INDJ = 1,250
+            SDEP_DATA(INDJ) = 0.
+      END DO
+ 
+      DO IW = 1, maxsdep
+C         print *, iw, molec_sdep(iw), iso_sdep(iw), vnu_sdep(iw)
+         temp_mol3 = molec_sdep(IW)+100*iso_sdep(IW)
+         success = 0
+ 
+         DO IND = 1, 250
+
+            IF(VNU_SDEP(IW).eq.VNU3(IND) 
+     *          .and.temp_mol3 .eq.MOL3(IND)) then
+               !write(6,903) temp_mol3, vnu_sdep(IW)
+               !write(6,904) MOL3(IND),VNU3(IND)
+  903          format('exact match, spd_dep_param line:',I3,F12.6)
+  904          format('TAPE1 line                    :',I3,F12.6)               
+               SDEP_DATA(IND) = SDEP(IW)
+               nsdep=nsdep+1
+               success = 1
+            ENDIF
+         ENDDO
+ 
+         IF (success .EQ. 0) THEN
+C               write(6,900) molec_sdep(iw), iso_sdep(iw), vnu_sdep(IW)
+C  900          format('no match, spd_dep_param line:',I2,I1,F12.6)
+         ENDIF       
+
+      END DO
+
+      RETURN
+      
+      END
+
+C-------------------------------------------------------------------------------
+
       SUBROUTINE VIBQU (ILO,NMAX,NLIN,VNU,STR,ALF,EPP,MOL,NSO82)         LN16100
 C                                                                        LN16110
       IMPLICIT REAL*8           (V)                                     !LN16120
@@ -3070,7 +4583,7 @@ C                                                                        LN18680
 C     THIS SUBROUTINE WRITES OUT THE LINES AND THEIR COUPLING            LN18690
 C     COEFFICIENTS TO TAPE2 FOR USE BY LNFL                              LN18700
 C                                                                        LN18710
-      parameter (mol_max=39)
+      parameter (mol_max=47)
 
       COMMON /CLINES_100/ CPLINS(886)                                        LN18720
       CHARACTER CPLINS*100, HQ*7                                         LN18730
@@ -3242,7 +4755,7 @@ C**********************************************************************  LN20840
 C                                                                        LN20850
       IMPLICIT CHARACTER*50 (C)                                          LN20860
 
-      parameter (mol_max=39)
+      parameter (mol_max=47)
 
       COMMON /CPLMOL_100/ MOLCPL_100(mol_max),NCPL_100
       COMMON /CLINES_100/ CPL001(16),CPL005(16),CPL009(16),CPL013(16),       LN20880
@@ -3273,7 +4786,7 @@ C     MOLCPL CONTAINS THE FLAGS FOR MOLECULE 2 AND 7                     LN21050
 C                                                                        LN21060
       DATA MOLCPL_100/0,1,0,0,0,0,1,0,0,0,0,0,0,0,0,                         LN21070
      1                0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,                         LN21080
-     2                0,0,0,0,0,0,0,0,0/                                       LN21090
+     2                0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0/                                       LN21090
 C                                                                        LN21100
 
 C     Previously NCPL was 598 ([([(293-1)/4]+1) * 16] + 12) / 2 = 598
@@ -5173,7 +6686,7 @@ C                                                                        LN18680
 C     THIS SUBROUTINE WRITES OUT THE LINES AND THEIR COUPLING            LN18690
 C     COEFFICIENTS TO TAPE2 FOR USE BY LNFL                              LN18700
 C                                                                        LN18710
-      parameter (mol_max=39)
+      parameter (mol_max=47)
 
       COMMON /CLINES_160/ CPLINS(886)                                        LN18720
       CHARACTER CPLINS*100, HQ*7                                         LN18730
@@ -5344,7 +6857,7 @@ C**********************************************************************  LN20840
 C                                                                        LN20850
       IMPLICIT CHARACTER*50 (C)                                          LN20860
 
-      parameter (mol_max=39)
+      parameter (mol_max=47)
 
       COMMON /CPLMOL_160/ MOLCPL_160(mol_max),NCPL_160
       COMMON /CLINES_160/ 
@@ -5376,7 +6889,7 @@ C     MOLCPL CONTAINS THE FLAGS FOR MOLECULE 2 AND 7                     LN21050
 C                                                                        LN21060
       DATA MOLCPL_160/0,1,0,0,0,0,1,0,0,0,0,0,0,0,0,                         LN21070
      1                0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,                         LN21080
-     2                0,0,0,0,0,0,0,0,0/                                       LN21090
+     2                0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0/                                       LN21090
 C                                                                        LN21100
 
 C     Previously NCPL was 598 ([([(293-1)/4]+1) * 16] + 12) / 2 = 598
@@ -7275,7 +8788,7 @@ C                                                                        LN33830
 C                                                                        LN18890
       IMPLICIT REAL*8           (V)                                     !LN18900
 C                                                                        LN18910
-      parameter (mol_max=39,mol_max_1=mol_max+1)
+      parameter (mol_max=47,mol_max_1=mol_max+1)
 
       COMMON /IFIL/ IRD,IPR,IPU,NWDR,LRC,ILNGTH,INLTE,IER,IPUOUT         LN18920
       COMMON /CONTRL/ VMIN,VMAX,VLO,VHI,LINES,NWDS,LSTW1                 LN18930
@@ -7290,12 +8803,20 @@ C                                                                        LN18960
 
       COMMON /BUFIDC/ CMOL(64),CHID10,CHID08                             LN19000
       CHARACTER CMOL*6,CHID10*8,CHID08*8                                 LN19010
-      COMMON /MANE/ VNU1(51),STR1(51),ALF1(51),EPP1(51),MOL1(51),        LN19020
-     *              HWHM1(51),TMPAL1(51),PSHIF1(51),IFG1(51),            LN19030
-     *              MIND1(64),IOUT(51)                                   LN19040
-      COMMON /MAINC/ VNUC(51),STRC(51),ALFC(51),EPPC(51),MOLC(51),       LN19050
-     *               HWHMC(51),TMPALC(51),PSHIFC(51),IFGC(51),           LN19060
-     *               MINDC(64),IOUTC(51)                                 LN19070
+C      COMMON /MANE/ VNU1(51),STR1(51),ALF1(51),EPP1(51),MOL1(51),        LN19020
+C     *              HWHM1(51),TMPAL1(51),PSHIF1(51),IFG1(51),            LN19030
+C     *              MIND1(64),IOUT(51)                                   LN19040
+C      COMMON /MAINC/ VNUC(51),STRC(51),ALFC(51),EPPC(51),MOLC(51),       LN19050
+C     *               HWHMC(51),TMPALC(51),PSHIFC(51),IFGC(51),           LN19060
+C     *               MINDC(64),IOUTC(51)                                 LN19070
+C     MJA, 01-19-2012
+C     Increased array sizes to accomodate self-line coupling coefficients
+      COMMON /MANE/ VNU1(52),STR1(52),ALF1(52),EPP1(52),MOL1(52),        LN19020
+     *              HWHM1(52),TMPAL1(52),PSHIF1(52),IFG1(52),            LN19030
+     *              MIND1(64),IOUT(52)                                   LN19040
+      COMMON /MAINC/ VNUC(52),STRC(52),ALFC(52),EPPC(52),MOLC(52),       LN19050
+     *               HWHMC(52),TMPALC(52),PSHIFC(52),IFGC(52),           LN19060
+     *               MINDC(64),IOUTC(52)                                 LN19070
       COMMON /TRAC/ VNU2(40),STR2(40),ALF2(40),EPP2(40),MOL2(40),        LN19080
      *              HWHM2(40),TMPAL2(40),PSHIF2(40),IFG2(40),MIND2(64)   LN19090
       COMMON /UNITS/ PI,PLANCK,BOLTZ,CLIGHT,AVOGAD,RADCN1,RADCN2           LN19100
@@ -7332,13 +8853,17 @@ C                                                                        LN19180
      *     '  H2S ','HCOOH ','  HO2 ','    O ','CLONO2','  NO+ ' /,      LN19400
      *     TALF(31),TALF(32),TALF(33),TALF(34),TALF(35),TALF(36) /       LN19410
      *          0.5,     0.5,     0.5,     0.5,     0.5,     0.5 /       LN19420
-      DATA CMOL(37),CMOL(38),CMOL(39)                            /
-     *     ' HOBr ',' C2H4 ','CH3OH '                            /,
-     *     TALF(37),TALF(38),TALF(39)                            /
-     *          0.5,     0.5,     0.5                            /
+      DATA CMOL(37),CMOL(38),CMOL(39),CMOL(40),CMOL(41),CMOL(42) /
+     *     ' HOBr ',' C2H4 ','CH3OH ','CH3Br ','CH3CN ','  CF4 ' /, 
+     *     TALF(37),TALF(38),TALF(39),TALF(40),TALF(41),TALF(42) /
+     *          0.5,     0.5,     0.5,     0.5,     0.5,     0.5 /
+      DATA CMOL(43),CMOL(44),CMOL(45),CMOL(46),CMOL(47) /
+     *     ' C4H2 ',' HC3N ','  H2  ','  CS  ','  SO3 ' /, 
+     *     TALF(43),TALF(44),TALF(45),TALF(46),TALF(47) /
+     *          0.5,     0.5,     0.5,     0.5,     0.5 /
 C                                                                        LN19430
-      DATA (CMOL(I),I=mol_max_1,64) / 25*'      '/                              LN19440
-      DATA (TALF(I),I=mol_max_1,64) / 25*0.0 /                                  LN19450
+      DATA (CMOL(I),I=mol_max_1,64) / 17*'      '/                              LN19440
+      DATA (TALF(I),I=mol_max_1,64) / 17*0.0 /                                  LN19450
 C                                                                        LN19460
 C     THE FOLLOWING DATA STATEMENTS CONTAIN THE DEFAULT REJECTION        LN19470
 C     FOR EACH OF THE FIRST 32 POSSIBLE MOLECULES - THESE ARE BASED         LN19480
@@ -7383,7 +8908,9 @@ C                                                                        LN19800
       DATA SUMSTR / 64*0. /,MCNTLC / 64*0 /,ILINLC / 0 /,IREC / 0 /,     LN19840
      *     IRECTL / 0 /                                                  LN19850
       DATA MOLIND / 64*0 /,MIND1 / 64*0 /,MIND2 / 64*0 /                 LN19860
-      DATA MINDC / 64*0 /,IOUT / 51*0 /,IOUTC / 51*0 /                   LN19870
+C      DATA MINDC / 64*0 /,IOUT / 51*0 /,IOUTC / 51*0 /                  LN19870
+C     MJA, 01-19-2012 New array sizes to accommodate self line coupling
+      DATA MINDC / 64*0 /,IOUT / 52*0 /,IOUTC / 52*0 /                   LN19870
       DATA MCNTNL / 64*0 /,ILINNL / 0 /                                  LN19880
 
       DATA PLANCK / 6.62606876E-27 /, BOLTZ  / 1.3806503E-16 /,
