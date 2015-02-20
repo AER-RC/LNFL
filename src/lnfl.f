@@ -216,7 +216,7 @@ C                                                                        LN01670
       CHARACTER*5 rev_num
       CHARACTER HNOCPL*5,HREJ*3,HNLTE*4,HMRG2*4,HF160*4,HOLIND1*40 
       CHARACTER HBLK1*4,HBLK2*4,HF80*3,HF100*4,HOLIND2*40,HCPL*3   
-      CHARACTER*5 HNBLK1,HNBLK2,HLNOUT,HH86T1,HH86T2                     LN01690
+      CHARACTER*5 HNBLK1,HNBLK2,HLNOUT,HH86T1,HH86T2, HBRD               LN01690
       CHARACTER*27 QUANT1,QUANTC                                         LN01700
       CHARACTER*100 ALIN1,ALIN2,ALINC,ALIN, ITAPE1                       LN01710
 C     MJA, 01-20-2012 Add SISO variable
@@ -348,6 +348,7 @@ C                                                                        LN02110
      *     HNBLK2 / 'NBLK2'/, HBLK1 /'BLK1'/, HBLK2 /'BLK2'/
       DATA HH86T1 / 'H86T1'/,HH86T2 / 'H86T2'/
       DATA GREJ / ' REJ    '/,GNLTE / ' NLTE   '/,GREJNL / 'NLTE REJ'/   LN02160
+      DATA HBRD / 'EXBRD' /
       DATA GNEGEPP / '       ^'/
       DATA MOLCNT / 64*0 /                                               LN02170
       DATA VLST1 / -1. /,VLST2 / -2. /                                   LN02180
@@ -485,6 +486,9 @@ C                                                                        LN02730
 
       CALL HOLRT (5,HH86T1,I86T1,HOLIND1,40)
       IF (I86T1.EQ.1) WRITE (IPR,925) HH86T1
+
+      CALL HOLRT (5,HBRD,IBRD,HOLIND1,40)
+      IF (IBRD.EQ.1) WRITE (IPR,925) HBRD
 
       IF (IPUOUT.EQ.1)                                                   LN02740
      *     OPEN (IPU,FILE='TAPE7',STATUS='UNKNOWN',FORM='FORMATTED')     LN02750
@@ -745,15 +749,20 @@ C                                                                        LN04640
       WRITE (IPR,970) NBLOCK                                             LN04750
 C                                                                        LN04760
 C     READ EXTRA BROADENING PARAMETER FILES
-      CALL RDWVCO2
-      CALL RDCO2CO2
-      CALL RDCO2H2O
-      CALL RDO2H2O
-      CALL RDSPDDEP
+      if(ibrd .eq. 1) then 
+           CALL RDWVCO2
+           CALL RDCO2CO2
+           CALL RDCO2H2O
+           CALL RDO2H2O
+           CALL RDSPDDEP
+      
 
-C     MJA, new TAPE8 output 01-20-2012
-C      IPX = 8
-C      OPEN (IPX,FILE='TAPE8',STATUS='UNKNOWN',FORM='FORMATTED')
+C         MJA, new TAPE8 output 01-20-2012
+          if (IPUOUT.EQ.1) then
+               IPX = 8
+               OPEN (IPX,FILE='TAPE8',STATUS='UNKNOWN',FORM='FORMATTED')
+          endif
+      endif
       isumtot=0
       DO 130 I = 1, NBLOCK                                               LN04770
          CALL BUFIN (LINMRG,IEOF,RCDHDR(1),LRC)                          LN04780
@@ -761,55 +770,61 @@ C      OPEN (IPX,FILE='TAPE8',STATUS='UNKNOWN',FORM='FORMATTED')
          CALL BUFOUT (LINFIL,RCDHDR(1),LRC)                              LN04800
          CALL BUFIN (LINMRG,IEOF,VNU3(1),ILNGTH)                         LN04810
          CALL CKFL (VLO,VHI,LINES,VNU3,IFLG)                             LN04820
-         CALL BRDMATCH(i)
-         CALL SPDMATCH(i)
-         isumtot=isumtot+sum(addflag)
-C       MJA, test new TAPE8 output 01-20-2012
-C         do j = 1,249
-             !Write broadening flags only on main line, not line coupling
-             !lines
-C             print *, j, iflg(j)
-C             if (IFLG(J).GE.0) then !main line
-C                imol = mod(MOL3(J),100)
-C                iiso = floor(MOL3(J)/100.0) 
-C                str_hit = STR3(J)*VNU3(J)*
-C     *                    (1.0-exp(-VNU3(J)* RADCN2/296.0 ))
-C                tmpalf_hit = 1.0-TMPALF(J)              
-C                write(IPX,999) imol, iiso, VNU3(J),str_hit,ALF3(J),
-C     *           HWHMS(J),EPP3(J),tmpalf_hit,PSHIFT(J),-IFLG(J),
-C     *          (ADDFLAG(itest,J), itest=1,7),SDEP_DATA(J)                    
-C                if(sum(addflag(:,J)).GT.0) then
-C                  write(IPX, 998) imol,(ADDDATA(itest,J), itest = 1, 21)
-C                endif
-C             else !Line coupling line
-C                ymol =  transfer(mol3(J),ymol)
-C                print *, imol,VNU3(J),STR3(J), ALF3(J), EPP3(J), 
-C     *                         ymol,HWHMS(J), TMPALF(J), PSHIFT(J),
-C     *                         IFLG(J)
-C                write(IPX,995) imol,VNU3(J),STR3(J), ALF3(J), EPP3(J), 
-C     *                         ymol,HWHMS(J), TMPALF(J), PSHIFT(J),
-C     *                         IFLG(J)
-C             endif
-C         enddo
-  999    format(I2,I1,F12.6,ES10.3,10X,2F5.4,F10.4,F4.2,F8.6,31X,
+         if(ibrd .eq. 1) then 
+             CALL BRDMATCH(i)
+             CALL SPDMATCH(i)
+             isumtot=isumtot+sum(addflag)
+C            MJA, test new TAPE8 output 01-20-2012
+             if (IPUOUT.EQ.1) then
+                 do j = 1,249
+                     !Write broadening flags only on main line, not line coupling
+                     !lines
+C                    print *, j, iflg(j)
+                     if (IFLG(J).GE.0) then !main line
+                        imol = mod(MOL3(J),100)
+                        iiso = floor(MOL3(J)/100.0) 
+                        str_hit = STR3(J)*VNU3(J)*
+     *                    (1.0-exp(-VNU3(J)* RADCN2/296.0 ))
+                        tmpalf_hit = 1.0-TMPALF(J)              
+                     write(IPX,999) imol, iiso, VNU3(J),str_hit,ALF3(J),
+     *                  HWHMS(J),EPP3(J),tmpalf_hit,PSHIFT(J),-IFLG(J),
+     *                  (ADDFLAG(itest,J), itest=1,7),SDEP_DATA(J)                    
+                        if(sum(addflag(:,J)).GT.0) then
+                            write(IPX, 998) imol,
+     *                      (ADDDATA(itest,J), itest = 1, 21)
+                        endif
+                     else !Line coupling line
+                        ymol =  transfer(mol3(J),ymol)
+                        print *, imol,VNU3(J),STR3(J), ALF3(J), EPP3(J), 
+     *                         ymol,HWHMS(J), TMPALF(J), PSHIFT(J),
+     *                         IFLG(J)
+                        write(IPX,995) imol,VNU3(J),STR3(J), ALF3(J),  
+     *                         EPP3(J), ymol,HWHMS(J), TMPALF(J),
+     *                         PSHIFT(J), IFLG(J)
+                     endif
+                 enddo
+             endif
+  999        format(I2,I1,F12.6,ES10.3,10X,2F5.4,F10.4,F4.2,F8.6,31X,
      *          I2,7I2,F9.5) 
-  998    format(I2,21F8.4) 
-  997    FORMAT (I2)   
-  996    format(2X,A1)
-  995    format(I2,4(ES13.6,ES11.4),I2) 
-C         write(ipr,981) i,vnu3(1),vnu3(249),sum(addflag)
-  981    format('linefile block ',i4,'  vmin=',f12.4,'  vmax=',f12.4,
-     $        '  sumflags=',i4)
+  998        format(I2,21F8.4) 
+  997        FORMAT (I2)   
+  996        format(2X,A1)
+  995        format(I2,4(ES13.6,ES11.4),I2) 
+C            write(ipr,981) i,vnu3(1),vnu3(249),sum(addflag)
+C  981       format('linefile block ',i4,'  vmin=',f12.4,'  vmax=',f12.4,
+C     $        '  sumflags=',i4)
+         endif !ibrd
          CALL BUFOUT (LINFIL,VNU3(1),ILNADD)
 
   130 CONTINUE                                                           LN04840
-      write(ipr,*) 'Total modified lines=',isumtot
-      write(ipr,*) 'Total modified wv lines (co2 brd) = ',nwvco2
-      write(ipr,*) 'Total modified co2 lines (self brd) = ',nco2co2
-      write(ipr,*) 'Total modified co2 lines (h2o brd) = ',nco2h2o
-      write(ipr,*) 'Total modified o2 lines (h2o brd) = ',no2h2o
-      write(ipr,*) 'Total speed dependent Voigt lines = ',nsdep
-      
+      if(ibrd .eq. 1) then 
+         write(ipr,*) 'Total modified lines=',isumtot
+         write(ipr,*) 'Total modified wv lines (co2 brd) = ',nwvco2
+         write(ipr,*) 'Total modified co2 lines (self brd) = ',nco2co2
+         write(ipr,*) 'Total modified co2 lines (h2o brd) = ',nco2h2o
+         write(ipr,*) 'Total modified o2 lines (h2o brd) = ',no2h2o
+         write(ipr,*) 'Total speed dependent Voigt lines = ',nsdep
+      endif
 C                                                                        LN04850
       CALL CPUTIM (TIME1)                                                LN04860
       TIME = TIME1-TIME0                                                 LN04870
