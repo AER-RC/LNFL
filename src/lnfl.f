@@ -777,9 +777,8 @@ C         MJA, new TAPE8 output 01-20-2012
 C            MJA, test new TAPE8 output 01-20-2012
              if (IPUOUT.EQ.1) then
                  do j = 1,249
-                     !Write broadening flags only on main line, not line coupling
-                     !lines
-C                    print *, j, iflg(j)
+                   !Write broadening flags only on main line, not line coupling
+                   !lines
                      if (IFLG(J).GE.0) then !main line
                         imol = mod(MOL3(J),100)
                         iiso = floor(MOL3(J)/100.0) 
@@ -795,9 +794,6 @@ C                    print *, j, iflg(j)
                         endif
                      else !Line coupling line
                         ymol =  transfer(mol3(J),ymol)
-                        print *, imol,VNU3(J),STR3(J), ALF3(J), EPP3(J), 
-     *                         ymol,HWHMS(J), TMPALF(J), PSHIFT(J),
-     *                         IFLG(J)
                         write(IPX,995) imol,VNU3(J),STR3(J), ALF3(J),  
      *                         EPP3(J), ymol,HWHMS(J), TMPALF(J),
      *                         PSHIFT(J), IFLG(J)
