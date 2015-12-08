@@ -732,7 +732,11 @@ C                                                                        LN04070
       IF (IMRG2.EQ.0) IEOF2 = 1                                          LN04620
       GO TO 90                                                           LN04630
 C                                                                        LN04640
-  110 CALL BLKOUT (LINMRG)                                               LN04650
+  110  WRITE(*,*) "IN Main", I1, N1, I2, N2
+       CALL BLKOUT (LINMRG)                                               LN04650
+
+!  110 CALL BLKOUT (LINMRG)                                               LN04650
+!      WRITE(*,*) "IN Main", I1, N1, I2, N2
       REWIND LINMRG                                                      LN04660
       REWIND LINFIL                                                      LN04670
       DO 120 M = 1, NMOL                                                 LN04680
@@ -1107,6 +1111,7 @@ c
       ENDIF                                                              LN09165
 C      IF (ILIN3.GE.NMAX-1) CALL BLKOUT (LINMRG)                          LN09170
 C     MJA 01-23-2012 Account for self line coupling in NMAX
+      IF (ILIN3.GE.NMAX-2) WRITE(*,*) "IN MOVE"
       IF (ILIN3.GE.NMAX-2) CALL BLKOUT (LINMRG) 
 C                                                                        LN09180
       RETURN                                                             LN09190
@@ -1170,6 +1175,7 @@ C                                                                        LN09460
          GO TO 30                                                        LN09690
       ENDIF                                                              LN09700
       IF (NBLOCK.EQ.1) FLINLO = VLO                                      LN09710
+      WRITE(*,*) NBLOCK, VHI, I3, VNU3(ITST), VNU3(ITST-1)
       FLINHI = VHI                                                       LN09720
       LINES = I3                                                         LN09730
 C      write(*,*) "I3", I3 
@@ -1635,10 +1641,10 @@ c
                 write(*,*) ALIN(I) 
                 stop ' molecule value is less than 1 '
             endif
-            !if (iso .lt. 1) then
-            !    write(*,*) ALIN(I) 
-            !    stop '  isotope value is less than 1 '
-            !endif
+            if (iso .lt. 0) then
+                write(*,*) ALIN(I) 
+                stop '  isotope value is less than 0 '
+            endif
 c
 c   the TIPS program in lblrtm is currently limited to molecules up to 38.
 c
@@ -2052,9 +2058,9 @@ c
                 write(*,*) ALIN(I) 
                 stop ' molecule value is less than 1 '
             endif
-            if (iso .lt. 1) then
+            if (iso .lt. 0) then
                 write(*,*) ALIN(I) 
-                stop '  isotope value is less than 1 '
+                stop '  isotope value is less than 0 '
             endif
 c
 c   the TIPS program in lblrtm is currently limited to molecules up to 38
@@ -2410,9 +2416,9 @@ c
                 write(*,*) ALIN(I) 
                 stop ' molecule value is less than 1 '
             endif
-            if (iso .lt. 1) then
+            if (iso .lt. 0) then
                 write(*,*) ALIN(I) 
-                stop '  isotope value is less than 1 '
+                stop '  isotope value is less than 0 '
             endif
 c
 c   the TIPS program in lblrtm is currently limited to molecules up to 38
@@ -2687,7 +2693,7 @@ c
 c    *    1,    2,    3,    4,    5,    6,    7,
      *   36,   139,   38,   105,  346,  340,   137,
 c    *    8,    9,     10
-     *   156,   72,   747/
+     *   156,   72,   746/
 
       data ( h_vib(1,lvl),lvl=1,36 ) /
      1 '              0', '              1', '              2',
@@ -3175,7 +3181,7 @@ c******
      9 '    0 1 014 0 0', '    0 0 024 0 1', '    0 1 013 0 0', 
      9 '    0 1 002 0 0', '    0 1 011 0 0', '    0 0 0 0 1 1'/
 
-      data ( h_vib(10,lvl),lvl=1,747 ) /
+      data ( h_vib(10,lvl),lvl=1,746 ) /
      * '         GROUND', '             V1', '             V2',
      * '             V4', '             V5', '             V9',
      * '            2V5', '            2V9', '            3V6',
@@ -3220,7 +3226,7 @@ c******
      * '    0 0 0 2 1A1', '    0 0 0 2 1E ', '    0 0 0 2 1F2',    
      * '    0 0 0 3 1A1', '    0 0 0 3 1F1', '    0 0 0 3 1F2',    
      * '    0 0 0 5  A1', '    0 0 0 5  E ', '    0 0 0 5  F1',    
-     * '    0 0 0 5  F2', '    0 0 1 0 1F2', '    0 0 1 1 1E ',    
+     * '    0 0 0 5  F2', '    0 0 1 1 1E ', ' 000000202 f u ',  
      * '    0 0 1 1 1F1', '    0 0 1 1 1F2', '    0 0 1 2 1A1',    
      * '    0 0 1 2 1E ', '    0 0 1 2 1F1', '    0 0 2 0  A1',    
      * '    0 0 2 0  E ', '    0 0 2 0  F2', '    0 1 0 0 1E ',    
@@ -3424,7 +3430,7 @@ c******
      * ' 000001003 f u ', ' 000001003 e g ', ' 000001003 f g ', 
      * ' 000001100 e g ', ' 000000103 f g ', ' 000000103 e g ', 
      * ' 000000103 f u ', ' 000000103 e u ', ' 000000202 f g ', 
-     * ' 000000202 e u ', ' 000000202 e g ', ' 000000202 f u '/                       
+     * ' 000000202 e u ', ' 000000202 e g '/                       
 
       end
 c__________________________________________________________________________
