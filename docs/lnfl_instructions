@@ -36,7 +36,8 @@
 
     Note 4. As of Dec. 2013, LNFL requires additional broadening parameter
     input files. These files are listed below, and example files are included 
-    in the LNFL package. 
+    in the LNFL package. These files are only needed and used if you set the 
+    flag 'IBRD' in your TAPE5.
 
     Note 5. As of Jan. 2015, LNFL allows you to specify the name of
     the ASCII line file at the command line rahter than having to link it
@@ -95,7 +96,7 @@
        wv_co2_brd_param  -> H2O transitions broadened by CO2 (input)
 
        spd_dep_param     -> Speed-dependent Voigt parameters (input)
-                               Note that LBLRTM v13.0 ignores the speed 
+                               Note that LBLRTM ignores the speed 
                                dependence parameters, but they are used by 
                                MonoRTM v5.0 and later.
 -------------------------------------------------------------------------
@@ -130,11 +131,11 @@ RECORD 2
   
 RECORD 3 
       
-       MIND1(M=1,39),      HOLIND1
+       MIND1(M=1,47),      HOLIND1
    
-                1-39,       44-83
+                1-47,       44-83
    
-                39I1,4X,    A40
+                47I1,4X,    A40
    
    
    
@@ -150,7 +151,8 @@ RECORD 3
         SPECIES   (15)  HCL  (16)  HBR  (17)    HI (18)   CLO (19)   OCS (20)  H2CO (21)  HOCL
                   (22)   N2  (23)  HCN  (24) CH3CL (25)  H2O2 (26)  C2H2 (27)  C2H6 (28)   PH3
                   (29) COF2  (30)  SF6  (31)   H2S (32) HCOOH (33)   HO2 (34)     O (35)CLONO2
-                  (36)  NO+  (37) HOBR  (38)  C2H4 (39) C3HOH (40)
+                  (36)  NO+  (37) HOBR  (38)  C2H4 (39) C3HOH (40) CH3Br (41) CH3CN (42)   CF4
+                  (43) C4H2  (44) HC3N  (45)    H2 (46)    CS (47)   SO3
    
    
      HOLIND1   HOLlerith INDicator to select general LNFL options and specific options for TAPE1
@@ -172,17 +174,19 @@ RECORD 3
                 F160  selects the 160 character format for TAPE1 (e.g. HITRAN_2004)
 
                 BLK1  indicates TAPE1 is blocked  (Note: NBLK1 is ignored)  
+ 
+               EXBRD  uses extra broadeneing parameter files
    
    
 RECORD 4            IF MRG2 SELECTED ON RECORD 3:       second line for TAPE2 data source required
    
    
    
-       MIND2(M=1,39),      HOLIND2
+       MIND2(M=1,47),      HOLIND2
    
-               1-39,       44-83
+               1-47,       44-83
    
-               39I1,4X,    A40
+               47I1,4X,    A40
    
   
    
