@@ -4,7 +4,7 @@
 #This script links the utility files from their repository
 #to the src directory
 
-ln -s ../../AER_RT_UTILS/trunk/*.f* .
+ln -s ../aer_rt_utils/*.f* .
 
 
 
