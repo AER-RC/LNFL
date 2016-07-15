@@ -23,9 +23,9 @@ C
       PROGRAM LNFL
 C**********************************************************************  
 C                                                                        
-C                               LNFL                     23 January 2015   
+C                               LNFL                     09 February 2016   
 C                                                                        
-C    THIS PROGRAM CREATES A TAPE3 LINE DATA FILE FOR LBLRTM v13.0 AND 
+C    THIS PROGRAM CREATES A TAPE3 LINE DATA FILE FOR LBLRTM v12.4 AND 
 C    LATER and MonoRTM v5.0 AND LATER.           
 C                                                                        
 C    FOR USE WITH HITRAN F100/F160 FORMAT FOR TAPE1 AND SUPPLEMENTAL OR  
@@ -111,6 +111,7 @@ C
 C    co2_co2_brd_param -> CO2 self broadening parameters
 C    co2_h2o_brd_param -> CO2 transitions broadened by H2O
 C    o2_h2o_brd_param  -> O2 transitions broadened by H2O
+C    o2_o2_brd_param  -> O2 transitions broadened by O2
 C    wv_co2_brd_param  -> H2O transitions broadened by CO2
 C    spd_dep_param     -> Speed-dependent Voigt parameters
 C
@@ -273,8 +274,12 @@ c              up to end of ADDDATA
       COMMON /O2_H2O_BRD/ VNU_O2_H2O(MXBRD),HW_O2_H2O(MXBRD),
      *                   TEMP_O2_H2O(MXBRD),SHFT_O2_H2O(MXBRD)
 
+      COMMON /O2_O2_BRD/ VNU_O2_O2(MXBRD),HW_O2_O2(MXBRD),
+     *                   TEMP_O2_O2(MXBRD),SHFT_O2_O2(MXBRD)
+
       common /max_brd_lines/maxwvco2,maxco2co2,nwvco2,nco2co2,
-     *                      maxco2h2o, nco2h2o, maxo2h2o, no2h2o
+     *                      maxco2h2o, nco2h2o, maxo2h2o, no2h2o, 
+     *                      maxo2o2, no2o2
 C*******************************************************
 C      !MJA, speed dependent common blocks, 06-05-2013
       PARAMETER (MXSDEP=135000)
@@ -756,6 +761,7 @@ C     READ EXTRA BROADENING PARAMETER FILES
            CALL RDCO2CO2
            CALL RDCO2H2O
            CALL RDO2H2O
+           CALL RDO2O2
            CALL RDSPDDEP
       
 
@@ -821,6 +827,7 @@ C     $        '  sumflags=',i4)
          write(ipr,*) 'Total modified co2 lines (self brd) = ',nco2co2
          write(ipr,*) 'Total modified co2 lines (h2o brd) = ',nco2h2o
          write(ipr,*) 'Total modified o2 lines (h2o brd) = ',no2h2o
+         write(ipr,*) 'Total modified o2 lines (o2 brd) = ',no2o2
          write(ipr,*) 'Total speed dependent Voigt lines = ',nsdep
       endif
 C                                                                        LN04850
@@ -3845,7 +3852,8 @@ C
       COMMON /WV_CO2_BRD/ VNU_WV_CO2(MXBRD),HW_WV_CO2(MXBRD),
      *                   TEMP_WV_CO2(MXBRD),SHFT_WV_CO2(MXBRD)
       common /max_brd_lines/maxwvco2,maxco2co2,nwvco2,nco2co2,
-     *                      maxco2h2o, nco2h2o, maxo2h2o, no2h2o
+     *                      maxco2h2o, nco2h2o, maxo2h2o, no2h2o, 
+     *                      maxo2o2, no2o2
       COMMON /IFIL/ IRD,IPR,IPU,NWDR,LRC,ILNGTH,INLTE,IER,IPUOUT         LN01770
 
       REAL*8 dummy
@@ -3888,7 +3896,8 @@ C                                                                         D02700
       COMMON /CO2_CO2_BRD/ VNU_CO2_CO2(MXBRD),HW_CO2_CO2(MXBRD),
      *                   TEMP_CO2_CO2(MXBRD),SHFT_CO2_CO2(MXBRD)
       common /max_brd_lines/maxwvco2,maxco2co2,nwvco2,nco2co2,
-     *                      maxco2h2o, nco2h2o, maxo2h2o, no2h2o
+     *                      maxco2h2o, nco2h2o, maxo2h2o, no2h2o, 
+     *                      maxo2o2, no2o2
       COMMON /IFIL/ IRD,IPR,IPU,NWDR,LRC,ILNGTH,INLTE,IER,IPUOUT         LN01770
 
       INTEGER*2 dummy
@@ -3931,7 +3940,8 @@ C
       COMMON /CO2_H2O_BRD/ VNU_CO2_H2O(MXBRD),HW_CO2_H2O(MXBRD),
      *                   TEMP_CO2_H2O(MXBRD),SHFT_CO2_H2O(MXBRD)
       common /max_brd_lines/maxwvco2,maxco2co2,nwvco2,nco2co2,
-     *                      maxco2h2o, nco2h2o, maxo2h2o, no2h2o
+     *                      maxco2h2o, nco2h2o, maxo2h2o, no2h2o, 
+     *                      maxo2o2, no2o2
       COMMON /IFIL/ IRD,IPR,IPU,NWDR,LRC,ILNGTH,INLTE,IER,IPUOUT         LN01770
 
       REAL*8 dummy
@@ -3976,7 +3986,8 @@ C
       COMMON /O2_H2O_BRD/ VNU_O2_H2O(MXBRD),HW_O2_H2O(MXBRD),
      *                   TEMP_O2_H2O(MXBRD),SHFT_O2_H2O(MXBRD)
       common /max_brd_lines/maxwvco2,maxco2co2,nwvco2,nco2co2,
-     *                      maxco2h2o, nco2h2o, maxo2h2o, no2h2o
+     *                      maxco2h2o, nco2h2o, maxo2h2o, no2h2o, 
+     *                      maxo2o2, no2o2
       COMMON /IFIL/ IRD,IPR,IPU,NWDR,LRC,ILNGTH,INLTE,IER,IPUOUT        LN01770
 
       REAL*8 dummy
@@ -4001,6 +4012,52 @@ c read in o2 broadened parameters here
       maxo2h2o=i
 
       write(ipr,*) maxo2h2o,' lines of O2_H2O data read in'
+      
+      RETURN
+
+  100 FORMAT(F12.6,E12.3,F7.4,F12.4,F6.2,F10.6)
+
+      END
+
+c*******************************************************************
+      SUBROUTINE RDO2O2                                             
+C                                                                         
+      IMPLICIT REAL*8           (V)                                    
+C                                                                       
+C     SUBROUTINE RDO2O2 READS THE FILE o2_o2_brd_param FOR SELF BROADENING OF
+C     O2 LINES BY O2                
+C                                                                         
+      PARAMETER (MXBRD=135000)
+
+      COMMON /O2_O2_BRD/ VNU_O2_O2(MXBRD),HW_O2_O2(MXBRD),
+     *                   TEMP_O2_O2(MXBRD),SHFT_O2_O2(MXBRD)
+      common /max_brd_lines/maxwvco2,maxco2co2,nwvco2,nco2co2,
+     *                      maxco2h2o, nco2h2o, maxo2h2o, no2h2o, 
+     *                      maxo2o2, no2o2
+      COMMON /IFIL/ IRD,IPR,IPU,NWDR,LRC,ILNGTH,INLTE,IER,IPUOUT        LN01770
+
+      REAL*8 dummy
+      CHARACTER*80 STR_O2_O2
+      CHARACTER*1 CHAR1
+
+c read in o2 broadened parameters here
+     
+      OPEN (77,FILE='o2_o2_brd_param')
+      CHAR1 = '>'
+      DO WHILE (CHAR1.EQ.'>'.OR.CHAR1.EQ.'%')
+          READ (77,'(a80)',END=5) STR_O2_O2
+	  READ (STR_O2_O2,'(1A1)',END=5) CHAR1
+      END DO
+      DO I=1, MXBRD
+	  READ(STR_O2_O2,*) dummy,
+     *            VNU_O2_O2(I),HW_O2_O2(I),TEMP_O2_O2(I),
+     *            SHFT_O2_O2(I) 
+	  READ (77,'(a80)',END=5) STR_O2_O2
+      END DO
+   5  CLOSE(77)
+      maxo2o2=i
+
+      write(ipr,*) maxo2o2,' lines of O2_O2 data read in'
       
       RETURN
 
@@ -4085,8 +4142,12 @@ C-------------------------------------------------------------------------------
       COMMON /O2_H2O_BRD/ VNU_O2_H2O(MXBRD),HW_O2_H2O(MXBRD),
      *                   TEMP_O2_H2O(MXBRD),SHFT_O2_H2O(MXBRD)
 
+      COMMON /O2_O2_BRD/ VNU_O2_O2(MXBRD),HW_O2_O2(MXBRD),
+     *                   TEMP_O2_O2(MXBRD),SHFT_O2_O2(MXBRD)
+
       common /max_brd_lines/maxwvco2,maxco2co2,nwvco2,nco2co2,
-     *                      maxco2h2o, nco2h2o, maxo2h2o, no2h2o
+     *                      maxco2h2o, nco2h2o, maxo2h2o, no2h2o, 
+     *                      maxo2o2, no2o2
       COMMON VNU3(250),STR3(250),ALF3(250),EPP3(250),MOL3(250),        
      *       HWHMS(250),TMPALF(250),PSHIFT(250),IFLG(250),         
      *       ADDFLAG(7,250),ADDDATA(21,250),SDEP_DATA(250),LSTW3
@@ -4149,6 +4210,43 @@ c    $             7(f9.4,f7.4,f7.4))
          ENDIF
 
          IF(MOL3(IND).EQ.107) THEN
+C******************O2_O2 FIRST**************************************
+c            write(0,*) 'molec 102, ind=',ind
+            IW = 1
+            DO WHILE ((VNU_O2_O2(IW).LT.VNU3(IND)))
+               if(IW.GT.MAXO2O2) then
+                    print *, iw, maxo2o2
+                    print *, vnu_o2_o2(iw), vnu3(ind)
+                   STOP 'IN BRDMATCH, IW FOR O2_O2>MAX'
+               endif
+               IW = IW+1
+            END DO          
+c##            if(abs(VNU_O2_O2(IW)-VNU3(IND)).gt.
+c##     $           abs(VNU_O2_O2(IW-1)-VNU3(IND))) iw=iw-1
+            IF(VNU_O2_O2(IW).ne.VNU3(IND)) then
+               write(6,720) vnu3(ind),vnu_o2_o2(iw-1),vnu_o2_o2(iw), iw
+  720          format('poor o2-o2 match',3f16.10,I5)
+               !stop 'o2-o2 vnu poor match'
+            else
+                write(6,*) 'exact o2-o2 match',vnu_o2_o2(iw)
+                IF(abs(VNU_O2_O2(IW)-VNU3(IND)).gt.0.0001) then
+                   !stop 'o2-o2 vnu poor match'
+                   write(0,*) VNU_O2_O2(IW),VNU3(IND),VNU_O2_O2(IW-1)
+                   stop 'O2_O2 match not close enough'
+                end if
+               write(6,*) 'O2_O2 MATCH, IW=',IW,'  IND=',IND,VNU3(IND)
+               ADDDATA(19,IND) = HW_O2_O2(IW)
+               ADDDATA(20,IND) = TEMP_O2_O2(IW)
+               ADDDATA(21,IND) = SHFT_O2_O2(IW)
+               ADDFLAG(7,IND) = 1
+               no2o2=no2o2+1
+               write(6,730) iblock,ind,vnu3(ind),(addflag(i,ind),i=1,7),
+     $              (adddata(i,ind),i=4,6)
+ 730           format(i4,' o2-o2 line#=',i5,2x,f12.6,2x,7i1,2x
+     $              7(f9.4,f7.4,f7.4))
+            end if
+
+C******************O2_H2O SECOND**************************************
 c            write(0,*) 'molec 107, ind=',ind
             IW = 1
             DO WHILE (VNU_O2_H2O(IW).LT.VNU3(IND))
