@@ -41,8 +41,8 @@
 
     Note 5. As of Jan. 2015, LNFL allows you to specify the name of
     the ASCII line file at the command line rahter than having to link it
-    to TAPE1. For example, if you wanted to use aer_v_4.0 as your ASCII line 
-    file you could type: 'lnfl_v3.0_linux_pgi_sgl aer_v_4.0'
+    to TAPE1. For example, if you wanted to use aer_v_3.5 as your ASCII line 
+    file you could type: 'lnfl_v3.0.1_linux_pgi_sgl aer_v_3.5'
 
 -------------------------------------------------------------------------
 
@@ -71,7 +71,7 @@
                 relase notes for more details.
 
                 Users who wish to run MonoRTM v5.0 in other spectral regions 
-                should use the full AER line file (aer_v_4.0), with a caution
+                should use the full AER line file (aer_v_3.5), with a caution
                 that the full line file can take a long time to run.
         
        TAPE2    Supplemenatry ASCII Line File to be merged with TAPE1
@@ -133,7 +133,7 @@ RECORD 3
       
        MIND1(M=1,47),      HOLIND1
    
-                1-47,       44-83
+                1-47,       52-83
    
                 47I1,4X,    A40
    

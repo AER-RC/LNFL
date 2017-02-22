@@ -1,3 +1,10 @@
+LNFL_v3.0.1
+
+Feb, 2017
+
+* LNFL v3.0.1 only includes a bug fix to LNFL_v3.0, where the number of lines allowed 
+  in the extra broadening parameter files has been increased from the previous limit of 135,000.
+
 LNFL_v3.0
 
 Feb., 2016
@@ -6,7 +13,7 @@ Feb., 2016
   all the transitions in the HITRAN 2012 line file, as well as the extra broadening
   and speed dependent parameters that were included in MonoLNFL_v1.0. 
 
-* LNFL_v3.0 should only be used for: LBLRTM_v13.0 or later versions
+* LNFL_v3.0 should only be used for: LBLRTM_v12.4 or later versions
                                      MonoRTM_v5.0 or later versions
 
 * LNFL_v3.0 has been updated to handle all 47 molecules in the HITRAN 2012 line list, 

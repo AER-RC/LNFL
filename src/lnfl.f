@@ -259,7 +259,7 @@ c              up to end of ADDDATA
       DIMENSION TAPE3BLOCK(9500)
       EQUIVALENCE (VNU3(1),TAPE3BLOCK(1))
 
-      PARAMETER (MXBRD=135000)
+      PARAMETER (MXBRD=270000)
 
       COMMON /WV_CO2_BRD/ VNU_WV_CO2(MXBRD),HW_WV_CO2(MXBRD),
      *                   TEMP_WV_CO2(MXBRD),SHFT_WV_CO2(MXBRD)
@@ -282,7 +282,7 @@ c              up to end of ADDDATA
      *                      maxo2o2, no2o2
 C*******************************************************
 C      !MJA, speed dependent common blocks, 06-05-2013
-      PARAMETER (MXSDEP=135000)
+      PARAMETER (MXSDEP=270000)
 
       COMMON /SDEP/ MOLEC_SDEP(MXSDEP), ISO_SDEP(MXSDEP),
      *          VNU_SDEP(MXSDEP),SDEP(MXSDEP),
@@ -3847,7 +3847,7 @@ C
 C                                                                       
 C     SUBROUTINE RDWVCO2 INPUTS THE LINE DATA FROM LINFIL                 
 C                                                                         
-      PARAMETER (MXBRD=135000)
+      PARAMETER (MXBRD=270000)
 
       COMMON /WV_CO2_BRD/ VNU_WV_CO2(MXBRD),HW_WV_CO2(MXBRD),
      *                   TEMP_WV_CO2(MXBRD),SHFT_WV_CO2(MXBRD)
@@ -3891,7 +3891,7 @@ C                                                                         D02660
 C                                                                         D02680
 C     SUBROUTINE RDCO2CO2 INPUTS THE LINE DATA FROM LINFIL                D02690
 C                                                                         D02700
-      PARAMETER (MXBRD=135000)
+      PARAMETER (MXBRD=270000)
 
       COMMON /CO2_CO2_BRD/ VNU_CO2_CO2(MXBRD),HW_CO2_CO2(MXBRD),
      *                   TEMP_CO2_CO2(MXBRD),SHFT_CO2_CO2(MXBRD)
@@ -3935,7 +3935,7 @@ C
 C     SUBROUTINE RDCO2H2O READS THE FILE co2_h2o_brd_param FOR BROADENING OF
 C     CO2 LINES BY H2O                
 C                                                                         
-      PARAMETER (MXBRD=135000)
+      PARAMETER (MXBRD=270000)
 
       COMMON /CO2_H2O_BRD/ VNU_CO2_H2O(MXBRD),HW_CO2_H2O(MXBRD),
      *                   TEMP_CO2_H2O(MXBRD),SHFT_CO2_H2O(MXBRD)
@@ -3981,7 +3981,7 @@ C
 C     SUBROUTINE RDO2H2O READS THE FILE o2_h2o_brd_param FOR BROADENING OF
 C     O2 LINES BY H2O                
 C                                                                         
-      PARAMETER (MXBRD=135000)
+      PARAMETER (MXBRD=270000)
 
       COMMON /O2_H2O_BRD/ VNU_O2_H2O(MXBRD),HW_O2_H2O(MXBRD),
      *                   TEMP_O2_H2O(MXBRD),SHFT_O2_H2O(MXBRD)
@@ -4027,7 +4027,7 @@ C
 C     SUBROUTINE RDO2O2 READS THE FILE o2_o2_brd_param FOR SELF BROADENING OF
 C     O2 LINES BY O2                
 C                                                                         
-      PARAMETER (MXBRD=135000)
+      PARAMETER (MXBRD=270000)
 
       COMMON /O2_O2_BRD/ VNU_O2_O2(MXBRD),HW_O2_O2(MXBRD),
      *                   TEMP_O2_O2(MXBRD),SHFT_O2_O2(MXBRD)
@@ -4081,7 +4081,7 @@ C     MJA, 06-05-2013 SDEP variables
       REAL*4 SDEP
       CHARACTER*24 STR_QNUM
 
-      PARAMETER (MXSDEP=135000)
+      PARAMETER (MXSDEP=270000)
 
       COMMON /SDEP/ MOLEC_SDEP(MXSDEP), ISO_SDEP(MXSDEP),
      *           VNU_SDEP(MXSDEP),SDEP(MXSDEP),
@@ -4128,7 +4128,7 @@ C-------------------------------------------------------------------------------
 
       IMPLICIT REAL*8           (V)                        
 
-      PARAMETER (MXBRD=135000)
+      PARAMETER (MXBRD=270000)
 
       COMMON /WV_CO2_BRD/ VNU_WV_CO2(MXBRD),HW_WV_CO2(MXBRD),
      *                   TEMP_WV_CO2(MXBRD),SHFT_WV_CO2(MXBRD)
@@ -4374,7 +4374,7 @@ C     Matches speed dependent parameters with main lines by quantum number
       REAL*8    temp_vnu
       CHARACTER*24 temp_qnum
 
-      PARAMETER (MXSDEP=135000)
+      PARAMETER (MXSDEP=270000)
 
       COMMON /SDEP/ MOLEC_SDEP(MXSDEP), ISO_SDEP(MXSDEP),
      *           VNU_SDEP(MXSDEP),SDEP(MXSDEP),
