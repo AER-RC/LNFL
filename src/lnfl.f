@@ -4224,7 +4224,7 @@ c            write(0,*) 'molec 102, ind=',ind
 c##            if(abs(VNU_O2_O2(IW)-VNU3(IND)).gt.
 c##     $           abs(VNU_O2_O2(IW-1)-VNU3(IND))) iw=iw-1
             IF(VNU_O2_O2(IW).ne.VNU3(IND)) then
-               write(6,720) vnu3(ind),vnu_o2_o2(iw-1),vnu_o2_o2(iw), iw
+C               write(6,720) vnu3(ind),vnu_o2_o2(iw-1),vnu_o2_o2(iw), iw
   720          format('poor o2-o2 match',3f16.10,I5)
                !stop 'o2-o2 vnu poor match'
             else
