@@ -1961,30 +1961,36 @@ C                                                                        LN10330
          DO 20 I = 1, IBLK                                               LN10420
             READ (LINBCD,900,END=30) ALIN(I)                             LN10430
    20    CONTINUE                                                        LN10440
-         READ (ALIN(IBLK),905) CFLAG,IFLAG                               LN10450
-         READ (ALIN(IBLK-1),905) CFLAG2,IFLAG2    
+c     skip over header records:
+         READ (ALIN(IBLK),913) a_1
+         if (a_1.eq.h_1 .or. a_1.eq.h_2) then
+             IBLK = 50
+         else         
+			 READ (ALIN(IBLK),905) CFLAG,IFLAG               
+			 READ (ALIN(IBLK-1),905) CFLAG2,IFLAG2    
 C         write(*,*) "Block check: ", IFLAG, CFLAG, CFLAG2
-         IF (IFLAG.LT.0) THEN !Line coupling
-            IF (IFLAG.NE.-5) THEN !Foreign line coupling only
-               IF(CFLAG.NE.CBLNK.AND.CFLAG.NE.CMINUS) THEN !Main line
-                 IBLK = 51                                               
-                 READ (LINBCD,900,END=30) ALIN(IBLK)  
-               ELSE !Foreign line coupling line
-                 IBLK = 50    
-               ENDIF
-            ELSE !Foreign and self line coupling (IFLAG = -5)
-               IF(CFLAG.NE.CBLNK.AND.CFLAG.NE.CMINUS) THEN !Main line
-                  IBLK = 52                                                 
-                  READ (LINBCD,900,END=30) ALIN(IBLK-1) 
-                  READ (LINBCD,900,END=30) ALIN(IBLK) 
-               ELSEIF(CFLAG2.NE.CBLNK.AND.CFLAG2.NE.CMINUS) THEN !Foreign line coupling line
-                  IBLK = 51                                              
-                  READ (LINBCD,900,END=30) ALIN(IBLK)        
-               ELSE !Self line coupling line
-                  IBLK = 50 
-               ENDIF
-            ENDIF
-         ENDIF
+			 IF (IFLAG.LT.0) THEN !Line coupling
+				IF (IFLAG.NE.-5) THEN !Foreign line coupling only
+				   IF(CFLAG.NE.CBLNK.AND.CFLAG.NE.CMINUS) THEN !Main line
+					 IBLK = 51                                               
+					 READ (LINBCD,900,END=30) ALIN(IBLK)  
+				   ELSE !Foreign line coupling line
+					 IBLK = 50    
+				   ENDIF
+				ELSE !Foreign and self line coupling (IFLAG = -5)
+				   IF(CFLAG.NE.CBLNK.AND.CFLAG.NE.CMINUS) THEN !Main line
+					  IBLK = 52                                                 
+					  READ (LINBCD,900,END=30) ALIN(IBLK-1) 
+					  READ (LINBCD,900,END=30) ALIN(IBLK) 
+				   ELSEIF(CFLAG2.NE.CBLNK.AND.CFLAG2.NE.CMINUS) THEN !Foreign line coupling line
+					  IBLK = 51                                              
+					  READ (LINBCD,900,END=30) ALIN(IBLK)        
+				   ELSE !Self line coupling line
+					  IBLK = 50 
+				   ENDIF
+				ENDIF
+			 ENDIF
+		  endif
       ENDIF
 C         IF (IFLAG.LT.0.AND.CFLAG.NE.CBLNK.AND.CFLAG.NE.CMINUS) THEN     LN10460
 C           MJA 01-19-2012 Read 52 lines if IFLAG = -5
@@ -4225,25 +4231,25 @@ c##            if(abs(VNU_O2_O2(IW)-VNU3(IND)).gt.
 c##     $           abs(VNU_O2_O2(IW-1)-VNU3(IND))) iw=iw-1
             IF(VNU_O2_O2(IW).ne.VNU3(IND)) then
 C               write(6,720) vnu3(ind),vnu_o2_o2(iw-1),vnu_o2_o2(iw), iw
-  720          format('poor o2-o2 match',3f16.10,I5)
+C  720          format('poor o2-o2 match',3f16.10,I5)
                !stop 'o2-o2 vnu poor match'
             else
-                write(6,*) 'exact o2-o2 match',vnu_o2_o2(iw)
+C                write(6,*) 'exact o2-o2 match',vnu_o2_o2(iw)
                 IF(abs(VNU_O2_O2(IW)-VNU3(IND)).gt.0.0001) then
                    !stop 'o2-o2 vnu poor match'
-                   write(0,*) VNU_O2_O2(IW),VNU3(IND),VNU_O2_O2(IW-1)
+C                   write(0,*) VNU_O2_O2(IW),VNU3(IND),VNU_O2_O2(IW-1)
                    stop 'O2_O2 match not close enough'
                 end if
-               write(6,*) 'O2_O2 MATCH, IW=',IW,'  IND=',IND,VNU3(IND)
+C               write(6,*) 'O2_O2 MATCH, IW=',IW,'  IND=',IND,VNU3(IND)
                ADDDATA(19,IND) = HW_O2_O2(IW)
                ADDDATA(20,IND) = TEMP_O2_O2(IW)
                ADDDATA(21,IND) = SHFT_O2_O2(IW)
                ADDFLAG(7,IND) = 1
                no2o2=no2o2+1
-               write(6,730) iblock,ind,vnu3(ind),(addflag(i,ind),i=1,7),
-     $              (adddata(i,ind),i=4,6)
- 730           format(i4,' o2-o2 line#=',i5,2x,f12.6,2x,7i1,2x
-     $              7(f9.4,f7.4,f7.4))
+C               write(6,730) iblock,ind,vnu3(ind),(addflag(i,ind),i=1,7),
+C     $              (adddata(i,ind),i=4,6)
+C 730           format(i4,' o2-o2 line#=',i5,2x,f12.6,2x,7i1,2x
+C     $              7(f9.4,f7.4,f7.4))
             end if
 
 C******************O2_H2O SECOND**************************************
