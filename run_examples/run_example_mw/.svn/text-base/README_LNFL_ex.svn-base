@@ -1,0 +1,51 @@
+Contact: Matt Alvarado and Karen Cady-Pereira (aer_lnfl@aer.com)
+FIRST COMPILE AN LNFL EXECUTABLE FOR YOUR SPECIFIC PLATFORM AND COMPILER:
+
+* See README.build_instructions in parent directory
+
+----------------------------------------------------------------------- 
+
+THEN COME BACK TO THE EXAMPLES DIRECTORY AND RUN THE EXECUTABLE WITH THE FILES PROVIDED
+
+    (i.e. in the examples directory modify and execute script "run_lnfl")
+
+   1) Input Files:
+                                                                               
+      TAPE1      LINE PARAMETER ASCII INPUT FILE IN HITRAN FORMAT    
+
+     co2_co2_brd_param -> CO2 self broadening parameters
+
+     co2_h2o_brd_param -> CO2 transitions broadened by H2O
+
+     o2_h2o_brd_param  -> O2 transitions broadened by H2O
+
+     wv_co2_brd_param  -> H2O transitions broadened by CO2
+
+     spd_dep_param     -> Speed-dependent Voigt parameters        
+
+      TAPE5      LNFL INPUT FILE                                            
+                                                                               
+
+   2) Output Files:
+
+
+      TAPE3      UNFORMATTED BINARY LINE FILE FOR LBLRTM                
+                                     
+      TAPE6      LNFL LOG FILE CONTAINING INFORMATION ABOUT THE RUN   
+                                                                               
+      TAPE7      TAPE3 in ASCII format                   
+                                                                               
+-----------------------------------------------------------------------    
+
+Note:
+
+1) All LNFL computations must be performed in single precision.
+
+2) The mw example generates a TAPE3 file from 0-30 cm-1
+   for the first 7 HITRAN molecules
+    
+3) The program is very flexible so please refer to instructions 
+   provided with the code to generate specific TAPE3 
+
+
+

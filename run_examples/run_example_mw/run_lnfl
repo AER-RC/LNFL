@@ -1,0 +1,28 @@
+#!/bin/tcsh
+
+\rm TAPE1 TAPE2 TAPE3 TAPE6 TAPE10
+
+# Set up link to AER line file (e.g. spectral_lines.dat.0_55_fast.v3.5) that comes in the line file package in the 'spectral_lines_for_MonoRTM/' subdirectory.
+set line_file = "spectral_lines.dat.0_55.v5.0_fast"
+
+# Set up link to MonoLNFL executable
+set lnfl_ex = "../../lnfl_v3.1_linux_pgi_sgl"
+
+\rm TAPE5 TAPE1 TAPE3 lnfl
+
+ln -s $line_file TAPE1
+ln -s TAPE5_ex TAPE5
+ln -s $lnfl_ex lnfl
+
+time lnfl
+
+\mv TAPE3 TAPE3_$line_file
+\mv TAPE6 TAPE6_$line_file
+\mv TAPE7 TAPE7_$line_file
+
+
+
+
+
+
+

@@ -1,0 +1,59 @@
+# Makefile for lnfl
+# From lnfl/build directory, type: gmake -f make_lnfl <TARGET>
+
+# Include file containing user input. Directory is referenced to 
+# parent directory and common build rules
+include makefile.common
+
+###############################
+# Set variables/
+###############################
+
+#Set version name.  Used in the default OUTPUT and CDOTO variables.  If you
+# change those two variables from what is provided here, no need to set this variable.
+
+PRODUCT = lnfl
+VERSION = v3.1
+
+# Set name of LNFL executable.  
+OUTPUT = ${PRODUCT}_$(VERSION)_$(PLTFRM)_$(FC_TYPE)_$(P_TYPE)
+
+# Set directory for object files.  
+CDOTO = ${PRODUCT}_$(VERSION)_$(PLTFRM)_$(FC_TYPE)_$(P_TYPE).obj
+
+# Set directory containing source files, relative to main directory from which
+# you are executing the makefile
+CPATH = ../src
+
+# Files contained in src directory.  If additional .f files are added,
+# add to this list. 
+SRCS = lnfl.f $(UTIL_FILE)
+
+#########################################
+# Set variables specific to LNFL compile#
+########################################
+#LNFL must be compiled in single-precision.  This instruction tells the 
+#routine to quit if the user does not provide a single-precision target.
+
+
+# Define makefile name
+MAKEFILE=make_$(PRODUCT)
+
+# Object file names
+OBPATH = ${SRCS:.f=.o} ${SRCS:.f90=.o}
+
+build : $(OBPATH) check
+
+check:
+	if [ $(P_TYPE) = 'dbl' ] ;\
+	then  \
+	     (echo 'STOP: MUST COMPILE IN SINGLE PRECISION.  RESET <TARGET>.'; \
+	     rm -rf $(CDOTO)); \
+	else \
+	     $(FC) $(FCFLAG) -o ../$(OUTPUT) ${CDOTO}/*.o; \
+	fi
+
+
+
+
+

@@ -1,0 +1,128 @@
+1$ f100 format                                           V:  3198               I 17/02/11  11:44:10
+0                    VMIN =  -25.000000 CM-1,      VMAX =  100.000000 CM-1
+0 ** NOTE IFLG SET - LNOUT *****
+
+0 ** NOTE IFLG SET - EXBRD *****
+
+                                           H2O  = 1
+                                           CO2  = 1
+                                            O3  = 1
+                                           N2O  = 1
+                                            CO  = 1
+                                           CH4  = 1
+                                            O2  = 1
+                                            NO  = 1
+                                           SO2  = 1
+                                           NO2  = 1
+                                           NH3  = 1
+                                           HNO3 = 1
+                                             OH = 1
+                                             HF = 1
+                                           HCL  = 1
+                                           HBR  = 1
+                                            HI  = 1
+                                           CLO  = 1
+                                           OCS  = 1
+                                          H2CO  = 1
+                                          HOCL  = 1
+                                            N2  = 1
+                                           HCN  = 1
+                                         CH3CL  = 1
+                                          H2O2  = 1
+                                          C2H2  = 1
+                                          C2H6  = 1
+                                           PH3  = 1
+                                          COF2  = 1
+                                           SF6  = 1
+                                           H2S  = 1
+                                         HCOOH  = 1
+                                           HO2  = 1
+                                             O  = 1
+                                         CLONO2 = 1
+                                           NO+  = 1
+                                          HOBr  = 1
+                                          C2H4  = 1
+                                         CH3OH  = 1
+                                         CH3Br  = 1
+                                         CH3CN  = 1
+                                           CF4  = 1
+                                          C4H2  = 1
+                                          HC3N  = 1
+                                           H2   = 1
+                                           CS   = 1
+                                           SO3  = 1
+ 
+0         TAPE NO. = 3
+          LOWEST LINE =     0.000010 CM-1,  HIGHEST LINE =    55.055000 CM-1,  TOTAL NUMBER OF LINES =   1316
+0
+                        COUPLED    NLTE   NEGATIVE   RESET    SUM LBLRTM      STRENGTH
+       MOL      LINES    LINES    LINES      EPP      EPP      STRENGTHS      REJECTION
+
+       H2O  =     338        0        0        0        0     1.5541E-19      0.000E+00
+       CO2  =       0        0        0        0        0     0.0000E+00      0.000E+00
+        O3  =     666        0        0        0        0     4.1811E-20      0.000E+00
+       N2O  =      40        0        0        0        0     4.6526E-21      0.000E+00
+        CO  =       4        0        0        0        0     7.8419E-22      0.000E+00
+       CH4  =       0        0        0        0        0     0.0000E+00      0.000E+00
+        O2  =     268       41        0        0        0     1.4353E-22      0.000E+00
+        NO  =       0        0        0        0        0     0.0000E+00      0.000E+00
+       SO2  =       0        0        0        0        0     0.0000E+00      0.000E+00
+       NO2  =       0        0        0        0        0     0.0000E+00      0.000E+00
+       NH3  =       0        0        0        0        0     0.0000E+00      0.000E+00
+       HNO3 =       0        0        0        0        0     0.0000E+00      0.000E+00
+         OH =       0        0        0        0        0     0.0000E+00      0.000E+00
+         HF =       0        0        0        0        0     0.0000E+00      0.000E+00
+       HCL  =       0        0        0        0        0     0.0000E+00      0.000E+00
+       HBR  =       0        0        0        0        0     0.0000E+00      0.000E+00
+        HI  =       0        0        0        0        0     0.0000E+00      0.000E+00
+       CLO  =       0        0        0        0        0     0.0000E+00      0.000E+00
+       OCS  =       0        0        0        0        0     0.0000E+00      0.000E+00
+      H2CO  =       0        0        0        0        0     0.0000E+00      0.000E+00
+      HOCL  =       0        0        0        0        0     0.0000E+00      0.000E+00
+        N2  =       0        0        0        0        0     0.0000E+00      0.000E+00
+       HCN  =       0        0        0        0        0     0.0000E+00      0.000E+00
+     CH3CL  =       0        0        0        0        0     0.0000E+00      0.000E+00
+      H2O2  =       0        0        0        0        0     0.0000E+00      0.000E+00
+      C2H2  =       0        0        0        0        0     0.0000E+00      0.000E+00
+      C2H6  =       0        0        0        0        0     0.0000E+00      0.000E+00
+       PH3  =       0        0        0        0        0     0.0000E+00      0.000E+00
+      COF2  =       0        0        0        0        0     0.0000E+00      0.000E+00
+       SF6  =       0        0        0        0        0     0.0000E+00      0.000E+00
+       H2S  =       0        0        0        0        0     0.0000E+00      0.000E+00
+     HCOOH  =       0        0        0        0        0     0.0000E+00      0.000E+00
+       HO2  =       0        0        0        0        0     0.0000E+00      0.000E+00
+         O  =       0        0        0        0        0     0.0000E+00      0.000E+00
+     CLONO2 =       0        0        0        0        0     0.0000E+00      0.000E+00
+       NO+  =       0        0        0        0        0     0.0000E+00      0.000E+00
+      HOBr  =       0        0        0        0        0     0.0000E+00      0.000E+00
+      C2H4  =       0        0        0        0        0     0.0000E+00      0.000E+00
+     CH3OH  =       0        0        0        0        0     0.0000E+00      0.000E+00
+     CH3Br  =       0        0        0        0        0     0.0000E+00      0.000E+00
+     CH3CN  =       0        0        0        0        0     0.0000E+00      0.000E+00
+       CF4  =       0        0        0        0        0     0.0000E+00      0.000E+00
+      C4H2  =       0        0        0        0        0     0.0000E+00      0.000E+00
+      HC3N  =       0        0        0        0        0     0.0000E+00      0.000E+00
+       H2   =       0        0        0        0        0     0.0000E+00      0.000E+00
+       CS   =       0        0        0        0        0     0.0000E+00      0.000E+00
+       SO3  =       0        0        0        0        0     0.0000E+00      0.000E+00
+0                    NUMBER OF BLOCKS =   6
+       125062  lines of WV_CO2 data read in
+       169055  lines of CO2_CO2 data read in
+       133045  lines of CO2_H2O data read in
+         1723  lines of O2_H2O data read in
+          490  lines of O2_O2 data read in
+         3567  lines of Speed Dep. Voigt data read in
+ Total modified lines=          221
+ Total modified wv lines (co2 brd) =           109
+ Total modified co2 lines (self brd) =             0
+ Total modified co2 lines (h2o brd) =             0
+ Total modified o2 lines (h2o brd) =           112
+ Total modified o2 lines (o2 brd) =             0
+ Total speed dependent Voigt lines =             0
+0           TOTAL TIME =     9.900 TIME IN =     0.000 TIME OUT =     9.900
+
+
+0 Modules and versions used in this calculation:
+
+                lnfl.f:  $Revision: 31984 $           util_linux_pgi.f:  $Revision: 10548 $
+
