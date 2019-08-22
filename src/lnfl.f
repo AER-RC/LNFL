@@ -277,9 +277,12 @@ c              up to end of ADDDATA
       COMMON /O2_O2_BRD/ VNU_O2_O2(MXBRD),HW_O2_O2(MXBRD),
      *                   TEMP_O2_O2(MXBRD),SHFT_O2_O2(MXBRD)
 
+      COMMON /O2_UV_BRD/ VNU_O2_UV(MXBRD),HW_O2_UV(MXBRD),
+     *                   TEMP_O2_UV(MXBRD),SHFT_O2_UV(MXBRD)
+
       common /max_brd_lines/maxwvco2,maxco2co2,nwvco2,nco2co2,
      *                      maxco2h2o, nco2h2o, maxo2h2o, no2h2o, 
-     *                      maxo2o2, no2o2
+     *                      maxo2o2, no2o2, maxo2uv
 C*******************************************************
 C      !MJA, speed dependent common blocks, 06-05-2013
       PARAMETER (MXSDEP=270000)
@@ -763,6 +766,7 @@ C     READ EXTRA BROADENING PARAMETER FILES
            CALL RDO2H2O
            CALL RDO2O2
            CALL RDSPDDEP
+           CALL RDO2UV
       
 
 C         MJA, new TAPE8 output 01-20-2012
@@ -778,9 +782,11 @@ C         MJA, new TAPE8 output 01-20-2012
          CALL BUFOUT (LINFIL,RCDHDR(1),LRC)                              LN04800
          CALL BUFIN (LINMRG,IEOF,VNU3(1),ILNGTH)                         LN04810
          CALL CKFL (VLO,VHI,LINES,VNU3,IFLG)                             LN04820
+      print*, 'main:', vnu3(1)
          if(ibrd .eq. 1) then 
              CALL BRDMATCH(i)
              CALL SPDMATCH(i)
+             CALL UVMATCH(i)
              isumtot=isumtot+sum(addflag)
 C            MJA, test new TAPE8 output 01-20-2012
              if (IPUOUT.EQ.1) then
@@ -2702,7 +2708,7 @@ c    *    C4H2,    HC3N,      H2,      CS,     SO3
 c
       data (n_lvl_v(j),j=1,10)    /
 c    *    1,    2,    3,    4,    5,    6,    7,
-     *   36,   139,   38,   102,  333,  337,   134,
+     *   36,   202,   38,   102,  333,  337,   134,
 c    *    8,    9,     10
      *   154,   71,   710/
 
@@ -2720,7 +2726,7 @@ c    *    8,    9,     10
      1 '      II  1 2 4', '      II  2 2 3', '      II  2 3 3',
      1 '             24', '             25', '             26'/    
 
-      data ( h_vib(2,lvl),lvl=1,139) /
+      data ( h_vib(2,lvl),lvl=1,202) /
      2 '       X      0', '       X      1', '       a      0',
      2 '       a      1', '       b      0', '       b      1',
      2 '       b      2', '               ', '       X      2',
@@ -2767,7 +2773,28 @@ c    *    8,    9,     10
      2 '    1 0 0 3  A1', '    1 0 0 3  F2', '    1 0 1 0  F2',    
      2 '    1 0 1 0 1F2', '    1 1 0 0 1E ', '    1 1 0 1 1F2',    
      2 '    1 2 0 0  E ', '    1 2 0 0  F1', '    2 0 0 0  A1',    
-     2 '    2 0 0 0 1A1'/                                          
+     2 '    2 0 0 0 1A1', '       c      2', '       c      3',
+     2 '       c      4', '       c      5', '       c      6', 
+     2 '       c      7', '       c      8', '       c      9', 
+     2 '       c     10', '       c     11', '       c     12', 
+     2 '       c     13', '       c     14', '       c     15', 
+     2 '       c     16', '       c     17', '       c     18', 
+     2 '       c     19', '       A      0', '       A      1', 
+     2 '       A      2', '       A      3', '       A      4', 
+     2 '       A      5', '       A      6', '       A      7', 
+     2 '       A      8', '       A      9', '       A     10', 
+     2 '       A     11', '       A     12', "      A'  1   2", 
+     2 "      A'  1   3", "      A'  1   4", "      A'  1   5", 
+     2 "      A'  1   6", "      A'  1   7", "      A'  1   8", 
+     2 "      A'  1   9", "      A'  1  10", "      A'  1  11", 
+     2 "      A'  1  12", "      A'  2   2", "      A'  2   3",
+     2 "      A'  2   4", "      A'  2   5", "      A'  2   6",
+     2 "      A'  2   7", "      A'  2   8", "      A'  2   9",
+     2 "      A'  2  10", "      A'  2  11", "      A'  2  12",
+     2 "      A'  3   3", "      A'  3   4", "      A'  3   5",
+     2 "      A'  3   6", "      A'  3   7", "      A'  3   8",
+     2 "      A'  3   9", "      A'  3  10", "      A'  3  11",
+     2 "      A'  3  12"/ 
 
       data ( h_vib(3,lvl),lvl=1,38) /
      3 '       X3/2   0', '       X3/2   1', '       X3/2   2',
@@ -3859,7 +3886,7 @@ C
      *                   TEMP_WV_CO2(MXBRD),SHFT_WV_CO2(MXBRD)
       common /max_brd_lines/maxwvco2,maxco2co2,nwvco2,nco2co2,
      *                      maxco2h2o, nco2h2o, maxo2h2o, no2h2o, 
-     *                      maxo2o2, no2o2
+     *                      maxo2o2, no2o2, maxo2uv
       COMMON /IFIL/ IRD,IPR,IPU,NWDR,LRC,ILNGTH,INLTE,IER,IPUOUT         LN01770
 
       REAL*8 dummy
@@ -3903,7 +3930,7 @@ C                                                                         D02700
      *                   TEMP_CO2_CO2(MXBRD),SHFT_CO2_CO2(MXBRD)
       common /max_brd_lines/maxwvco2,maxco2co2,nwvco2,nco2co2,
      *                      maxco2h2o, nco2h2o, maxo2h2o, no2h2o, 
-     *                      maxo2o2, no2o2
+     *                      maxo2o2, no2o2, maxo2uv
       COMMON /IFIL/ IRD,IPR,IPU,NWDR,LRC,ILNGTH,INLTE,IER,IPUOUT         LN01770
 
       INTEGER*2 dummy
@@ -3947,7 +3974,7 @@ C
      *                   TEMP_CO2_H2O(MXBRD),SHFT_CO2_H2O(MXBRD)
       common /max_brd_lines/maxwvco2,maxco2co2,nwvco2,nco2co2,
      *                      maxco2h2o, nco2h2o, maxo2h2o, no2h2o, 
-     *                      maxo2o2, no2o2
+     *                      maxo2o2, no2o2, maxo2uv
       COMMON /IFIL/ IRD,IPR,IPU,NWDR,LRC,ILNGTH,INLTE,IER,IPUOUT         LN01770
 
       REAL*8 dummy
@@ -3993,7 +4020,7 @@ C
      *                   TEMP_O2_H2O(MXBRD),SHFT_O2_H2O(MXBRD)
       common /max_brd_lines/maxwvco2,maxco2co2,nwvco2,nco2co2,
      *                      maxco2h2o, nco2h2o, maxo2h2o, no2h2o, 
-     *                      maxo2o2, no2o2
+     *                      maxo2o2, no2o2, maxo2uv
       COMMON /IFIL/ IRD,IPR,IPU,NWDR,LRC,ILNGTH,INLTE,IER,IPUOUT        LN01770
 
       REAL*8 dummy
@@ -4039,7 +4066,7 @@ C
      *                   TEMP_O2_O2(MXBRD),SHFT_O2_O2(MXBRD)
       common /max_brd_lines/maxwvco2,maxco2co2,nwvco2,nco2co2,
      *                      maxco2h2o, nco2h2o, maxo2h2o, no2h2o, 
-     *                      maxo2o2, no2o2
+     *                      maxo2o2, no2o2, maxo2uv
       COMMON /IFIL/ IRD,IPR,IPU,NWDR,LRC,ILNGTH,INLTE,IER,IPUOUT        LN01770
 
       REAL*8 dummy
@@ -4128,6 +4155,59 @@ C     *            VNU_SDEP(I),SDEP(I), STR_QNUM(I)
 
       END
 
+c*******************************************************************
+      SUBROUTINE RDO2UV                                                  
+C     MJA, 06-05-2013 (malvarad@aer.com)
+C     MJI, 09-25-2018
+C     Modified from RDO2O2 for O2 UV lines
+C     This subroutine reads in the data in the text file o2_uv_brd_param
+C     that allows us to match the O2 UV broadening parameters with the
+C     appropriate line. 
+C     A flag at the end of each record in the text file controls whether 
+C     each line is to be pressure broadened ("-1" = no broadening).
+C                                                                        
+      IMPLICIT REAL*8           (V)                                    
+C                                                                       
+C     SUBROUTINE RDO2UV READS THE FILE o2_uv_brd_param FOR PRESSURE 
+C     BROADENING OF O2 LINES IN THE UV (EXCEPT THOSE LINES FLAGGED 
+C     FOR NO BROADENING).
+C                                                                         
+      PARAMETER (MXBRD=270000)
+
+      COMMON /O2_UV_BRD/ VNU_O2_UV(MXBRD),HW_O2_UV(MXBRD),
+     *                   TEMP_O2_UV(MXBRD),SHFT_O2_UV(MXBRD)
+      common /max_brd_lines/maxwvco2,maxco2co2,nwvco2,nco2co2,
+     *                      maxco2h2o, nco2h2o, maxo2h2o, no2h2o, 
+     *                      maxo2o2, no2o2, maxo2uv
+      COMMON /IFIL/ IRD,IPR,IPU,NWDR,LRC,ILNGTH,INLTE,IER,IPUOUT        LN01770
+
+      REAL*8 dummy
+      CHARACTER*80 STR_O2_UV
+      CHARACTER*1 CHAR1
+
+c read in o2 UV broadening parameters here
+     
+      OPEN (77,FILE='o2_uv_brd_param')
+      CHAR1 = '>'
+      DO WHILE (CHAR1.EQ.'>'.OR.CHAR1.EQ.'%')
+          READ (77,'(a80)',END=5) STR_O2_UV
+	  READ (STR_O2_UV,'(1A1)',END=5) CHAR1
+      END DO
+      DO I=1, MXBRD
+	  READ(STR_O2_UV,*) dummy,
+     *            VNU_O2_UV(I),HW_O2_UV(I),TEMP_O2_UV(I),
+     *            SHFT_O2_UV(I) 
+	  READ (77,'(a80)',END=5) STR_O2_UV
+      END DO
+   5  CLOSE(77)
+      maxo2uv=i
+
+      write(ipr,*) maxo2uv,' lines of O2 UV data read in'
+      
+      RETURN
+
+      END
+
 C-------------------------------------------------------------------------------
 
       SUBROUTINE BRDMATCH(iblock)
@@ -4153,7 +4233,7 @@ C-------------------------------------------------------------------------------
 
       common /max_brd_lines/maxwvco2,maxco2co2,nwvco2,nco2co2,
      *                      maxco2h2o, nco2h2o, maxo2h2o, no2h2o, 
-     *                      maxo2o2, no2o2
+     *                      maxo2o2, no2o2, maxo2uv
       COMMON VNU3(250),STR3(250),ALF3(250),EPP3(250),MOL3(250),        
      *       HWHMS(250),TMPALF(250),PSHIFT(250),IFLG(250),         
      *       ADDFLAG(7,250),ADDDATA(21,250),SDEP_DATA(250),LSTW3
@@ -4167,6 +4247,11 @@ C      write(0,*) 'start brdmatch, maxwvco2=',maxwvco2,'  maxco2co2=',
 C     &       maxco2co2, '  maxco2h2o=',maxco2h2o
 c      write(0,*) 'mol3=',mol3
 c      write(0,*) 'vnu3=',vnu3
+
+        print*, 'brdmatch: vnu_o2_h2o(1) = ',vnu_o2_h2o(1)
+        print*, 'brdmatch: vnu_o2_h2o(maxo2h2o) = ',vnu_o2_h2o(maxo2h2o)
+        print*, 'brdmatch: vnu3 = '
+        print*, vnu3(indj),indj=1,250)
 
       DO INDJ = 1,250
          DO INDI = 1,21
@@ -4254,8 +4339,12 @@ C     $              7(f9.4,f7.4,f7.4))
 
 C******************O2_H2O SECOND**************************************
 c            write(0,*) 'molec 107, ind=',ind
+        print*, 'brdmatch: ind, vnu3(ind) = ',ind,vnu3(ind)
+        print*, 'brdmatch: vnu_o2_h2o(1) = ',vnu_o2_h2o(1)
+        print*, 'brdmatch: vnu_o2_h2o(maxo2h2o) = ',vnu_o2_h2o(maxo2h2o)
             IW = 1
             DO WHILE (VNU_O2_H2O(IW).LT.VNU3(IND))
+c         print*, 'brdmatch:', iw, vnu_o2_h2o(iw), ind, vnu3(ind)
                IW = IW+1
                if(IW.GT.MAXO2H2O) then
                     print *, iw, maxo2h2o
@@ -4428,6 +4517,65 @@ C         print *, iw, molec_sdep(iw), iso_sdep(iw), vnu_sdep(iw)
          IF (success .EQ. 0) THEN
 C               write(6,900) molec_sdep(iw), iso_sdep(iw), vnu_sdep(IW)
 C  900          format('no match, spd_dep_param line:',I2,I1,F12.6)
+         ENDIF       
+
+      END DO
+
+      RETURN
+      
+      END
+
+C-------------------------------------------------------------------------------
+
+      SUBROUTINE UVMATCH(iblock)
+C     MJA, 06-05-2013
+C     MJI, 10-04-2018
+C     Matches UV line parameters with main lines to set which lines are not
+C     to be pressure broadened.
+C     Modified from SPDMATCH for UV O2 lines
+      IMPLICIT REAL*8           (V)                        
+
+      REAL*4 ADDDATA, SDEP_DATA
+      INTEGER*4 IFLG,ADDFLAG
+ 
+      PARAMETER (MXBRD=270000)
+
+      COMMON /O2_UV_BRD/ VNU_O2_UV(MXBRD),HW_O2_UV(MXBRD),
+     *                   TEMP_O2_UV(MXBRD),SHFT_O2_UV(MXBRD)
+
+      common /max_brd_lines/maxwvco2,maxco2co2,nwvco2,nco2co2,
+     *                      maxco2h2o, nco2h2o, maxo2h2o, no2h2o, 
+     *                      maxo2o2, no2o2, maxo2uv
+
+      COMMON /LCHAR/ ALIN1(52),ALIN2(40),ALINC(52),ALIN(250)  
+
+      COMMON VNU3(250),STR3(250),ALF3(250),EPP3(250),MOL3(250),        
+     *       HWHMS(250),TMPALF(250),PSHIFT(250),IFLG(250),         
+     *       ADDFLAG(7,250),ADDDATA(21,250),SDEP_DATA(250),LSTW3
+      COMMON /IFIL/ IRD,IPR,IPU,NWDR,LRC,ILNGTH,INLTE,IER,IPUOUT         LN01770
+      INTEGER ,IND, IW
+
+      DO IW = 1, maxo2uv
+C         print *, iw, vnu_o2_uv(iw), hw_o2_uv(iw)
+         success = 0
+ 
+         DO IND = 1, 250
+
+            IF (VNU_O2_UV(IW) .eq. VNU3(IND) .and.
+     *          HW_O2_UV(IW) .eq. HWHMS(IND)) then
+              print *, iw, ind, vnu_o2_uv(iw), vnu3(ind)
+C               write(6,903) VNU_O2_UV(IW), HW_O2_UV(IW)
+C               write(6,904) VNU3(IND), HWHMS(IND)
+  903          format('exact match, o2_uv_brd_param line:',2F12.6)
+  904          format('TAPE1 line                    :',2F12.6)               
+               ADDFLAG(7,IND) = -1
+               success = 1
+            ENDIF
+         ENDDO
+ 
+         IF (success .EQ. 0) THEN
+C               write(6,900) VNU_O2_UV(IW), HW_O2_UV(IW)
+  900          format('no match, o2_uv_brd_param line:',2F12.6)
          ENDIF       
 
       END DO
