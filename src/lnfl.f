@@ -782,7 +782,7 @@ C         MJA, new TAPE8 output 01-20-2012
          CALL BUFOUT (LINFIL,RCDHDR(1),LRC)                              LN04800
          CALL BUFIN (LINMRG,IEOF,VNU3(1),ILNGTH)                         LN04810
          CALL CKFL (VLO,VHI,LINES,VNU3,IFLG)                             LN04820
-      print*, 'main:', vnu3(1)
+
          if(ibrd .eq. 1) then 
              CALL BRDMATCH(i)
              CALL SPDMATCH(i)
@@ -4248,11 +4248,6 @@ C     &       maxco2co2, '  maxco2h2o=',maxco2h2o
 c      write(0,*) 'mol3=',mol3
 c      write(0,*) 'vnu3=',vnu3
 
-        print*, 'brdmatch: vnu_o2_h2o(1) = ',vnu_o2_h2o(1)
-        print*, 'brdmatch: vnu_o2_h2o(maxo2h2o) = ',vnu_o2_h2o(maxo2h2o)
-        print*, 'brdmatch: vnu3 = '
-        print*, vnu3(indj),indj=1,250)
-
       DO INDJ = 1,250
          DO INDI = 1,21
             ADDDATA(INDI,INDJ) = 0.
@@ -4339,12 +4334,8 @@ C     $              7(f9.4,f7.4,f7.4))
 
 C******************O2_H2O SECOND**************************************
 c            write(0,*) 'molec 107, ind=',ind
-        print*, 'brdmatch: ind, vnu3(ind) = ',ind,vnu3(ind)
-        print*, 'brdmatch: vnu_o2_h2o(1) = ',vnu_o2_h2o(1)
-        print*, 'brdmatch: vnu_o2_h2o(maxo2h2o) = ',vnu_o2_h2o(maxo2h2o)
             IW = 1
             DO WHILE (VNU_O2_H2O(IW).LT.VNU3(IND))
-c         print*, 'brdmatch:', iw, vnu_o2_h2o(iw), ind, vnu3(ind)
                IW = IW+1
                if(IW.GT.MAXO2H2O) then
                     print *, iw, maxo2h2o
