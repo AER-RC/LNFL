@@ -4544,7 +4544,7 @@ C     Modified from SPDMATCH for UV O2 lines
      *       HWHMS(250),TMPALF(250),PSHIFT(250),IFLG(250),         
      *       ADDFLAG(7,250),ADDDATA(21,250),SDEP_DATA(250),LSTW3
       COMMON /IFIL/ IRD,IPR,IPU,NWDR,LRC,ILNGTH,INLTE,IER,IPUOUT         LN01770
-      INTEGER ,IND, IW
+      INTEGER IND, IW
 
       DO IW = 1, maxo2uv
 C         print *, iw, vnu_o2_uv(iw), hw_o2_uv(iw)
