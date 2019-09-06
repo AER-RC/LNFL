@@ -4547,14 +4547,12 @@ C     Modified from SPDMATCH for UV O2 lines
       INTEGER IND, IW
 
       DO IW = 1, maxo2uv
-C         print *, iw, vnu_o2_uv(iw), hw_o2_uv(iw)
          success = 0
  
          DO IND = 1, 250
 
             IF (VNU_O2_UV(IW) .eq. VNU3(IND) .and.
      *          HW_O2_UV(IW) .eq. HWHMS(IND)) then
-              print *, iw, ind, vnu_o2_uv(iw), vnu3(ind)
 C               write(6,903) VNU_O2_UV(IW), HW_O2_UV(IW)
 C               write(6,904) VNU3(IND), HWHMS(IND)
   903          format('exact match, o2_uv_brd_param line:',2F12.6)
