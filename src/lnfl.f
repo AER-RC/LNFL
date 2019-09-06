@@ -1938,6 +1938,7 @@ C     MJA, 01-19-2012 new array sizes
       CHARACTER*9 CUP,CLO
       CHARACTER*7 HOL                                                    LN10160
       CHARACTER*1 CFLAG,CBLNK,CMINUS,a_1,h_1,h_2,CFLAG2
+      character*2 TFLAG
 C      DIMENSION AMOL1(51)                                                LN10180
 C     MJA, 01-19-2012 new array sizes
       DIMENSION AMOL1(52)
@@ -1972,32 +1973,38 @@ c     skip over header records:
          if (a_1.eq.h_1 .or. a_1.eq.h_2) then
              IBLK = 50
          else         
-			 READ (ALIN(IBLK),905) CFLAG,IFLAG               
-			 READ (ALIN(IBLK-1),905) CFLAG2,IFLAG2    
-C         write(*,*) "Block check: ", IFLAG, CFLAG, CFLAG2
-			 IF (IFLAG.LT.0) THEN !Line coupling
-				IF (IFLAG.NE.-5) THEN !Foreign line coupling only
-				   IF(CFLAG.NE.CBLNK.AND.CFLAG.NE.CMINUS) THEN !Main line
-					 IBLK = 51                                               
-					 READ (LINBCD,900,END=30) ALIN(IBLK)  
-				   ELSE !Foreign line coupling line
-					 IBLK = 50    
-				   ENDIF
-				ELSE !Foreign and self line coupling (IFLAG = -5)
-				   IF(CFLAG.NE.CBLNK.AND.CFLAG.NE.CMINUS) THEN !Main line
-					  IBLK = 52                                                 
-					  READ (LINBCD,900,END=30) ALIN(IBLK-1) 
-					  READ (LINBCD,900,END=30) ALIN(IBLK) 
-				   ELSEIF(CFLAG2.NE.CBLNK.AND.CFLAG2.NE.CMINUS) THEN !Foreign line coupling line
-					  IBLK = 51                                              
-					  READ (LINBCD,900,END=30) ALIN(IBLK)        
-				   ELSE !Self line coupling line
-					  IBLK = 50 
-				   ENDIF
-				ENDIF
-			 ENDIF
-		  endif
-      ENDIF
+
+
+C        RLP implementing F160 Bug Fix into F100 code:
+C        MJA 01-19-2012 IFLAG format code is off...
+         READ (ALIN(IBLK),805) CFLAG, TFLAG
+         READ (ALIN(IBLK-1),805) CFLAG2,TFLAG2
+
+         IF (TFLAG.EQ.'-1'.OR.TFLAG.EQ.'-3'.OR.TFLAG.EQ.'-5') THEN !Line coupling
+          READ (ALIN(IBLK),905) CFLAG,IFLAG               
+          READ (ALIN(IBLK-1),905) CFLAG2,IFLAG2    
+				  IF (IFLAG.NE.-5) THEN !Foreign line coupling only
+				     IF(CFLAG.NE.CBLNK.AND.CFLAG.NE.CMINUS) THEN !Main line
+					   IBLK = 51                                               
+					   READ (LINBCD,900,END=30) ALIN(IBLK)  
+				     ELSE !Foreign line coupling line
+					   IBLK = 50    
+				     ENDIF
+				  ELSE !Foreign and self line coupling (IFLAG = -5)
+				     IF(CFLAG.NE.CBLNK.AND.CFLAG.NE.CMINUS) THEN !Main line
+					    IBLK = 52                                                 
+					    READ (LINBCD,900,END=30) ALIN(IBLK-1) 
+					    READ (LINBCD,900,END=30) ALIN(IBLK) 
+				     ELSEIF(CFLAG2.NE.CBLNK.AND.CFLAG2.NE.CMINUS) THEN !Foreign line coupling line
+					    IBLK = 51                                              
+					    READ (LINBCD,900,END=30) ALIN(IBLK)        
+				     ELSE !Self line coupling line
+					    IBLK = 50 
+				     ENDIF
+				  ENDIF
+			   ENDIF
+		    endif
+        ENDIF
 C         IF (IFLAG.LT.0.AND.CFLAG.NE.CBLNK.AND.CFLAG.NE.CMINUS) THEN     LN10460
 C           MJA 01-19-2012 Read 52 lines if IFLAG = -5
 C            IF(IFLAG.EQ.-5) THEN
@@ -2240,6 +2247,7 @@ C 900  FORMAT (51(A100))                                                  LN1143
 C MJA 01-19-2012 Increase array sizes for self line coupling
  900  FORMAT (52(A100))
  905  FORMAT (2X,A1,95X,I2)                                              LN11440
+ 805  FORMAT (2X,A1,95X,A2) 
  910  FORMAT (2A50)                                                      LN11450
  913  format (a1)
  914  format ( ' skipping over header records on TAPE1')
