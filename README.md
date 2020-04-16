@@ -71,8 +71,38 @@ A few notes:
 
 5. As of Jan. 2015, LNFL allows one to specify the name of the ASCII line file at the command line rather than having to link it to `TAPE1`. For example, if one wanted to use aer_v_3.6 as the ASCII line file, `lnfl_v3.1_linux_pgi_sgl aer_v_3.6` could be used at the command line.
 
-## LNFL Inputs <a href="inputs"></a>
+## LNFL Inputs <a name="inputs"></a>
 
-| File Name | 
+| File Name | Description |
+| :--- | :--- |
+| `TAPE1` | ASCII line file (e.g., HITRAN database) |
+| `TAPE2` | Supplemenatry ASCII Line File to be merged with `TAPE1` |
+| `TAPE5` | [LNFL Input File](#TAPE5) |
+| `co2_co2_brd_param`| CO<sub>2</sub> self broadening parameters |
+| `co2_h2o_brd_param` | CO<sub>2</sub> transitions broadened by H<sub>2</sub>O |
+| `o2_h2o_brd_param` | O<sub>2</sub> transitions broadened by H<sub>2</sub>O |
+| `wv_co2_brd_param` | H<sub>2</sub>O transitions broadened by CO<sub>2</sub> |
+| `spd_dep_param` | Speed-dependent Voigt parameters |
+
+Special reduced microwave ASCII line files, corresponding to the old `spectral_lines.dat` of MonoRTM v4.2, are provided to be used as the `TAPE1` inputs of MonoLNFL in the microwave. The calculational accuracy of these reduced line lists at any frequency between 0 and 899.4 GHz (0-30 cm<sup>-1</sup>) with respect to the corresponding full line list (aer_v_3.3) is:
+
+* spectral_lines.dat.0_55.v5.0_fast: 0.1 K upwelling, 0.2 K downwelling
+* spectral_lines.dat.0_55.v5.0_veryfast: 0.5 K upwelling, 1.0 K downwelling
+
+A special reduced near-IR ASCII line file for the ASCENDS region (6300-6700 cm<sup>-1</sup>) containing the first 7 HITRAN molecules is also included (`spectral_lines.dat.6300_6700.v5.0`). These line parameters are consistent with aer_v_3.2 and aer_v_3.3 (which are identical for wavenumbers greater than 55 cm<sup>-1</sup>). See files headers and MonoRTM v5.0 release notes for more details.
+
+Users who wish to run MonoRTM v5.0 in other spectral regions should use the full AER line file (aer_v_3.5), with a caution that the full line file can take a long time to run.
+
+`TAPE2` *must* be in older 100 character HITRAN format.
+
+Note that LBLRTM ignores the speed dependence parameters, but they are used by MonoRTM v5.0 and later.
+
+### LNFL TAPE5 <a name="TAPE5"></a>
 
 ## LNFL Outputs
+
+| File Name | Description |
+| :--- | :--- |
+| `TAPE3` | Binary output file (input for LBLRTM and MonoRTM) |
+| `TAPE6` | Log file |
+| `TAPE7` | ASCII version of `TAPE3` in older 100 character HITRAN format, does not include extra broadening parameters) |
