@@ -154,7 +154,7 @@ Required if `MRG2` set in Record 3; `TAPE2` molecules and options
 | Variable Name | Column Number Range | String Format | Notes |
 | :--- | :---: | :---: | :--- |
 : `MOLIND2` | 1-47 | `47I1` | <ul><li>Molecular INDicator for Molecule `M` from line data on file `TAPE2`</li><li>0  molecule `M` is not selected, 1 molecule `M` is selected</li><li>See [Available Species Table](#molecules)</ul> |
-: `HOLIND2` | 52-100 | `A49` | <ul><li>HOLlerith INDicator to select general LNFL options and specific options for `TAPE2`</li><li>See [LNFL Options Table](#options2)</ul> |
+: `HOLIND2` | 52-100 | `A49` | <ul><li>HOLlerith INDicator to select general LNFL options and specific options for `TAPE2`</li><li>See [Line Coupling Options Table](#options2)</ul> |
 
 **Line Coupling Options** <a name="options2"></a>
 
