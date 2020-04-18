@@ -99,6 +99,39 @@ Note that LBLRTM ignores the speed dependence parameters, but they are used by M
 
 ### LNFL TAPE5 <a name="TAPE5"></a>
 
+1. _Record 1_: Required (but ignored); 72 characters (formatted as 9 8-character strings, or `9A8`) of user identification; think of this record as a documentation comment
+2. _Record 2_: Required; Specifies the spectral range of the line file, with:
+
+| Variable Name | Column Number Range | String Format | Notes |
+| :--- | :---: | :---: | :--- |
+: _v<sub>min</sub>_ | 1-10 | `F10.3` | <ul><li>low wavenumber limit for the line file</li><li>should be 25 cm<sup>-1</sup> less than _v<sub>1</sub>_ for LBLRTM calculation</li></ul> |
+: _v<sub>max</sub>_ | 11-20 | `F10.3` | <ul><li>high wavenumber limit for the line file</li><li>should be 25 cm<sup>-1</sup> greater than _v<sub>2</sub>_ for LBLRTM calculation</li></ul> |
+
+
+3. _Record 3_: Required; Specifies the molecules for which the line file is created and additional LNFL options
+
+| Variable Name | Column Number Range | String Format | Notes |
+| :--- | :---: | :---: | :--- |
+: `MOLIND1` | 1-47 | `47I1` | <ul><li>Molecular INDicator for Molecule `M` from line data on file `TAPE1`</li><li>0  molecule `M` is not selected, 1 molecule `M` is selected</li><li>See [Available Species Table](#molecules)</ul> |
+: `HOLIND1` | 52-100 | `A49` | <ul><li>HOLlerith INDicator to select general LNFL options and specific options for TAPE1</li><li>See [LNFL Options Table](#options)</ul> |
+
+**Available Molecular Species** <a name="molecules"></a>
+
+| Molecule Number `N` | Species Chemical Formula | Molecule Number `N` | Species Chemical Formula | Molecule Number `N` | Species Chemical Formula | Molecule Number `N` | Species Chemical Formula | Molecule Number `N` | Species Chemical Formula | Molecule Number `N` | Species Chemical Formula | Molecule Number `N` | Species Chemical Formula |
+| :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| 1 | H<sub>2</sub>O | 2 | CO<sub>2</sub> | 3 | O<sub>3</sub>| 4 | N<sub>2</sub>O | 5 | CO | 6 | CH<<sub>4</sub> | 7 | O<sub>2</sub> |
+| 8 | NO | 9 | SO<sub>2</sub> | 10 | NO<sub>2</sub> | 11 | NH<sub>3</sub> | 12 | HNO<sub>3</sub> | 13 | OH | 14 | HF |
+| 15 | HCl | 16 | HBr | 17 | HI | 18 | CLO | 19 | OCS | 20 | H<sub>2</sub>CO | 21 | HOCl |
+| 22 | N<sub>2</sub> | 23 | HCN | 24 | CH<sub>3</sub>Cl | 25 | H<sub>2</sub>O<sub>2</sub> | 26 | C<sub>2</sub>H<sub>2</sub> | 27 | C<sub>2</sub>H<sub>6</sub> | 28 | PH<sub>3</sub> |
+| 29 | COF<sub>2</sub> | 30 | SF<sub>6</sub> | 31 | H<sub>2</sub>S | 32 | HCOOH | 33 | HO<sub>2</sub> | 34 | O | 35 | ClONO<sub>2</sub> |
+| 36 | NO<sup>+</sup> | 37 | HOBr | 38 | C<sub>2</sub>H<sub>4</sub> | 39 | C<sub>3</sub>HOH | 40 | CH<sub>3</sub>Br | 41 | CH<sub>3</sub>CN | 42 | CF<sub>4</sub> |
+| 43 | C<sub>4</sub>H<sub>2</sub>| 44 | HC<sub>3</sub>N | 45 | H<sub>2</sub> | 46 | CS | 47 | SO<sub>3</sub> |  | | | |
+
+**LNFL Options** <a name="options"></a>
+
+4. _Record 4_:
+5. _Record 5_:
+
 ## LNFL Outputs
 
 | File Name | Description |
