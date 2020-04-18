@@ -99,8 +99,13 @@ Note that LBLRTM ignores the speed dependence parameters, but they are used by M
 
 ### LNFL TAPE5 <a name="TAPE5"></a>
 
-1. _Record 1_: Required (but ignored); 72 characters (formatted as 9 8-character strings, or `9A8`) of user identification; think of this record as a documentation comment
-2. _Record 2_: Required; Specifies the spectral range of the line file, with:
+#### _Record 1_
+
+Required (but ignored); 72 characters (formatted as 9 8-character strings, or `9A8`) of user identification; think of this record as a documentation comment
+
+#### _Record 2_
+
+Required; Specifies the spectral range of the line file, with:
 
 | Variable Name | Column Number Range | String Format | Notes |
 | :--- | :---: | :---: | :--- |
@@ -108,12 +113,14 @@ Note that LBLRTM ignores the speed dependence parameters, but they are used by M
 : _v<sub>max</sub>_ | 11-20 | `F10.3` | <ul><li>high wavenumber limit for the line file</li><li>should be 25 cm<sup>-1</sup> greater than _v<sub>2</sub>_ for LBLRTM calculation</li></ul> |
 
 
-3. _Record 3_: Required; Specifies the molecules for which the line file is created and additional LNFL options
+#### _Record 3_
+
+Required; Specifies the molecules for which the line file is created and additional LNFL options
 
 | Variable Name | Column Number Range | String Format | Notes |
 | :--- | :---: | :---: | :--- |
 : `MOLIND1` | 1-47 | `47I1` | <ul><li>Molecular INDicator for Molecule `M` from line data on file `TAPE1`</li><li>0  molecule `M` is not selected, 1 molecule `M` is selected</li><li>See [Available Species Table](#molecules)</ul> |
-: `HOLIND1` | 52-100 | `A49` | <ul><li>HOLlerith INDicator to select general LNFL options and specific options for TAPE1</li><li>See [LNFL Options Table](#options)</ul> |
+: `HOLIND1` | 52-100 | `A49` | <ul><li>HOLlerith INDicator to select general LNFL options and specific options for `TAPE1`</li><li>See [LNFL Options Table](#options1)</ul> |
 
 **Available Molecular Species** <a name="molecules"></a>
 
@@ -127,10 +134,46 @@ Note that LBLRTM ignores the speed dependence parameters, but they are used by M
 | 36 | NO<sup>+</sup> | 37 | HOBr | 38 | C<sub>2</sub>H<sub>4</sub> | 39 | C<sub>3</sub>HOH | 40 | CH<sub>3</sub>Br | 41 | CH<sub>3</sub>CN | 42 | CF<sub>4</sub> |
 | 43 | C<sub>4</sub>H<sub>2</sub>| 44 | HC<sub>3</sub>N | 45 | H<sub>2</sub> | 46 | CS | 47 | SO<sub>3</sub> |  | | | |
 
-**LNFL Options** <a name="options"></a>
+**LNFL Options** <a name="options1"></a>
 
-4. _Record 4_:
-5. _Record 5_:
+| Option | Description |
+| :--- | :--- |
+| `LNOUT` | <ul><li>Selects option to provide formatted representation of `TAPE3` on file `TAPE7`</li><li>Representation is identical to `TAPE1` and `TAPE2`</li><li>One transition per record</li><li>**CAUTION** this option may produce a VERY LARGE output file</li></ul> |
+| `NOCPL` | <ul><li>Suppresses all line coupling information on `TAPE3` and `TAPE7`</li></ul> |
+| `NLTE` | <ul><li>Reserves transition parameters (quantum numbers) for LBLRTM Non Local Thermodynamic Equilibrium (NLTE) option</li></ul> |
+| `REJ` | <ul><li>Selects line rejection and requires input data for strength rejection (record 5)</li></ul> |
+| `MRG2` | <ul><li>Line parameters on `TAPE2` are to be merged with those on `TAPE1`</li></ul> |
+| `F160` | <ul><li>Selects the 160 character format for `TAPE1` (e.g. HITRAN_2004)</li></ul> |
+| `BLK1` | <ul><li>indicates `TAPE1` is blocked (Note: `NBLK1` is ignored)</li></ul> |
+| `EXBRD` | <ul><li>Uses extra broadeneing parameter files</li></ul> |
+
+#### _Record 4_
+
+Required if `MRG2` set in Record 3; `TAPE2` molecules and options
+
+| Variable Name | Column Number Range | String Format | Notes |
+| :--- | :---: | :---: | :--- |
+: `MOLIND2` | 1-47 | `47I1` | <ul><li>Molecular INDicator for Molecule `M` from line data on file `TAPE2`</li><li>0  molecule `M` is not selected, 1 molecule `M` is selected</li><li>See [Available Species Table](#molecules)</ul> |
+: `HOLIND2` | 52-100 | `A49` | <ul><li>HOLlerith INDicator to select general LNFL options and specific options for `TAPE2`</li><li>See [LNFL Options Table](#options2)</ul> |
+
+**Line Coupling Options** <a name="options2"></a>
+
+| Option | Description |
+| :--- | :--- |
+| `BLK2` | <ul><li>indicates `TAPE2` is blocked (Note: `NBLK2` is ignored)</li></ul> |
+| `F80` | <ul><li>Replacement or supplemental line data in 80-character format from `TAPE2` merged with line data from `TAPE1`.</li><li>`TAPE3` parameters required for LBLRTM from 80-character formatted data are set to default parameters by LNFL (1982 HITRAN format)</li></ul> |
+
+#### _Record 5_
+
+Required if line rejection option (`REJ`) selected in Record 3
+
+* `SR(M=1,NMOL)`: Strength rejection value for molecule `M`
+* `8E10.3` Format
+*  lines with strength values less than `SR(M)` will not be included on LBLRTM line file (`TAPE3`)
+*  negative value for `SR(M)` uses internally stored default value based on tangent path through the Earth's atmosphere
+*  a value of 0 for `SR(M)` implies no rejection for molecule `M`, all lines for that molecule are retained
+*  values for `SR(M)` are relative to LBLRTM line strengths, which are equal to HITRAN strengths / ( _v_ * (1-e<sup>_v_/_kT_</sup>))
+*  `NMOL` is 7 or the number of the highest molecule selected, whichever is larger
 
 ## LNFL Outputs
 
