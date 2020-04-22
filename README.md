@@ -27,6 +27,22 @@ git checkout tags/v3.2
 
 No releases before v3.2 are available via GitHub, but they can be requested by emailing <aer_lblrtm@aer.com>. For information on previous releases, please visit the [What's New Wiki page](https://github.com/AER-RC/LNFL/wiki/What's-New).
 
+# LNFL Docker Image
+
+If users would like to bypass having to setup and build LNFL on their own and have [Docker](https://www.docker.com/) installed on their system, they can use the Docker image for LNFL that the AER-RC group has made [publicly available](https://hub.docker.com/repository/docker/aerradclim/lnfl). To run an LNFL container with the image:
+
+```
+% docker pull aerradclim/lnfl
+% docker run --name lnfl --rm -v ~/Work/RC/TAPE5_2000-3250:/LNFL/TAPE5 -v ~/Work/RC/LNFL_output:/LNFL/LNFL_Out aerradclim/lnfl
+```
+
+Not all of the arguments in the previous code snippet are required. A simple `docker run aerradclim/lnfl` will suffice, but the user would not be providing any inputs or getting any outputs. Consequently, there are two "volume mounts" -- one for the only LNFL input ([the TAPE5](#TAPE5)), and one for the [outputs](#output). The former is a single file, and the latter is a directory. In volume mounts, the path on the left side of the `:` is with respect to the "host" (i.e., the local machine of the user), and the path to the right of the `:` is the path inside the container. LNFL users should alter their host paths accordingly. BOTH VOLUME MOUNTS ARE NECESSARY.
+
+The following are optional container arguments:
+
+* `name`: name of the container
+* `--rm`: removes container after LNFL is finished running and staging outputs
+
 # Building LNFL
 
 LNFL has been built extensively only in single precision. It is not recommended that users attempt to build in double precision. To start, descend into the `build` directory:
@@ -175,7 +191,7 @@ Required if line rejection option (`REJ`) selected in Record 3
 *  values for `SR(M)` are relative to LBLRTM line strengths, which are equal to HITRAN strengths / ( _v_ * (1-e<sup>_v_/_kT_</sup>))
 *  `NMOL` is 7 or the number of the highest molecule selected, whichever is larger
 
-## LNFL Outputs
+## LNFL Outputs <a name="output"></a>
 
 | File Name | Description |
 | :--- | :--- |
