@@ -125,8 +125,8 @@ Required; Specifies the spectral range of the line file, with:
 
 | Variable Name | Column Number Range | String Format | Notes |
 | :--- | :---: | :---: | :--- |
-: _v<sub>min</sub>_ | 1-10 | `F10.3` | <ul><li>low wavenumber limit for the line file</li><li>should be 25 cm<sup>-1</sup> less than _v<sub>1</sub>_ for LBLRTM calculation</li></ul> |
-: _v<sub>max</sub>_ | 11-20 | `F10.3` | <ul><li>high wavenumber limit for the line file</li><li>should be 25 cm<sup>-1</sup> greater than _v<sub>2</sub>_ for LBLRTM calculation</li></ul> |
+| _v<sub>min</sub>_ | 1-10 | `F10.3` | <ul><li>low wavenumber limit for the line file</li><li>should be 25 cm<sup>-1</sup> less than _v<sub>1</sub>_ for LBLRTM calculation</li></ul> |
+| _v<sub>max</sub>_ | 11-20 | `F10.3` | <ul><li>high wavenumber limit for the line file</li><li>should be 25 cm<sup>-1</sup> greater than _v<sub>2</sub>_ for LBLRTM calculation</li></ul> |
 
 
 #### _Record 3_
@@ -135,8 +135,8 @@ Required; Specifies the molecules for which the line file is created and additio
 
 | Variable Name | Column Number Range | String Format | Notes |
 | :--- | :---: | :---: | :--- |
-: `MOLIND1` | 1-47 | `47I1` | <ul><li>Molecular INDicator for Molecule `M` from line data on file `TAPE1`</li><li>0  molecule `M` is not selected, 1 molecule `M` is selected</li><li>See [Available Species Table](#molecules)</li><li>Note that molecule number and column number are the same</li></ul> |
-: `HOLIND1` | 52-100 | `A49` | <ul><li>HOLlerith INDicator to select general LNFL options and specific options for `TAPE1`</li><li>See [LNFL Options Table](#options1)</ul> |
+| `MOLIND1` | 1-47 | `47I1` | <ul><li>Molecular INDicator for Molecule `M` from line data on file `TAPE1`</li><li>0  molecule `M` is not selected, 1 molecule `M` is selected</li><li>See [Available Species Table](#molecules)</li><li>Note that molecule number and column number are the same</li></ul> |
+| `HOLIND1` | 52-100 | `A49` | <ul><li>HOLlerith INDicator to select general LNFL options and specific options for `TAPE1`</li><li>See [LNFL Options Table](#options1)</ul> |
 
 **Available Molecular Species** <a name="molecules"></a>
 
