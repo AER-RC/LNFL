@@ -1,8 +1,16 @@
 # LNFL
 
+---
+**Contents**
+
+1. [Cloning](#cloning)
+2. [LNFL Docker Image](#docker)
+3. [Building LNFL](#build)
+4. [Running LNFL](#run)
+
 LNFL converts an ASCII line file parameter database (available at [RTWeb](http://rtweb.aer.com/line_param_download.php)) to the unformatted binary the LBLRTM expects as input. This is called a `TAPE3`.
 
-# Cloning
+# Cloning <a name="cloning"></a>
 
 Assuming the output directory should be `LNFL`:
 
@@ -27,7 +35,7 @@ git checkout tags/v3.2
 
 No releases before v3.2 are available via GitHub, but they can be requested by emailing <aer_lblrtm@aer.com>. For information on previous releases, please visit the [What's New Wiki page](https://github.com/AER-RC/LNFL/wiki/What's-New).
 
-# LNFL Docker Image
+# LNFL Docker Image <a name="docker"></a>
 
 If users would like to bypass having to setup and build LNFL on their own and have [Docker](https://www.docker.com/) installed on their system, they can use the Docker Hub image for LNFL that the AER-RC group has made [publicly available](https://hub.docker.com/repository/docker/aerradclim/lnfl). To run an LNFL container with the image:
 
@@ -43,7 +51,7 @@ The following are optional container arguments:
 * `name`: name of the container
 * `--rm`: removes container after LNFL is finished running and staging outputs
 
-# Building LNFL
+# Building LNFL <a name="build"></a>
 
 LNFL has been built extensively only in single precision. It is not recommended that users attempt to build in double precision. To start, descend into the `build` directory:
 
@@ -69,7 +77,7 @@ The `TARGET` environment variable depends on the user's operating system, compil
 | sunSUNsgl | Sun/Solaris OS using Sun fortran,single precision | `sunf90` |
 | sgiMIPSsgl | SGI/IRIX64 OS using MIPS fortran,single precision | `f90` |
 
-# Running LNFL
+# Running LNFL <a name="run"></a>
 
 LNFL now accommodates the 160 character `.par` format adopted for HITRAN_2004. However, the default format for LNFL will remain the 100 character format. The rationale for this choice is that the vibrational data as stored in the 100 character format is more amenable to utilization in LBLRTM, particularly for LBLRTM Non-LTE calculation than that associated with the 160 character format for which the vibrational information had been expanded to facilitate association of the lines with the quantum mechanical vibrational designations.
 
