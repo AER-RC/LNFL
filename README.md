@@ -15,7 +15,7 @@ LNFL converts an ASCII line file parameter database (available at [RTWeb](http:/
 Assuming the output directory should be `LNFL`:
 
 ```
-% git clone --recursive git@github.com:AER-RC/LNFL.git
+git clone --recursive git@github.com:AER-RC/LNFL.git
 ```
 
 `--recursive` is important, because this repository is linked with our [common FORTRAN modules repository](https://github.com/AER-RC/aer_rt_utils) that are required in the model builds. If this keyword is forgotten, one can do:
@@ -37,11 +37,16 @@ No releases before v3.2 are available via GitHub, but they can be requested by e
 
 # LNFL Docker Image <a name="docker"></a>
 
-If users would like to bypass having to setup and build LNFL on their own and have [Docker](https://www.docker.com/) installed on their system, they can use the Docker Hub image for LNFL that the AER-RC group has made [publicly available](https://hub.docker.com/repository/docker/aerradclim/lnfl). To run an LNFL container with the image:
+If users would like to bypass having to setup and build LNFL on their own and have [Docker](https://www.docker.com/) installed on their system, they can use the Docker Hub image for LNFL that the AER-RC group has made [publicly available](https://hub.docker.com/repository/docker/aerradclim/lnfl). Alternatively, the same image is available in the [LNFL GitHub Packages](https://github.com/AER-RC/LNFL/packages/200491). To run an LNFL container with the image (only one `pull` is necessary):
 
 ```
-% docker pull aerradclim/lnfl
-% docker run --name lnfl --rm -v ~/Work/RC/TAPE5_2000-3250:/LNFL/TAPE5 -v ~/Work/RC/LNFL_output:/LNFL/LNFL_Out aerradclim/lnfl
+docker pull aerradclim/lnfl # from Docker Hub
+docker tag aerradclim/lnfl lnfl
+
+docker pull docker.pkg.github.com/aer-rc/lnfl/lnfl:latest # from GitHub
+docker tag docker.pkg.github.com/aer-rc/lnfl/lnfl:latest
+
+docker run --name lnfl --rm -v ~/Work/RC/TAPE5_2000-3250:/LNFL/TAPE5 -v ~/Work/RC/LNFL_output:/LNFL/LNFL_Out lnfl
 ```
 
 Not all of the arguments in the previous code snippet are required. A simple `docker run aerradclim/lnfl` will suffice, but the user would not be providing any inputs or getting any outputs. Consequently, there are two "volume mounts" -- one for the only LNFL input ([the TAPE5](#TAPE5)), and one for the [outputs](#output). The former is a single file, and the latter is a directory. In volume mounts, the path on the left side of the `:` is with respect to the "host" (i.e., the local machine of the user), and the path to the right of the `:` is the path inside the container. LNFL users should alter their host paths accordingly. Host paths should be absolute and not relative. The output directory should already exist on the host, otherwise it will be written as root and the files underneath it will only be accessible by root. BOTH VOLUME MOUNTS ARE NECESSARY TO RUN THE MODEL AND RETRIEVE ITS OUTPUT.
@@ -177,8 +182,8 @@ Required if `MRG2` set in Record 3; `TAPE2` molecules and options
 
 | Variable Name | Column Number Range | String Format | Notes |
 | :--- | :---: | :---: | :--- |
-: `MOLIND2` | 1-47 | `47I1` | <ul><li>Molecular INDicator for Molecule `M` from line data on file `TAPE2`</li><li>0  molecule `M` is not selected, 1 molecule `M` is selected</li><li>See [Available Species Table](#molecules)</ul> |
-: `HOLIND2` | 52-100 | `A49` | <ul><li>HOLlerith INDicator to select general LNFL options and specific options for `TAPE2`</li><li>See [Line Coupling Options Table](#options2)</ul> |
+| `MOLIND2` | 1-47 | `47I1` | <ul><li>Molecular INDicator for Molecule `M` from line data on file `TAPE2`</li><li>0  molecule `M` is not selected, 1 molecule `M` is selected</li><li>See [Available Species Table](#molecules)</ul> |
+| `HOLIND2` | 52-100 | `A49` | <ul><li>HOLlerith INDicator to select general LNFL options and specific options for `TAPE2`</li><li>See [Line Coupling Options Table](#options2)</ul> |
 
 **Line Coupling Options** <a name="options2"></a>
 
