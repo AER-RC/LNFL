@@ -44,16 +44,16 @@ docker pull aerradclim/lnfl # from Docker Hub
 docker tag aerradclim/lnfl lnfl
 
 docker pull docker.pkg.github.com/aer-rc/lnfl/lnfl:latest # from GitHub
-docker tag docker.pkg.github.com/aer-rc/lnfl/lnfl:latest
+docker tag docker.pkg.github.com/aer-rc/lnfl/lnfl:latest lnfl
 
 docker run --name lnfl --rm -v ~/Work/RC/TAPE5_2000-3250:/LNFL/TAPE5 -v ~/Work/RC/LNFL_output:/LNFL/LNFL_Out lnfl
 ```
 
-Not all of the arguments in the previous code snippet are required. A simple `docker run aerradclim/lnfl` will suffice, but the user would not be providing any inputs or getting any outputs. Consequently, there are two "volume mounts" -- one for the only LNFL input ([the TAPE5](#TAPE5)), and one for the [outputs](#output). The former is a single file, and the latter is a directory. In volume mounts, the path on the left side of the `:` is with respect to the "host" (i.e., the local machine of the user), and the path to the right of the `:` is the path inside the container. LNFL users should alter their host paths accordingly. Host paths should be absolute and not relative. The output directory should already exist on the host, otherwise it will be written as root and the files underneath it will only be accessible by root. BOTH VOLUME MOUNTS ARE NECESSARY TO RUN THE MODEL AND RETRIEVE ITS OUTPUT.
+Not all of the arguments in the previous code snippet are required. A simple `docker run aerradclim/lnfl` will suffice, but the user would not be providing any inputs or getting any outputs. Consequently,  there are two "volume mounts" -- one for the only LNFL input ([the TAPE5](#TAPE5)), and one for the [outputs](#output). The former is a single file, and the latter is a directory. In volume mounts, the path on the left side of the `:` is with respect to the "host" (i.e., the local machine of the user), and the path to the right of the `:` is the path inside the container. LNFL users should alter their host paths accordingly. Host paths should be absolute and not relative. The output directory should already exist on the host, otherwise it will be written as root and the files underneath it will only be accessible by root. BOTH VOLUME MOUNTS ARE NECESSARY TO RUN THE MODEL AND RETRIEVE ITS OUTPUT. The image name -- `lnfl` -- is the final argument in the call and is required.
 
 The following are optional container arguments:
 
-* `name`: name of the container
+* `--name`: name of the container
 * `--rm`: removes container after LNFL is finished running and staging outputs
 
 # Building LNFL <a name="build"></a>
@@ -69,18 +69,18 @@ The `TARGET` environment variable depends on the user's operating system, compil
 
 | Target | Description | Compiler |
 | :--- | :--- | :--- |
-| aixIBMsgl | IBM/AIX OS using IBM fortran,single precision| `xlf90` |
-| linuxPGIsgl | Linux OS using PGI fortran,single precision |  `pgf90` |
-| linuxGNUsgl | Linux OS using GNU fortran,single precision | `gfortran` |
-| linuxG95sgl | Linux OS using G95 fortran,single precision | `g95` |
-| inuxINTELsgl | Linux OS using Intel fortran,single precision | `ifort` |
-| mingwGNUsgl | Windows unix shell environment using gfortran,single precision | `gfortran` |
-| osxABSOFTsgl | Mac OS_X using Absoft Pro fortran,singleprecision | `f90` |
-| osxGNUsgl | Mac OS_X using GNU fortran,singleprecision | `gfortran` |
-| osxIBMsgl | Mac OS_X using IBM XL fortran,singleprecision | `xlf90` |
-| osxINTELsgl | Mac OS_X using Intel fortran,single precision | `ifort` |
-| sunSUNsgl | Sun/Solaris OS using Sun fortran,single precision | `sunf90` |
-| sgiMIPSsgl | SGI/IRIX64 OS using MIPS fortran,single precision | `f90` |
+| `aixIBMsgl` | IBM/AIX OS using IBM fortran,single precision| `xlf90` |
+| `linuxPGIsgl` | Linux OS using PGI fortran,single precision |  `pgf90` |
+| `linuxGNUsgl` | Linux OS using GNU fortran,single precision | `gfortran` |
+| `linuxG95sgl` | Linux OS using G95 fortran,single precision | `g95` |
+| `inuxINTELsgl` | Linux OS using Intel fortran,single precision | `ifort` |
+| `mingwGNUsgl` | Windows unix shell environment using gfortran,single precision | `gfortran` |
+| `osxABSOFTsgl` | Mac OS_X using Absoft Pro fortran,singleprecision | `f90` |
+| `osxGNUsgl` | Mac OS_X using GNU fortran,singleprecision | `gfortran` |
+| `osxIBMsgl` | Mac OS_X using IBM XL fortran,singleprecision | `xlf90` |
+| `osxINTELsgl` | Mac OS_X using Intel fortran,single precision | `ifort` |
+| `sunSUNsgl` | Sun/Solaris OS using Sun fortran,single precision | `sunf90` |
+| `sgiMIPSsgl` | SGI/IRIX64 OS using MIPS fortran,single precision | `f90` |
 
 # Running LNFL <a name="run"></a>
 
