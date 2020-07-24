@@ -35,6 +35,15 @@ git checkout tags/v3.2
 
 No releases before v3.2 are available via GitHub, but they can be requested by emailing <aer_lblrtm@aer.com>. For information on previous releases, please visit the [What's New Wiki page](https://github.com/AER-RC/LNFL/wiki/What's-New).
 
+Instead of cloning, users can also download an LNFL [tarball](https://github.com/AER-RC/LNFL/releases/tag/v3.2) and unpack it:
+
+```
+tar xvf lnfl_v3.2.tar.gz
+mv LNFL-3.2/ lnfl
+```
+
+Though not necessary, the move to `lnfl` is for consistency with previous release packages and the associated documentation.
+
 # LNFL Docker Image <a name="docker"></a>
 
 If users would like to bypass having to setup and build LNFL on their own and have [Docker](https://www.docker.com/) installed on their system, they can use the Docker Hub image for LNFL that the AER-RC group has made [publicly available](https://hub.docker.com/repository/docker/aerradclim/lnfl). Alternatively, the same image is available in the [LNFL GitHub Packages](https://github.com/AER-RC/LNFL/packages/200491). To run an LNFL container with the image (only one `pull` is necessary):
