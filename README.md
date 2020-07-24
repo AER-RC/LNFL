@@ -10,7 +10,7 @@
 
 LNFL converts an ASCII line file parameter database (available at [RTWeb](http://rtweb.aer.com/line_param_download.php)) to the unformatted binary the LBLRTM expects as input. This is called a `TAPE3`.
 
-# Cloning <a name="cloning"></a>
+# Cloning the Latest Release <a name="cloning"></a>
 
 Assuming the output directory should be `LNFL`:
 
