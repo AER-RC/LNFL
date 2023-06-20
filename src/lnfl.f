@@ -326,7 +326,7 @@ C     Increased array sizes to accomodate self-line coupling coefficients
       COMMON /TRAC/ VNU2(40),STR2(40),ALF2(40),EPP2(40),MOL2(40),        LN01960
      *              HWHM2(40),TMPAL2(40),PSHIF2(40),IFG2(40),            LN01970
      *              MIND2(64)                                            LN01980
-      COMMON /CPLMOL/ MOLCPL(38),NCPL                                    LN01990
+      COMMON /CPLMOL/ MOLCPL(47),NCPL                                    LN01990
       COMMON /SREJ/ SR(64),SRD(64),TALF(64)                              LN02000
       COMMON /ICN/ ILIN3,NMAX,NBLOCK,inocpl
 C     MJA, 01-19-2012
