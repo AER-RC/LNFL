@@ -185,7 +185,7 @@ Required; Specifies the molecules for which the line file is created and additio
 | `MRG2` | <ul><li>Line parameters on `TAPE2` are to be merged with those on `TAPE1`</li></ul> |
 | `F160` | <ul><li>Selects the 160 character format for `TAPE1` (e.g. HITRAN_2004)</li></ul> |
 | `BLK1` | <ul><li>indicates `TAPE1` is blocked (Note: `NBLK1` is ignored)</li></ul> |
-| `EXBRD` | <ul><li>Uses extra broadeneing parameter files</li></ul> |
+| `EXBRD` | <ul><li>Uses extra broadening and speed dependence parameter files</li></ul> |
 
 #### _Record 4_
 
