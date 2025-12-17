@@ -2413,7 +2413,7 @@ c        check for header records and write to 'tape2_header'
             if (n_hdr.eq. 1) then
                Write (*,914)     
                open (13,file='tape2_header',
-     &                  status='new',form='formatted')
+     &                  status='unknown',form='formatted')
             end if
             if (ipuout.eq.1) Write(13,902) alin(i)
  902        format (a100) 
@@ -2716,7 +2716,7 @@ c    *    C4H2,    HC3N,      H2,      CS,     SO3
 c
       data (n_lvl_v(j),j=1,10)    /
 c    *    1,    2,    3,    4,    5,    6,    7,
-     *   36,   202,   38,   102,  333,  337,   134,
+     *   36,   202,   38,   102,  333,  387,   134,
 c    *    8,    9,     10
      *   154,   71,   710/
 
@@ -2968,7 +2968,7 @@ c    *    8,    9,     10
      5 '       1 1 1 51', '       1 2 2 52', '       2 0 0 53', 
      5 '       1 1 1 52', '       2 0 0 52', '       2 0 0 51'/
 
-      data ( h_vib(6,lvl),lvl=1,337 ) /
+      data ( h_vib(6,lvl),lvl=1,387 ) /
 c******
 c**
 c** There is a deuterated water vapor line in HITRAN 2004 at 12657.367357 cm-1
@@ -3090,7 +3090,23 @@ c******
      6 '    1 0 0 3  A1', '    1 0 0 3  F2', '    1 0 1 0  F2',    
      6 '    1 0 1 0 1F2', '    1 1 0 0 1E ', '    1 1 0 1 1F2',    
      6 '    1 2 0 0  E ', '    1 2 0 0  F1', '    2 0 0 0  A1',    
-     6 '    2 0 0 0 1A1'/                                          
+     6 '    2 0 0 0 1A1', '          2-2-2', '          4 3 3', 
+     6 '          5 1 3', '          5 2 3', '          5 3 2', 
+     6 '          6 0 2', '          6 1 2', '          6 2 2', 
+     6 '          7 0 3', '          7 1 5', '          8 0 1', 
+     6 '          8 0 2', '          8 1 1', '          8 1 4', 
+     6 '          9 0 0', '          9 0 1', '          9 0 3', 
+     6 '          9 1 0', '          9 1 1', '          9 1 3', 
+     6 '         10 0 0', '         10 0 1', '         10 0 2', 
+     6 '         10 1 0', '         10 1 1', '         10 1 2', 
+     6 '         10 3 1', '         11 0 0', '         11 0 1', 
+     6 '         11 1 0', '         11 1 3', '         11 2 1', 
+     6 '         11 3 0', '         11 3 1', '         12 0 0', 
+     6 '         12 0 1', '         12 1 1', '         12 2 0', 
+     6 '         12 2 1', '         12 3 0', '         13 0 0', 
+     6 '         13 0 1', '         13 1 0', '         13 2 1', 
+     6 '         14 0 1', '         14 2 1', '         15 0 0', 
+     6 '         15 0 1', '         15 2 0', '         17 0 0'/
 
       data ( h_vib(7,lvl),lvl=1,134 ) /
      7 ' 0 0 0 0 1 1   ', ' 0 0 0 0 0 0+  ', ' 0 0 1 0 0 0+  ',
@@ -3888,7 +3904,7 @@ C
 C                                                                       
 C     SUBROUTINE RDWVCO2 INPUTS THE LINE DATA FROM LINFIL                 
 C                                                                         
-      PARAMETER (MXBRD=270000)
+      PARAMETER (MXBRD=320000)
 
       COMMON /WV_CO2_BRD/ VNU_WV_CO2(MXBRD),HW_WV_CO2(MXBRD),
      *                   TEMP_WV_CO2(MXBRD),SHFT_WV_CO2(MXBRD)
@@ -4251,8 +4267,8 @@ C-------------------------------------------------------------------------------
 
 
       INTEGER INDI,INDJ,IND
-C      write(0,*) 'start brdmatch, maxwvco2=',maxwvco2,'  maxco2co2=',
-C     &       maxco2co2, '  maxco2h2o=',maxco2h2o
+c      write(0,*) 'start brdmatch, maxwvco2=',maxwvco2,'  maxco2co2=',
+c     &       maxco2co2, '  maxco2h2o=',maxco2h2o
 c      write(0,*) 'mol3=',mol3
 c      write(0,*) 'vnu3=',vnu3
 
@@ -4273,7 +4289,7 @@ c            write(0,*) 'molec 101, ind=',ind
             DO WHILE (VNU_WV_CO2(IW).LT.VNU3(IND))
                IW = IW+1
                if(IW.GT.MAXWVCO2) then
-                    print *, iw, maxwvco2
+                    print *, iw, maxwvco2, VNU_WV_CO2(IW), VNU3(IND)
                    STOP 'IN BRDMATCH, IW FOR WV_CO2>MAX'
                endif
             END DO          
@@ -4305,8 +4321,8 @@ c    $             7(f9.4,f7.4,f7.4))
 
          IF(MOL3(IND).EQ.107) THEN
 C******************O2_O2 FIRST**************************************
-c            write(0,*) 'molec 102, ind=',ind
-            IW = 1
+c            write(0,*) 'molec O2_02, ind=',ind
+            IW = 1    
             DO WHILE ((VNU_O2_O2(IW).LT.VNU3(IND)))
                if(IW.GT.MAXO2O2) then
                     print *, iw, maxo2o2
@@ -4341,7 +4357,7 @@ C     $              7(f9.4,f7.4,f7.4))
             end if
 
 C******************O2_H2O SECOND**************************************
-c            write(0,*) 'molec 107, ind=',ind
+c            write(0,*) 'molec O2_H2O, ind=',ind
             IW = 1
             DO WHILE (VNU_O2_H2O(IW).LT.VNU3(IND))
                IW = IW+1
@@ -4377,7 +4393,7 @@ c    $             7(f9.4,f7.4,f7.4))
          ENDIF
          IF(MOL3(IND).EQ.102) THEN
 C******************CO2_CO2 FIRST**************************************
-c            write(0,*) 'molec 102, ind=',ind
+c            write(0,*) 'molec CO2_CO2, ind=',ind
             IW = 1
             DO WHILE ((VNU_CO2_CO2(IW).LT.VNU3(IND)))
                if(IW.GT.MAXCO2CO2) then
@@ -4412,6 +4428,7 @@ C 930           format(i4,' co2-co2 line#=',i5,2x,f12.6,2x,7i1,2x
 C     $              7(f9.4,f7.4,f7.4))
             end if
 C******************CO2_H2O SECOND**************************************
+c            write(0,*) 'molec CO2_H2O, ind=',ind
             IW = 1
             DO WHILE ((VNU_CO2_H2O(IW).LT.VNU3(IND)))
                if(IW.GT.MAXCO2H2O) then
