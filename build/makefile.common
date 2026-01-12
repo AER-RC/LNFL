@@ -212,7 +212,7 @@ linuxGNUdbl:
 linuxGNUsgl:
 	${MAKE} -f ${MAKEFILE} all P_TYPE=sgl FC_TYPE=gnu PLTFRM=linux \
 	FC=gfortran \
-	FCFLAG="-Wall -frecord-marker=4" \
+	FCFLAG="-Wall -frecord-marker=4 -std=legacy" \
 	UTIL_FILE=util_gfortran.f90
 
 ##############################################################
