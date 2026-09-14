@@ -100,6 +100,11 @@
                                dependence parameters, but they are used by 
                                MonoRTM v5.0 and later.
 -------------------------------------------------------------------------
+The one-character isotopologue field on ASCII line files accepts 1-9, 0,
+and a-z, representing local isotopologue numbers 1-36.  Thus, 0 represents
+isotope 10, a represents isotope 11, b represents isotope 12, and so forth.
+Uppercase letters are accepted and normalized to lowercase.
+
 TAPE5 format
    
 RECORD 1
@@ -233,4 +238,3 @@ RECORD 5...            IF  ( HOLIND .EQ. REJ )           line rejection option s
    
                 NMOL is 7 or the number of the highest molecule selected,
                 whichever is larger
-

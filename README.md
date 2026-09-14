@@ -97,6 +97,11 @@ The `TARGET` environment variable depends on the user's operating system, compil
 
 LNFL now accommodates the 160 character `.par` format adopted for HITRAN_2004. However, the default format for LNFL will remain the 100 character format. The rationale for this choice is that the vibrational data as stored in the 100 character format is more amenable to utilization in LBLRTM, particularly for LBLRTM Non-LTE calculation than that associated with the 160 character format for which the vibrational information had been expanded to facilitate association of the lines with the quantum mechanical vibrational designations.
 
+The one-character isotopologue field accepts `1`-`9`, `0`, and `a`-`z`,
+representing local isotopologue numbers 1-36. Thus, `0` represents isotope
+10, `a` represents isotope 11, `b` represents isotope 12, and so forth.
+Uppercase letters are accepted and normalized to lowercase.
+
 The capability to accommodate the 160 character format is restricted to `TAPE1`. The `TAPE2` files should be in 100 character format - you can generate this from the 160 character format by running LNFL with the 160 cahacter file as `TAPE1`, and then use the 100 character `TAPE7` file that LNFL produces as the `TAPE2` for the next run.
 
 A few notes:

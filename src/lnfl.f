@@ -796,10 +796,19 @@ C            MJA, test new TAPE8 output 01-20-2012
                      if (IFLG(J).GE.0) then !main line
                         imol = mod(MOL3(J),100)
                         iiso = floor(MOL3(J)/100.0) 
+                        CALL ISO_ENCODE (IISO,SISO,IOSISO)
+                        IF (IOSISO.NE.0) then
+                           print * ,"J: ", J
+                           print * ,"MOL3(J): ", MOL3(J)
+                           print * ,"IISO: ", IISO
+                           print * ,"SISO: ", SISO
+                           print * ,"IOSISO: ", IOSISO
+                           STOP 'Invalid isotope number in TAPE3 block'
+                        END IF
                         str_hit = STR3(J)*VNU3(J)*
      *                    (1.0-exp(-VNU3(J)* RADCN2/296.0 ))
                         tmpalf_hit = 1.0-TMPALF(J)              
-                     write(IPX,999) imol, iiso, VNU3(J),str_hit,ALF3(J),
+                     write(IPX,999) imol, SISO, VNU3(J),str_hit,ALF3(J),
      *                  HWHMS(J),EPP3(J),tmpalf_hit,PSHIFT(J),-IFLG(J),
      *                  (ADDFLAG(itest,J), itest=1,7),SDEP_DATA(J)                    
                         if(sum(addflag(:,J)).GT.0) then
@@ -814,7 +823,7 @@ C            MJA, test new TAPE8 output 01-20-2012
                      endif
                  enddo
              endif
-  999        format(I2,I1,F12.6,ES10.3,10X,2F5.4,F10.4,F4.2,F8.6,31X,
+  999        format(I2,A1,F12.6,ES10.3,10X,2F5.4,F10.4,F4.2,F8.6,31X,
      *          I2,7I2,F9.5) 
   998        format(I2,21F8.4) 
   997        FORMAT (I2)   
@@ -914,6 +923,49 @@ C                                                                        LN06790
       RETURN                                                             LN06800
 C                                                                        LN06810
       END                                                                LN06820
+      SUBROUTINE ISO_DECODE (SISO,ISO,IERR)
+C
+C     Decode the extended one-character isotopologue identifier:
+C       1-9 -> 1-9, 0 -> 10, a-z/A-Z -> 11-36.
+C     Uppercase input is normalized to lowercase.
+C
+      CHARACTER*1 SISO
+      IERR = 0
+      IF (SISO.GE.'1'.AND.SISO.LE.'9') THEN
+         ISO = ICHAR(SISO)-ICHAR('0')
+      ELSE IF (SISO.EQ.'0') THEN
+         ISO = 10
+      ELSE IF (SISO.GE.'a'.AND.SISO.LE.'z') THEN
+         ISO = ICHAR(SISO)-ICHAR('a')+11
+      ELSE IF (SISO.GE.'A'.AND.SISO.LE.'Z') THEN
+         ISO = ICHAR(SISO)-ICHAR('A')+11
+         SISO = CHAR(ICHAR('a')+ISO-11)
+      ELSE
+         ISO = 0
+         IERR = 1
+      ENDIF
+      RETURN
+      END
+C
+      SUBROUTINE ISO_ENCODE (ISO,SISO,IERR)
+C
+C     Encode isotope numbers 1-36 in the one-character representation.
+C
+      CHARACTER*1 SISO
+      IERR = 0
+      IF (ISO.GE.1.AND.ISO.LE.9) THEN
+         SISO = CHAR(ICHAR('0')+ISO)
+      ELSE IF (ISO.EQ.10) THEN
+         SISO = '0'
+      ELSE IF (ISO.GE.11.AND.ISO.LE.36) THEN
+         SISO = CHAR(ICHAR('a')+ISO-11)
+      ELSE
+         SISO = ' '
+         IERR = 1
+      ENDIF
+      RETURN
+      END
+C
       SUBROUTINE CKFL (VLO,VHI,LINES,VNU3,IFLG)                          LN06830
 C                                                                        LN06840
       IMPLICIT REAL*8           (V)                                     !LN06850
@@ -976,7 +1028,7 @@ c
 c    The number of isotopes for a particular molecule:
       DATA (ISO_MAX(I),I=1,NMOL)/
 c     H2O, CO2, O3, N2O, CO, CH4, O2,
-     +  6,  10,  9,   5,  6,   4,  3,
+     +  6,  12,  9,   5,  6,   4,  3,
 c      NO, SO2, NO2, NH3, HNO3, OH, HF, HCl, HBr, HI,
      +  3,   2,   1,   2,    2,  3,  2,   4,   4,  2,
 c     ClO, OCS, H2CO, HOCl, N2, HCN, CH3Cl, H2O2, C2H2, C2H6, PH3
@@ -1281,7 +1333,7 @@ C     MJA, 01-19-2012 new array sizes
       CHARACTER*9 CUP,CLO
       character*8 clo_rd
       CHARACTER*7 HOL                                                    LN10160
-      CHARACTER*1 CFLAG,CBLNK,CMINUS,hr_1,h_1,h_2, CFLAG2
+      CHARACTER*1 CFLAG,CBLNK,CMINUS,hr_1,h_1,h_2,CFLAG2,SISO
 
       character*1 a_15
       character*2 a_11,a_12,a_13,a_14
@@ -1432,7 +1484,7 @@ c            write (*,924) ISO,VNU,STRSV,TRANS,HWHMF,HWHMS,ENERGY,
 c     *                    TDEP,SHIFT,hvib_u,hvib_l,CUP,CLO,HOL,IFLGSV 
 c_old *                         TDEP,SHIFT,IVUP,IVLO,CUP,CLO,HOL,IFLGSV   LN10650
 
- 924  FORMAT (2X,I1,F12.6,1p,D10.3,E10.3,0p,2F5.4,F10.4,F4.2,F8.6,
+ 924  FORMAT (2X,A1,F12.6,1p,D10.3,E10.3,0p,2F5.4,F10.4,F4.2,F8.6,
      *    2A15,A9,6x,a9,6x,A7,5x,I1) 
 
 
@@ -1449,10 +1501,10 @@ c_______________________________________________________________________
             if (nclass_r(m) .eq. 0) then
 
                READ (ALIN(I),950) 
-     *              ISO,VNU,STRSV,TRANS,HWHMF,HWHMS,ENERGY,TDEP,SHIFT,
+     *              SISO,VNU,STRSV,TRANS,HWHMF,HWHMS,ENERGY,TDEP,SHIFT,
      *              hvib_u,hvib_l,  CUP,CLO,  HOL,IFLGSV
 
- 950           format(2X,I1,F12.6,D10.3,E10.3,2F5.4,F10.4,F4.2,F8.6,
+ 950           format(2X,A1,F12.6,D10.3,E10.3,2F5.4,F10.4,F4.2,F8.6,
      *              2A15,  A9,6x,a9,6x,A7,5x,I1)
 
 c_______________________________________________________________________
@@ -1465,12 +1517,12 @@ c              HCOOH, ClONO2, HOBr, C2H4
 c              tested with H2O
 
                READ (ALIN(I),951) 
-     *              ISO,VNU,STRSV,TRANS,HWHMF,HWHMS,ENERGY,TDEP,SHIFT,
+     *              SISO,VNU,STRSV,TRANS,HWHMF,HWHMS,ENERGY,TDEP,SHIFT,
      *              hvib_u,hvib_l, 
      *              a_11,a_12,a_13,a_14,a_15,
      *              b_11,b_12,b_13,b_14,b_15,               HOL,IFLGSV
 
- 951           format(2X,I1,F12.6,D10.3,E10.3,2F5.4,F10.4,F4.2,F8.6,
+ 951           format(2X,A1,F12.6,D10.3,E10.3,2F5.4,F10.4,F4.2,F8.6,
      *              2A15, 
      *           1x,a2,1x,a2,1x,a2,3x,a2,a1,
      *           1x,a2,1x,a2,1x,a2,3x,a2,a1,      A7,5x,I1)
@@ -1493,11 +1545,11 @@ c              CO2, N2O, CO, HF, HCl, HBr, HI,OCS, N2, HCN, C2H2, NO+
 c              tested with CO2
 
                READ (ALIN(I),952) 
-     *              ISO,VNU,STRSV,TRANS,HWHMF,HWHMS,ENERGY,TDEP,SHIFT,
+     *              SISO,VNU,STRSV,TRANS,HWHMF,HWHMS,ENERGY,TDEP,SHIFT,
      *              hvib_u,hvib_l,  CUP,
      *              b_21,b_22,b_23,b_24,                    HOL,IFLGSV
 
- 952           format(2X,I1,F12.6,D10.3,E10.3,2F5.4,F10.4,F4.2,F8.6,
+ 952           format(2X,A1,F12.6,D10.3,E10.3,2F5.4,F10.4,F4.2,F8.6,
      *              2A15, 10x,a5,
 c%%% *           5x,a1,1x,a2, a1,a5,      A7,5x,I1)
 
@@ -1527,12 +1579,12 @@ c              SF6, CH4
 c              tested with CH4
 
                READ (ALIN(I),953) 
-     *              ISO,VNU,STRSV,TRANS,HWHMF,HWHMS,ENERGY,TDEP,SHIFT,
+     *              SISO,VNU,STRSV,TRANS,HWHMF,HWHMS,ENERGY,TDEP,SHIFT,
      *              hvib_u,hvib_l, 
      *              a_31,a_32,a_33,a_34,
      *              b_31,b_32,b_33,b_34,                    HOL,IFLGSV
 
- 953           format(2X,I1,F12.6,D10.3,E10.3,2F5.4,F10.4,F4.2,F8.6,
+ 953           format(2X,A1,F12.6,D10.3,E10.3,2F5.4,F10.4,F4.2,F8.6,
      *              2A15, 
      *           2x,1x,a2,a2,1x,a2,3x,a2,
      *           2x,1x,a2,a2,1x,a2,3x,a2,      A7,5x,I1)
@@ -1562,12 +1614,12 @@ c              tested with NH3
 c              ************  how is CH3D differentiated from CH4 
 
                READ (ALIN(I),954) 
-     *              ISO,VNU,STRSV,TRANS,HWHMF,HWHMS,ENERGY,TDEP,SHIFT,
+     *              SISO,VNU,STRSV,TRANS,HWHMF,HWHMS,ENERGY,TDEP,SHIFT,
      *              hvib_u,hvib_l, 
      *              a_41,a_42,a_43,a_44,a_45,a_46,
      *              b_41,b_42,b_43,b_44,b_45,b_46,          HOL,IFLGSV
 
- 954           format(2X,I1,F12.6,D10.3,E10.3,2F5.4,F10.4,F4.2,F8.6,
+ 954           format(2X,A1,F12.6,D10.3,E10.3,2F5.4,F10.4,F4.2,F8.6,
      *              2A15, 
      *           1x,a2,1x,a2,a2,a2,a1,a4,
      *           1x,a2,1x,a2,a2,a2,a1,a4,      A7,5x,I1)
@@ -1595,11 +1647,11 @@ c              O2
 c              tested with O2
 
                READ (ALIN(I),955) 
-     *              ISO,VNU,STRSV,TRANS,HWHMF,HWHMS,ENERGY,TDEP,SHIFT,
+     *              SISO,VNU,STRSV,TRANS,HWHMF,HWHMS,ENERGY,TDEP,SHIFT,
      *              hvib_u,hvib_l,  CUP,
      *              b_51,b_52,b_53,b_54,b_55,b_56,  HOL,IFLGSV
 
- 955           format(2X,I1,F12.6,D10.3,E10.3,2F5.4,F10.4,F4.2,F8.6,
+ 955           format(2X,A1,F12.6,D10.3,E10.3,2F5.4,F10.4,F4.2,F8.6,
      *              2A15, 10x,a5,
      *           1x,a1,1x,a2,a1,1x,a2,3x,a2,a1,      A7,5x,I1)
 
@@ -1621,11 +1673,11 @@ c              NO, OH, ClO
 c              tested with NO  symmetry not converted to +/-
 
                READ (ALIN(I),956) 
-     *              ISO,VNU,STRSV,TRANS,HWHMF,HWHMS,ENERGY,TDEP,SHIFT,
+     *              SISO,VNU,STRSV,TRANS,HWHMF,HWHMS,ENERGY,TDEP,SHIFT,
      *              hvib_u,hvib_l,  CUP,
      *              b_61,b_62,b_63,b_64,                    HOL,IFLGSV
 
- 956           format(2X,I1,F12.6,D10.3,E10.3,2F5.4,F10.4,F4.2,F8.6,
+ 956           format(2X,A1,F12.6,D10.3,E10.3,2F5.4,F10.4,F4.2,F8.6,
      *                      2A15, 10x,a5,
      *                      3x,a1,1x,a4, a1,a5,      A7,5x,I1)
 
@@ -1643,6 +1695,11 @@ c              F"  has been dropped here!
 c_______________________________________________________________________
             endif
 
+            CALL ISO_DECODE (SISO,ISO,IOSISO)
+            IF (IOSISO.NE.0) THEN
+               WRITE (*,*) 'Invalid isotope identifier: ',SISO
+               STOP 'Invalid isotope identifier on TAPE1'
+            ENDIF
             IFLAG = IFLGSV                                               LN10660
          
 c
@@ -1731,7 +1788,7 @@ c     test for valid vibrational states
             IF (INLTE.EQ.1) CALL VIBQ1 (MOL,IVUP,IVLO)                   LN10780
             ILIN3 = ILIN3+1                                              LN10790
             ILINS = ILIN3                                                LN10795
-            WRITE (QUANT1(ILIN3),930) M,ISO,IVUP,IVLO,CUP,CLO            LN10800
+            WRITE (QUANT1(ILIN3),930) M,SISO,IVUP,IVLO,CUP,CLO           LN10800
 C                                                                        LN10810
 C           NOTE: SHIFT VARIABLE MAY CONTAIN COUPLING INFORMATION        LN10820
 C            - NO PRESSURE SHIFT INFORMATION CURRENTLY PROVIDED,         LN10830
@@ -1748,11 +1805,11 @@ C                                                                        LN10900
             ENDIF                                                        LN10940
 c
             if (hwhms.le.0.9999)  then
-               WRITE (ALIN1(ILIN3),921) M,ISO,VNU,STRSV,TRANS,HWHMF,        LN10950
+               WRITE (ALIN1(ILIN3),921) M,SISO,VNU,STRSV,TRANS,HWHMF,        LN10950
      *                              HWHMS,ENERGY,TDEP,SHIFT,IVUP,        LN10960
      *                              IVLO,CUP,CLO,HOL,IFLGSV              LN10970
             else
-               WRITE (ALIN1(ILIN3),922) M,ISO,VNU,STRSV,TRANS,HWHMF,        LN10950
+               WRITE (ALIN1(ILIN3),922) M,SISO,VNU,STRSV,TRANS,HWHMF,        LN10950
      *                              HWHMS,ENERGY,TDEP,SHIFT,IVUP,        LN10960
      *                              IVLO,CUP,CLO,HOL,IFLGSV              LN10970
             endif
@@ -1858,15 +1915,15 @@ C MJA 01-19-2012 Increase array size for self line coupling
  914  format ( ' skipping over header records on TAPE1')
  915  FORMAT (I2)                                                        LN11460
       
- 920  FORMAT (2X,I1,F12.6,D10.3,E10.3,2F5.4,F10.4,F4.2,F8.6,
+ 920  FORMAT (2X,A1,F12.6,D10.3,E10.3,2F5.4,F10.4,F4.2,F8.6,
      *    2A15,A9,7x,a8,6x,A7,5x,I1) 
  
- 921  FORMAT (I2,I1,F12.6,1P,D10.3,E10.3,0P,2F5.4,F10.4,F4.2,F8.6,2I3,
+ 921  FORMAT (I2,A1,F12.6,1P,D10.3,E10.3,0P,2F5.4,F10.4,F4.2,F8.6,2I3,
      *        2A9,A7,I2)
- 922  FORMAT (I2,I1,F12.6,1P,D10.3,E10.3,0P,2F5.3,F10.4,F4.2,F8.6,2I3,
+ 922  FORMAT (I2,A1,F12.6,1P,D10.3,E10.3,0P,2F5.3,F10.4,F4.2,F8.6,2I3,
      *        2A9,A7,I2)
  925  FORMAT (2X,4(E13.6,E11.4),I2)                                      LN11480
- 930  FORMAT (I2,I1,2I3,2A9)                                             LN11490
+ 930  FORMAT (I2,A1,2I3,2A9)                                             LN11490
  940  FORMAT (' TAPE1 IS AT A EOF ')
  945  FORMAT (' THE EOF ON TAPE2 IS BEFORE',/,
      *        ' VMAX = ',F12.5,' YOU MAY HAVE A BAD TAPE ')              LN11540
@@ -1937,7 +1994,7 @@ C     MJA, 01-19-2012 new array sizes
       CHARACTER*27 QUANT1,QUANTC                                         LN10150
       CHARACTER*9 CUP,CLO
       CHARACTER*7 HOL                                                    LN10160
-      CHARACTER*1 CFLAG,CBLNK,CMINUS,a_1,h_1,h_2,CFLAG2
+      CHARACTER*1 CFLAG,CBLNK,CMINUS,a_1,h_1,h_2,CFLAG2,SISO
       character*2 TFLAG
 C      DIMENSION AMOL1(51)                                                LN10180
 C     MJA, 01-19-2012 new array sizes
@@ -2071,8 +2128,13 @@ c     check vibrational data
 C           MJA 01-23-2012 debugging 
 C            write(*,*) alin(I), IFLGM1
 
-            READ (ALIN(I),920) ISO,VNU,STRSV,TRANS,HWHMF,HWHMS,ENERGY,   LN10640
+            READ (ALIN(I),920) SISO,VNU,STRSV,TRANS,HWHMF,HWHMS,ENERGY,   LN10640
      *                         TDEP,SHIFT,IVUP,IVLO,CUP,CLO,HOL,IFLGSV   LN10650
+            CALL ISO_DECODE (SISO,ISO,IOSISO)
+            IF (IOSISO.NE.0) THEN
+               WRITE (*,*) 'Invalid isotope identifier: ',SISO
+               STOP 'Invalid isotope identifier on TAPE1'
+            ENDIF
             IFLAG = IFLGSV                                               LN10660
 C          write(*,*)  IFLAG, IFLGSV  
 c
@@ -2123,7 +2185,7 @@ C
             IF (INLTE.EQ.1) CALL VIBQ1 (MOL,IVUP,IVLO)                   LN10780
             ILIN3 = ILIN3+1                                              LN10790
             ILINS = ILIN3                                                LN10795
-            WRITE (QUANT1(ILIN3),930) M,ISO,IVUP,IVLO,CUP,CLO            LN10800
+            WRITE (QUANT1(ILIN3),930) M,SISO,IVUP,IVLO,CUP,CLO           LN10800
 C                                                                        LN10810
 C           NOTE: SHIFT VARIABLE MAY CONTAIN COUPLING INFORMATION        LN10820
 C            - NO PRESSURE SHIFT INFORMATION CURRENTLY PROVIDED,         LN10830
@@ -2140,11 +2202,11 @@ C                                                                        LN10900
             ENDIF                                                        LN10940
 c
             if (hwhms.le.0.9999)  then
-               WRITE (ALIN1(ILIN3),921) M,ISO,VNU,STRSV,TRANS,HWHMF,        LN10950
+               WRITE (ALIN1(ILIN3),921) M,SISO,VNU,STRSV,TRANS,HWHMF,        LN10950
      *                              HWHMS,ENERGY,TDEP,SHIFT,IVUP,        LN10960
      *                              IVLO,CUP,CLO,HOL,IFLGSV              LN10970
             else
-               WRITE (ALIN1(ILIN3),922) M,ISO,VNU,STRSV,TRANS,HWHMF,        LN10950
+               WRITE (ALIN1(ILIN3),922) M,SISO,VNU,STRSV,TRANS,HWHMF,        LN10950
      *                              HWHMS,ENERGY,TDEP,SHIFT,IVUP,        LN10960
      *                              IVLO,CUP,CLO,HOL,IFLGSV              LN10970
             endif
@@ -2252,14 +2314,14 @@ C MJA 01-19-2012 Increase array sizes for self line coupling
  913  format (a1)
  914  format ( ' skipping over header records on TAPE1')
  915  FORMAT (I2)                                                        LN11460
- 920  FORMAT (2X,I1,F12.6,D10.3,E10.3,2F5.4,F10.4,F4.2,F8.6,2I3,2A9,
+ 920  FORMAT (2X,A1,F12.6,D10.3,E10.3,2F5.4,F10.4,F4.2,F8.6,2I3,2A9,
      *        A7,I2)                                                     LN11470
- 921  FORMAT (I2,I1,F12.6,1P,D10.3,E10.3,0P,2F5.4,F10.4,F4.2,F8.6,2I3,
+ 921  FORMAT (I2,A1,F12.6,1P,D10.3,E10.3,0P,2F5.4,F10.4,F4.2,F8.6,2I3,
      *        2A9,A7,I2)
- 922  FORMAT (I2,I1,F12.6,1P,D10.3,E10.3,0P,2F5.3,F10.4,F4.2,F8.6,2I3,
+ 922  FORMAT (I2,A1,F12.6,1P,D10.3,E10.3,0P,2F5.3,F10.4,F4.2,F8.6,2I3,
      *        2A9,A7,I2)
  925  FORMAT (2X,4(E13.6,E11.4),I2)                                      LN11480
- 930  FORMAT (I2,I1,2I3,2A9)                                             LN11490
+ 930  FORMAT (I2,A1,2I3,2A9)                                             LN11490
  940  FORMAT (' TAPE1 IS AT A EOF ')
 C                                                                        LN11550
       END                                                                LN11560
@@ -2324,7 +2386,7 @@ C     MJA 01-19-2012 New array sizes
       CHARACTER*27 QUANT1,QUANTC                                         LN11810
       CHARACTER*9 CUP,CLO                                                LN11820
       CHARACTER*7 HOL
-      CHARACTER*1 CFLAG,CBLNK,CMINUS,hr_1,h_1,h_2,CFLAG2
+      CHARACTER*1 CFLAG,CBLNK,CMINUS,hr_1,h_1,h_2,CFLAG2,SISO
 C      DIMENSION AMOLC(51)                                                LN11840
 C     MJA 01-19-2012 New array sizes
       DIMENSION AMOLC(52)   
@@ -2431,8 +2493,13 @@ C        IF IFLGM1 <= 0, main HITRAN F100 line, read normally
 C        ELSE IF IFLGM1 = 5, both foreign and self line coupling (new!)
 C        ELSE (IFLGM1 = 1 or 3) just read foreign line coupling
          IF (IFLGM1.LE.0) THEN                                           LN12290
-            READ (ALIN(I),920) ISO,VNU,STRSV,TRANS,HWHMF,HWHMS,ENERGY,   LN12300
+            READ (ALIN(I),920) SISO,VNU,STRSV,TRANS,HWHMF,HWHMS,ENERGY,   LN12300
      *                         TDEP,SHIFT,IVUP,IVLO,CUP,CLO,HOL,IFLGSV   LN12310
+            CALL ISO_DECODE (SISO,ISO,IOSISO)
+            IF (IOSISO.NE.0) THEN
+               WRITE (*,*) 'Invalid isotope identifier: ',SISO
+               STOP 'Invalid isotope identifier on TAPE2'
+            ENDIF
             IFLAG = IFLGSV
 c
 c     check that molecule and isotope are within proper range
@@ -2478,7 +2545,7 @@ C
             IF (INLTE.EQ.1) CALL VIBQ1 (MOL,IVUP,IVLO)                   LN12420
             ILIN3 = ILIN3+1                                              LN12430
             ILINS = ILIN3
-            WRITE (QUANTC(ILIN3),930) M,ISO,IVUP,IVLO,CUP,CLO            LN12440
+            WRITE (QUANTC(ILIN3),930) M,SISO,IVUP,IVLO,CUP,CLO           LN12440
 C
 C           NOTE: SHIFT VARIABLE MAY CONTAIN COUPLING INFORMATION        LN12450
 C            - NO PRESSURE SHIFT INFORMATION CURRENTLY PROVIDED,         LN12460
@@ -2495,11 +2562,11 @@ C
             ENDIF                                                        LN12520
 c
             if (hwhms.le.0.9999) then
-               WRITE (ALINC(ILIN3),921) M,ISO,VNU,STRSV,TRANS,HWHMF,        LN12530
+               WRITE (ALINC(ILIN3),921) M,SISO,VNU,STRSV,TRANS,HWHMF,        LN12530
      *                               HWHMS,ENERGY,TDEP,SHIFT,IVUP,       LN12540
      *                               IVLO,CUP,CLO,HOL,IFLGSV             LN12550
             else
-               WRITE (ALINC(ILIN3),922) M,ISO,VNU,STRSV,TRANS,HWHMF,        LN12530
+               WRITE (ALINC(ILIN3),922) M,SISO,VNU,STRSV,TRANS,HWHMF,        LN12530
      *                               HWHMS,ENERGY,TDEP,SHIFT,IVUP,       LN12540
      *                               IVLO,CUP,CLO,HOL,IFLGSV             LN12550
             endif
@@ -2596,14 +2663,14 @@ C MJA 01-19-2012 Increase array size for self-line coupling
  913  format (a1)
  914  format ( ' skipping over header records on TAPE2')
  915  FORMAT (I2)                                                        LN13080
- 920  FORMAT (2X,I1,F12.6,D10.3,E10.3,2F5.4,F10.4,F4.2,F8.6,2I3,2A9,
+ 920  FORMAT (2X,A1,F12.6,D10.3,E10.3,2F5.4,F10.4,F4.2,F8.6,2I3,2A9,
      *        A7,I2)                                                     LN13090
- 921  FORMAT (I2,I1,F12.6,1P,D10.3,E10.3,0P,2F5.4,F10.4,F4.2,F8.6,2I3,
+ 921  FORMAT (I2,A1,F12.6,1P,D10.3,E10.3,0P,2F5.4,F10.4,F4.2,F8.6,2I3,
      *        2A9,A7,I2)
- 922  FORMAT (I2,I1,F12.6,1P,D10.3,E10.3,0P,2F5.3,F10.4,F4.2,F8.6,2I3,
+ 922  FORMAT (I2,A1,F12.6,1P,D10.3,E10.3,0P,2F5.3,F10.4,F4.2,F8.6,2I3,
      *        2A9,A7,I2)
  925  FORMAT (2X,4(E13.6,E11.4),I2)                                      LN13100
- 930  FORMAT (I2,I1,2I3,2A9)                                             LN13110
+ 930  FORMAT (I2,A1,2I3,2A9)                                             LN13110
  940  FORMAT (' TAPE2 IS AT A EOF ')                                     LN13130
 C                                                                        LN13140
       END                                                                LN13150
@@ -4150,7 +4217,7 @@ C     !and rotational quantum numbers for the speed dependent line.
       COMMON /IFIL/ IRD,IPR,IPU,NWDR,LRC,ILNGTH,INLTE,IER,IPUOUT         LN01770
 
       CHARACTER*62 STR_SDEP
-      CHARACTER*1 CHAR1
+      CHARACTER*1 CHAR1,SISO_SDEP
 
 c read in co2 broadened parameters here
      
@@ -4162,8 +4229,14 @@ c read in co2 broadened parameters here
       END DO
       DO I=1, MXSDEP
 	  READ(STR_SDEP,100) 
-     *            MOLEC_SDEP(I), ISO_SDEP(I),
+     *            MOLEC_SDEP(I), SISO_SDEP,
      *            VNU_SDEP(I),SDEP(I), STR_QNUM(I)
+          CALL ISO_DECODE (SISO_SDEP,ISO_SDEP(I),IOSISO)
+          IF (IOSISO.NE.0) THEN
+             WRITE (*,*) 'Invalid isotope ID in spd_dep_param: ',
+     *                    SISO_SDEP
+             STOP 'Invalid isotope identifier in spd_dep_param'
+          ENDIF
 C          write(ipr,100) MOLEC_SDEP(I), 
 C     *            ISO_SDEP(I),
 C     *            VNU_SDEP(I),SDEP(I), STR_QNUM(I)
@@ -4175,7 +4248,7 @@ C     *            VNU_SDEP(I),SDEP(I), STR_QNUM(I)
       
       RETURN
 
-  100 FORMAT(I2,I1,3X,F12.6,3X,F9.5,2X,A24)
+  100 FORMAT(I2,A1,3X,F12.6,3X,F9.5,2X,A24)
 
       END
 
