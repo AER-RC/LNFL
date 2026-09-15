@@ -181,6 +181,9 @@ RECORD 3
                 BLK1  indicates TAPE1 is blocked  (Note: NBLK1 is ignored)  
  
                EXBRD  uses extra broadeneing parameter files
+
+               ISOEX  reads Record 6 and excludes selected
+                      molecule-isotopologue pairs from TAPE3 and TAPE7
    
    
 RECORD 4            IF MRG2 SELECTED ON RECORD 3:       second line for TAPE2 data source required
@@ -238,3 +241,54 @@ RECORD 5...            IF  ( HOLIND .EQ. REJ )           line rejection option s
    
                 NMOL is 7 or the number of the highest molecule selected,
                 whichever is larger
+
+
+RECORD 6...            IF ISOEX IS SELECTED ON RECORD 3
+
+
+RECORD 6.1
+
+
+       NISOEX
+
+               1-5
+
+               I5
+
+
+       NISOEX   number of molecule-isotopologue pairs to exclude
+
+                a value of 0 specifies an empty exclusion list
+
+
+RECORD 6.2              REPEATED NISOEX TIMES
+
+
+      MEX,   NISOX,   ISOX(K=1,NISOX)
+   
+        1-2,     4-5,   7-...
+   
+        I2,       I2,   10(1X,I1)
+   
+   
+   
+       MEX      molecule number M, per the Available Molecular Species table
+                on Record 3
+   
+       NISOX    number of isotopologues of molecule MEX to exclude
+                (must not exceed the number of isotopologues LNFL knows
+                about for that molecule)
+   
+       ISOX(K)  the HITRAN/AFGL local isotopologue ID (single digit) of the
+                K-th isotopologue of MEX to exclude, using the same
+                convention as the isotopologue field on TAPE1/TAPE2:
+                1-9 for the 2nd through 10th most abundant isotopologues,
+                0 for the 10th (i.e. the digit that appears on the line
+                file itself)
+   
+                lines belonging to an excluded (MEX,ISOX) pair are dropped
+                from TAPE3 (and TAPE7, if requested) entirely -- this is
+                independent of, and applied in addition to, any strength
+                rejection requested via REJ (record 5)
+   
+                Record 6 must appear after Record 5, if Record 5 is present

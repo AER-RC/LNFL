@@ -217,7 +217,8 @@ C                                                                        LN01670
       CHARACTER*5 rev_num
       CHARACTER HNOCPL*5,HREJ*3,HNLTE*4,HMRG2*4,HF160*4,HOLIND1*40 
       CHARACTER HBLK1*4,HBLK2*4,HF80*3,HF100*4,HOLIND2*40,HCPL*3   
-      CHARACTER*5 HNBLK1,HNBLK2,HLNOUT,HH86T1,HH86T2, HBRD               LN01690
+      CHARACTER*5 HNBLK1,HNBLK2,HLNOUT,HH86T1,HH86T2,HBRD
+      CHARACTER*5 HISOEX
       CHARACTER*27 QUANT1,QUANTC                                         LN01700
       CHARACTER*100 ALIN1,ALIN2,ALINC,ALIN, ITAPE1                       LN01710
 C     MJA, 01-20-2012 Add SISO variable
@@ -328,6 +329,8 @@ C     Increased array sizes to accomodate self-line coupling coefficients
      *              MIND2(64)                                            LN01980
       COMMON /CPLMOL/ MOLCPL(47),NCPL                                    LN01990
       COMMON /SREJ/ SR(64),SRD(64),TALF(64)                              LN02000
+      INTEGER IEXISO
+      COMMON /ISOEXC/ IEXISO(64,36),NISOEX
       COMMON /ICN/ ILIN3,NMAX,NBLOCK,inocpl
 C     MJA, 01-19-2012
 C     Increased array sizes to accomodate self-line coupling coefficients
@@ -336,6 +339,10 @@ C      COMMON /QUANT/ QUANT1(51),QUANTC(51)                              LN02020
       COMMON /CVRLBL/ HNAMLNFL,HVRLNFL
       COMMON /CVRUTL/ HNAMUTL,HVRUTL
       common /eppinfo/ negflag
+      COMMON /ISVECT/ ISO_MAX(MOL_MAX) 
+C     array to read excluded isotopes number    
+      DIMENSION IXV(20)
+
 C                                                                        LN02030
       DIMENSION MOLCNT(64),IID(10),RCDHDR(5)                             LN02040
       dimension iid2(10)
@@ -357,6 +364,7 @@ C                                                                        LN02110
       DATA HH86T1 / 'H86T1'/,HH86T2 / 'H86T2'/
       DATA GREJ / ' REJ    '/,GNLTE / ' NLTE   '/,GREJNL / 'NLTE REJ'/   LN02160
       DATA HBRD / 'EXBRD' /
+      DATA HISOEX / 'ISOEX' /
       DATA GNEGEPP / '       ^'/
       DATA MOLCNT / 64*0 /                                               LN02170
       DATA VLST1 / -1. /,VLST2 / -2. /                                   LN02180
@@ -390,7 +398,11 @@ C                                                                        LN02240
       do 5 m=1,64
          n_negepp(m) = 0
          n_resetepp(m) = 0
+         do 4 iso=1,iso_max(m)
+            iexiso(m,iso) = 0
+ 4       continue
  5    continue
+      nisoex = 0
 C                                                                        LN02295
 c**      call prnt_vib_map
 c**      call prnt_rot_map
@@ -497,6 +509,10 @@ C                                                                        LN02730
 
       CALL HOLRT (5,HBRD,IBRD,HOLIND1,40)
       IF (IBRD.EQ.1) WRITE (IPR,925) HBRD
+
+C     ISOEX SELECTS RECORD 6 ISOTOPOLOGUE EXCLUSIONS.
+      CALL HOLRT (5,HISOEX,IISOEX,HOLIND1,40)
+      IF (IISOEX.EQ.1) WRITE (IPR,925) HISOEX
 
       IF (IPUOUT.EQ.1)                                                   LN02740
      *     OPEN (IPU,FILE='TAPE7',STATUS='UNKNOWN',FORM='FORMATTED')     LN02750
@@ -613,6 +629,46 @@ C                                                                        LN03400
          IF (INLTE.EQ.1) READ (GREJNL,902) HID(9)                        LN03460
          READ (IRD,950) (SR(I),I=1,NMOL)                                 LN03470
       ENDIF                                                              LN03480
+C
+C     RECORD 6.1: NUMBER OF MOLECULE/ISOTOPOLOGUE EXCLUSIONS.
+C     RECORD 6.2: NISOEX RECORDS IN (I5,I5) FORMAT.
+C
+      IF (IISOEX.EQ.1) THEN
+         READ (IRD,952,IOSTAT=IOSR6) NISOEX
+         print *, 'record 6: num lines ', NISOEX
+         IF (IOSR6.NE.0) THEN
+            STOP 'Missing or invalid TAPE5 Record 6.1'
+         ENDIF
+         IF (NISOEX.LT.0) THEN
+            STOP 'Negative exclusion count on TAPE5 Record 6'
+         ENDIF
+         DO 25 I=1,NISOEX
+            READ (IRD,953,IOSTAT=IOSR6) MEX, NISOX, (IXV(K),K=1,NISOX)
+            IF (IOSR6.NE.0) THEN
+               STOP 'Missing or invalid TAPE5 Record 6.2'
+            ENDIF
+            IF (MEX.LT.1 .OR. MEX.GT.MOL_MAX) THEN
+               WRITE (*,*) 'Invalid molecule on Record 6: ',MEX
+               STOP 'Invalid molecule on TAPE5 Record 6'
+            ENDIF
+            IF (NISOX.GT.ISO_MAX(MEX)) WRITE (IPR,959)                   
+     *              MEX, NISOX, ISO_MAX(MEX)                             
+            DO 24 K = 1, NISOX
+               IEX=IXV(K)
+               IF (IEX.LT.1 .OR. IEX.GT.iso_max(MEX)) THEN
+                    WRITE (*,*) 'Invalid isotopologue on Record 6: '
+     *              ,IEX,iso_max(MEX)
+                    STOP 'Invalid isotopologue on TAPE5 Record 6'
+                ENDIF
+                IF (IEXISO(MEX,IEX).EQ.1) THEN
+                    WRITE (IPR,982) MEX,IEX
+                ELSE
+                    IEXISO(MEX,IEX) = 1
+                    WRITE (IPR,983) MEX,IEX
+                ENDIF
+ 24         CONTINUE                 
+ 25      CONTINUE
+      ENDIF
 C                                                                        LN03490
 C     IF STRENGTH REJECTION READ IN IS NEGATIVE, SET TO DEFAULT VALUE    LN03500
 C                                                                        LN03510
@@ -869,6 +925,14 @@ c            mol_max
      *        '      DUPLICATE LINES MAY ARISE.  MOLECULE = ',I3)        LN05020
  945  FORMAT (' ',40X,A6,' = ',I1)                                       LN05030
  950  FORMAT (8E10.3)                                                    LN05040
+ 952  FORMAT (I5)
+ 953  FORMAT (2I3,20(I3))                                     
+ 959  FORMAT (' *** RECORD 6 WARNING: MOLECULE ',I3,' LISTS ',I3,        
+     *        ' EXCLUDED ISOTOPOLOGUES BUT ISO_MAX = ',I3,' ***')        
+
+ 982  FORMAT (' Duplicate isotope exclusion ignored: molecule ',I3,
+     *        ', isotopologue ',I3)
+ 983  FORMAT (' Excluding molecule ',I3,', isotopologue ',I3)
  955  FORMAT ('0',' O2 LINES < .007 CM-1 HAVE BEEN REPLACED BY A O2',    LN05050
      *        1X,'BAND CENTERED AT .000010 CM-1 ',/)                     LN05060
  960  FORMAT ('0',9X,'TAPE NO. =',I2/10X,'LOWEST LINE =',F13.6,          LN05070
@@ -1293,6 +1357,8 @@ C                                                                        LN09980
       REAL*8           STRSV
 C                                                                        LN10000
       COMMON /SREJ/ SR(64),SRD(64),TALF(64)                              LN10010
+      INTEGER IEXISO
+      COMMON /ISOEXC/ IEXISO(64,36),NISOEX
       COMMON /CONTRL/ VMIN,VMAX,VLO,VHI,LINES,NWDS,LSTW1                 LN10020
       COMMON /HBLOCK/ INBLK1,INBLK2,I86T1,I86T2
       COMMON /IFIL/ IRD,IPR,IPU,NWDR,LRC,ILNGTH,INLTE,IER,IPUOUT         LN10040
@@ -1443,6 +1509,7 @@ C                                                                        LN10510
    30 IBLK = I-1                                                         LN10540
       IF (IBLK.LE.0) GO TO 60                                            LN10550
    40 IFLGM1 = 0                                                         LN10560
+      IEXCUR = 0
 
 C      DO 50 I = 1, 51                                                    LN10570
 C      MJA, 01-19-2012 Increase array size
@@ -1734,6 +1801,8 @@ c
                IFLAG = 0                                                 LN10710
             ENDIF                                                        LN10720
             IFLGM1 = IFLAG
+            IEXCUR = IEXISO(M,ISO)
+            IF (IEXCUR.EQ.1) GO TO 50
             VNUS = VNU                                                   LN10730
 C
 C           SKIP OVER UNEEDED WAVENUMBERS
@@ -1859,6 +1928,7 @@ C           SELF LINE COUPLING INFORMATION USING the else
 C           statement below (MJA, 01-20-2012)
 C
             IFLGM1 = 1                                                   LN11120                                                                      
+            IF (IEXCUR.EQ.1) GO TO 50
          ELSE                                                            LN11100
 C
 C           FOREIGN LINE COUPLING INFORMATION READ IN
@@ -1869,6 +1939,7 @@ C           SET IFLGM1 TO ZERO TO ENSURE THE NEXT PASS USES
 C           REGULAR FORMAT FOR READING LINE INFORMATION
 C
             IFLGM1 = 0                                                   LN11120
+            IF (IEXCUR.EQ.1) GO TO 50
 C           SKIP STRENGTH REJECTED COUPLED LINES (MJA, 11-16-2010)
 C
 C            WRITE(*,*) STR
@@ -1959,6 +2030,8 @@ C                                                                        LN09980
       REAL*8           STRSV
 C                                                                        LN10000
       COMMON /SREJ/ SR(64),SRD(64),TALF(64)                              LN10010
+      INTEGER IEXISO
+      COMMON /ISOEXC/ IEXISO(64,36),NISOEX
       COMMON /CONTRL/ VMIN,VMAX,VLO,VHI,LINES,NWDS,LSTW1                 LN10020
       COMMON /HBLOCK/ INBLK1,INBLK2,I86T1,I86T2
       COMMON /IFIL/ IRD,IPR,IPU,NWDR,LRC,ILNGTH,INLTE,IER,IPUOUT         LN10040
@@ -2084,6 +2157,7 @@ C      enddo
 
       IF (IBLK.LE.0) GO TO 60                                            LN10550
    40 IFLGM1 = 0                                                         LN10560
+      IEXCUR = 0
 C      MJA 01-19-2012 Self line coupling fix
 C      DO 50 I = 1, 51                                                    LN10570
       DO 50 I = 1, 52                                                    LN10570
@@ -2172,6 +2246,8 @@ C           and place in IFLAGM1
                IFLAG = 0                                                 LN10710
             ENDIF                                                        LN10720
             IFLGM1 = IFLAG
+            IEXCUR = IEXISO(M,ISO)
+            IF (IEXCUR.EQ.1) GO TO 50
             VNUS = VNU                                                   LN10730
 C            write(*,*) IFLGM1
 C
@@ -2259,6 +2335,7 @@ C           SELF LINE COUPLING INFORMATION USING the else
 C           statement below (MJA, 01-20-2012)
 C
             IFLGM1 = 1                                                   LN11120
+            IF (IEXCUR.EQ.1) GO TO 50
 
          ELSE                                                            LN11100
 C
@@ -2270,6 +2347,7 @@ C           SET IFLGM1 TO ZERO TO ENSURE THE NEXT PASS USES
 C           REGULAR FORMAT FOR READING LINE INFORMATION
 C
             IFLGM1 = 0                                                   LN11120
+            IF (IEXCUR.EQ.1) GO TO 50
 C
 C           SKIP STRENGTH REJECTED COUPLED LINES (MJA, 11-16-2010)
 C
@@ -2354,6 +2432,8 @@ C                                                                        LN11640
       REAL*8           STRSV
 C                                                                        LN11660
       COMMON /SREJ/ SR(64),SRD(64),TALF(64)                              LN11670
+      INTEGER IEXISO
+      COMMON /ISOEXC/ IEXISO(64,36),NISOEX
       COMMON /CONTRL/ VMIN,VMAX,VLO,VHI,LINES,NWDS,LSTW1                 LN11680
       COMMON /HBLOCK/ INBLK1,INBLK2,I86T1,I86T2
       COMMON /IFIL/ IRD,IPR,IPU,NWDR,LRC,ILNGTH,INLTE,IER,IPUOUT         LN11700
@@ -2461,6 +2541,7 @@ C                                                                        LN12170
       PRINT 940
       IF (IBLK.LE.0) GO TO 60                                            LN12210
    40 IFLGM1 = 0                                                         LN12220
+      IEXCUR = 0
 c
 C      DO 50 I = 1, 51                                                    LN12230
 C      MJA 01-19-2011 Increase array sizes for self line coupling
@@ -2533,6 +2614,8 @@ c
                IFLAG = 0                                                 LN12350
             ENDIF                                                        LN12360
             IFLGM1 = IFLAG
+            IEXCUR = IEXISO(M,ISO)
+            IF (IEXCUR.EQ.1) GO TO 50
             VNUS = VNU                                                   LN12370
 C
 C           SKIP OVER UNEEDED WAVENUMBERS
@@ -2616,6 +2699,7 @@ C           SELF LINE COUPLING INFORMATION USING the else
 C           statement below (MJA, 01-20-2012)
 C
             IFLGM1 = 1                                       
+            IF (IEXCUR.EQ.1) GO TO 50
                      
          ELSE                                                            LN12710
 C                                                                        LN12720
@@ -2627,6 +2711,7 @@ C           SET IFLGM1 TO ZERO TO ENSURE THE NEXT PASS USES
 C           REGULAR FORMAT FOR READING LINE INFORMATION
 C
             IFLGM1 = 0                                                   LN12760
+            IF (IEXCUR.EQ.1) GO TO 50
 C
 C           SKIP OVER UNEEDED WAVENUMBERS
 C
@@ -3916,6 +4001,8 @@ C                                                                        LN14820
       CHARACTER*8      HID,HID1,HMOL                                    &LN14830
 C                                                                        LN14840
       COMMON /SREJ/ SR(64),SRD(64),TALF(64)                              LN14850
+      INTEGER IEXISO
+      COMMON /ISOEXC/ IEXISO(64,36),NISOEX
       COMMON /HOL/ HOL82(40)                                             LN14860
       CHARACTER HOL82*35                                                 LN14870
       COMMON /TRAC/ VNU(40),STR(40),ALF(40),EPP(40),MOL(40),HWHMF(40),   LN14880
@@ -3990,6 +4077,12 @@ C                                                                        LN15510
          M = MOL(I)                                                      LN15550
          IF (MIND2(M).NE.1) MOL(I) = 0                                   LN15560
          IF (MOL(I).EQ.0) GO TO 50                                       LN15570
+         IF (ISO(I).GE.1 .AND. ISO(I).LE.36) THEN
+            IF (IEXISO(M,ISO(I)).EQ.1) THEN
+               MOL(I) = 0
+               GO TO 50
+            ENDIF
+         ENDIF
          STR(I) = STR(I)/(VNU(I)*(1.0-EXP(-BETA0*VNU(I))))               LN15580
          HWHMF(I) = ALF(I)                                               LN15590
          IF (M.EQ.1) HWHMF(I) = ALF(I)*5.                                LN15600
