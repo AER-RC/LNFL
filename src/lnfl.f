@@ -846,7 +846,7 @@ C         MJA, new TAPE8 output 01-20-2012
              isumtot=isumtot+sum(addflag)
 C            MJA, test new TAPE8 output 01-20-2012
              if (IPUOUT.EQ.1) then
-                 do j = 1,249
+                 do j = 1,LINES
                    !Write broadening flags only on main line, not line coupling
                    !lines
                      if (IFLG(J).GE.0) then !main line
@@ -1038,7 +1038,7 @@ C                                                                        LN06860
 C                                                                        LN06880
       VST = VLO                                                          LN06890
       DO 10 I = 1, LINES  
-C         write(*,*) IFLG(I),VNU3(I)                                      LN06900
+        !  write(*,*) I, VLO,VHI, VST, IFLG(I),VNU3(I)                                      LN06900
          IF (IFLG(I).GE.0) THEN                                          LN06910
             IF (VNU3(I).LT.VST) THEN
                 PRINT 900,I,VST,VNU3(I) 
@@ -1059,9 +1059,15 @@ C                                                                        LN07040
       END                                                                LN07050
       SUBROUTINE SKIPT (IFIL,VNU,IEOF)                                   LN07060
 C                                                                        LN07070
-      IMPLICIT REAL*8           (V)                                     !LN07080
-C                                                                        LN07090
-   10 READ (IFIL,900,END=20) VA                                          LN07100
+      IMPLICIT REAL*8           (V)                                      LN07080
+      CHARACTER(len=1)   :: CH(3)
+      CHARACTER(len=12) :: VAS
+C     
+C skipp header records
+   10 READ(IFIL, "(3A1,A12)",END=20) CH, VAS
+      if ((CH(1) == '>') .or. (CH(1) == '%')) goto 10
+                                                                         LN07090
+      READ (VAS,"(E12.4)")    VA                                          LN07100
 C                                                                        LN07110
 C#    IF (UNIT(IFIL) .EQ. 0.) IEOF=0                                     LN07120
 C                                                                        LN07130
