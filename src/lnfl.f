@@ -260,9 +260,10 @@ c              up to end of ADDDATA
       EQUIVALENCE (VNU3(1),TAPE3BLOCK(1))
 
       PARAMETER (MXBRD=270000)
+      PARAMETER (MXBRDW=320000)
 
-      COMMON /WV_CO2_BRD/ VNU_WV_CO2(MXBRD),HW_WV_CO2(MXBRD),
-     *                   TEMP_WV_CO2(MXBRD),SHFT_WV_CO2(MXBRD)
+      COMMON /WV_CO2_BRD/ VNU_WV_CO2(MXBRDW),HW_WV_CO2(MXBRDW),
+     *                   TEMP_WV_CO2(MXBRDW),SHFT_WV_CO2(MXBRDW)
 
 
       COMMON /CO2_CO2_BRD/ VNU_CO2_CO2(MXBRD),HW_CO2_CO2(MXBRD),
@@ -4239,9 +4240,10 @@ C-------------------------------------------------------------------------------
       IMPLICIT REAL*8           (V)                        
 
       PARAMETER (MXBRD=270000)
+      PARAMETER (MXBRDW=320000)
 
-      COMMON /WV_CO2_BRD/ VNU_WV_CO2(MXBRD),HW_WV_CO2(MXBRD),
-     *                   TEMP_WV_CO2(MXBRD),SHFT_WV_CO2(MXBRD)
+      COMMON /WV_CO2_BRD/ VNU_WV_CO2(MXBRDW),HW_WV_CO2(MXBRDW),
+     *                   TEMP_WV_CO2(MXBRDW),SHFT_WV_CO2(MXBRDW)
 
       COMMON /CO2_CO2_BRD/ VNU_CO2_CO2(MXBRD),HW_CO2_CO2(MXBRD),
      *                   TEMP_CO2_CO2(MXBRD),SHFT_CO2_CO2(MXBRD)
